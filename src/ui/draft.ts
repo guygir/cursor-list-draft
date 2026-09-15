@@ -1,0 +1,219 @@
+import { getPerson, slateLabelHe } from "../data/pool";
+import { portraitUrl } from "../data/portraits";
+import type { DraftList, PersonId } from "../data/types";
+import { LIST_SIZE } from "../systems/draft";
+import { listMeters } from "../systems/scores";
+import { copy } from "./copy";
+import { el } from "./dom";
+import { renderHowCalc } from "./info";
+import { scoreMeters } from "./meters";
+import { renderMemberPicker } from "./members";
+import {
+  edgeLine,
+  hintFor,
+  peopleInSlate,
+  renderEdgeTip,
+  renderTreeMap,
+  slatesWithPeople,
+  type TreeHandlers,
+  type TreeView,
+} from "./tree";
+
+export interface DraftHandlers extends TreeHandlers {
+  onCloseSlate: () => void;
+}
+
+export interface PickNotice {
+  listHe: string;
+  personId: PersonId;
+  slot: number;
+}
+
+export interface DraftView extends TreeView {
+  liveText: string;
+  cpuThinking: boolean;
+  notices: PickNotice[];
+  hardMode: boolean;
+}
+
+export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLElement {
+  const player = view.lists.find((l) => l.isPlayer);
+  const hub = player?.picks[0] ?? null;
+  const focus = view.focusId ? getPerson(view.focusId) : null;
+  const inspectId = view.hoverId ?? view.focusId;
+  const root = el("div", { class: "screen draft-screen" });
+
+  root.append(renderHeader(view, player));
+  root.append(renderSlots(player, view.lists));
+
+  const stage = el("div", { class: "graph-pane" });
+  stage.append(renderNotices(view.notices));
+  stage.append(renderTreeMap(view, handlers));
+  stage.append(renderEdgeTip(view.hoverEdge ?? view.selectedEdge));
+  stage.append(el("p", { class: "hint-line" }, hintFor(inspectId, hub, view.hoverEdge ?? view.selectedEdge)));
+  root.append(stage);
+
+  root.append(renderPickDock(view, handlers, hub));
+
+  const confirm = el(
+    "button",
+    {
+      type: "button",
+      class: "primary confirm-btn",
+      disabled: !canConfirm(view),
+    },
+    focus && canConfirm(view) ? copy.confirm(focus.nameHe) : view.openSlate ? copy.confirmEmpty : copy.chooseParty,
+  );
+  confirm.addEventListener("click", () => {
+    if (view.focusId && canConfirm(view)) handlers.onPick(view.focusId);
+  });
+  root.append(el("div", { class: "confirm-bar" }, confirm));
+  root.append(renderRivals(view.lists));
+  root.append(el("div", { class: "sr-only", "aria-live": "polite" }, view.liveText));
+  return root;
+}
+
+function canConfirm(view: DraftView): boolean {
+  return Boolean(
+    view.canPick && view.focusId && view.remaining.includes(view.focusId) && !view.cpuThinking,
+  );
+}
+
+function renderHeader(view: DraftView, player: DraftList | undefined): HTMLElement {
+  const filled = player?.picks.length ?? 0;
+  return el(
+    "header",
+    { class: "mast compact" },
+    el("h1", {}, copy.title),
+    el(
+      "div",
+      { class: "mast-tools" },
+      view.hardMode ? el("p", { class: "hard-badge" }, copy.hardMode) : null,
+      el("p", { class: "pick-count" }, copy.pickN(Math.min(filled + (view.canPick ? 1 : 0), LIST_SIZE), LIST_SIZE)),
+      renderHowCalc(),
+    ),
+  );
+}
+
+function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLElement {
+  const wrap = el("section", { class: "slot-rail-wrap", "aria-label": copy.yourParty });
+  if (player && player.picks.length > 0) {
+    const meters = listMeters(player, lists);
+    wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct));
+  }
+  const ol = el("ol", { class: "slot-rail" });
+  for (let i = 0; i < LIST_SIZE; i++) {
+    const id = player?.picks[i];
+    const person = id ? getPerson(id) : null;
+    ol.append(
+      el(
+        "li",
+        { class: person ? "slot filled" : "slot empty" },
+        el("span", { class: "slot-n" }, String(i + 1)),
+        el("span", { class: "slot-name" }, person ? person.nameHe : copy.emptySlot),
+      ),
+    );
+  }
+  wrap.append(ol);
+  return wrap;
+}
+
+function renderPickDock(view: DraftView, handlers: DraftHandlers, hub: PersonId | null): HTMLElement {
+  const dock = el("section", { class: "pick-dock", "aria-label": copy.pool });
+  if (view.openSlate && hub) {
+    dock.append(
+      renderMemberPicker({
+        ids: peopleInSlate(view.remaining, view.openSlate),
+        slate: view.openSlate,
+        hub,
+        focusId: view.focusId,
+        canPick: view.canPick,
+        variant: "dock",
+        onHover: handlers.onHover,
+        onFocus: handlers.onFocus,
+        onPick: handlers.onPick,
+        onCloseSlate: handlers.onCloseSlate,
+      }),
+    );
+  } else if (hub) {
+    dock.append(el("p", { class: "dock-kicker" }, copy.chooseParty));
+    dock.append(renderPartyChips(view, handlers));
+  } else if (!view.openSlate) {
+    dock.append(el("p", { class: "dock-kicker" }, copy.chooseMemberHint));
+  }
+  return dock;
+}
+
+function renderPartyChips(view: DraftView, handlers: DraftHandlers): HTMLElement {
+  const row = el("div", { class: "party-chip-row" });
+  for (const slate of slatesWithPeople(view.remaining)) {
+    const btn = el(
+      "button",
+      {
+        type: "button",
+        class: `party-btn chip ${view.openSlate === slate ? "is-hot" : ""}`,
+        "data-slate": slate,
+      },
+      slateLabelHe(slate),
+    );
+    btn.addEventListener("click", () => handlers.onOpenSlate(slate));
+    row.append(btn);
+  }
+  return row;
+}
+
+function renderNotices(notices: PickNotice[]): HTMLElement {
+  const rail = el("aside", { class: "notice-rail", "aria-label": copy.roundNotices, "aria-live": "polite" });
+  for (const notice of notices) {
+    const person = getPerson(notice.personId);
+    const photo = portraitUrl(notice.personId);
+    rail.append(
+      el(
+        "p",
+        { class: "notice" },
+        photo
+          ? el("img", {
+              class: "notice-photo",
+              src: photo,
+              alt: "",
+              referrerpolicy: "no-referrer",
+            })
+          : el("span", { class: "notice-photo is-fallback", "aria-hidden": "true" }, person.nameHe.slice(0, 1)),
+        el("span", {}, copy.cpuNotice(notice.listHe, person.nameHe)),
+      ),
+    );
+  }
+  return rail;
+}
+
+function renderRivals(lists: DraftList[]): HTMLElement {
+  const parts = lists
+    .filter((l) => !l.isPlayer)
+    .map((list) => {
+      const names = list.picks.map((id) => getPerson(id).nameHe).join(" · ") || copy.emptySlot;
+      return `${list.labelHe}: ${names}`;
+    });
+  return el("p", { class: "rival-line", "aria-label": copy.parties }, parts.join("  ·  "));
+}
+
+export function hoverEdge(root: HTMLElement, key: string | null, personHint: string): void {
+  root.querySelectorAll(".chem-edge.is-selected").forEach((node) => node.classList.remove("is-selected"));
+  if (key) {
+    root.querySelectorAll(`[data-edge="${key}"] .chem-edge`).forEach((node) => node.classList.add("is-selected"));
+  }
+  const tip = root.querySelector(".edge-tip");
+  if (tip) tip.replaceWith(renderEdgeTip(key));
+  const hint = root.querySelector(".hint-line");
+  if (hint) hint.textContent = key ? edgeLine(key) : personHint;
+}
+
+export function hoverPerson(root: HTMLElement, id: PersonId | null, fallback: PersonId | null, hub: PersonId | null): void {
+  root.querySelectorAll(".person-node.is-hot").forEach((node) => node.classList.remove("is-hot"));
+  root.querySelectorAll(".name-btn.is-hot").forEach((node) => node.classList.remove("is-hot"));
+  const shown = id ?? fallback;
+  if (shown) {
+    root.querySelectorAll(`[data-person="${shown}"]`).forEach((node) => node.classList.add("is-hot"));
+  }
+  const hint = root.querySelector(".hint-line");
+  if (hint) hint.textContent = hintFor(shown, hub);
+}

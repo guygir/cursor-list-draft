@@ -1,0 +1,99 @@
+import { getPerson } from "../data/pool";
+import type { DraftList, PersonId, SlateId } from "../data/types";
+import { scoreCohesion } from "./chemistry";
+import { effectiveVotes, hubDraw, placeList, splitNeighborhoodMass } from "./demand";
+
+export const GREEDY_RATE = 0.92;
+export const NOISE_TOP = 2;
+const NOISE_BAND = 0.1;
+const PARTNER_WEIGHT = 0.35;
+
+export interface CpuCandidate {
+  id: PersonId;
+  score: number;
+  draw: number;
+}
+
+export function rankCpuCandidates(
+  cpu: DraftList,
+  allLists: DraftList[],
+  remaining: PersonId[],
+  hardMode = false,
+): CpuCandidate[] {
+  const ranked: CpuCandidate[] = remaining.map((id) => {
+    const hypothetical: DraftList = { ...cpu, picks: [...cpu.picks, id] };
+    const others = allLists.map((list) => (list.id === cpu.id ? hypothetical : list));
+    const chemistry = scoreCohesion(hypothetical.picks);
+    const placements = others.filter((list) => list.picks.length > 0).map(placeList);
+    const split = splitNeighborhoodMass(placements).find((row) => row.listId === cpu.id);
+    const mass = split?.massAfterSplit ?? placeList(hypothetical).massRaw;
+    let score = effectiveVotes(mass, chemistry.cohesion, hubDraw(hypothetical.picks));
+    if (hardMode) {
+      score += PARTNER_WEIGHT * partnerBoost(hypothetical, remaining, id);
+    }
+    return { id, score, draw: getPerson(id).draw };
+  });
+
+  ranked.sort((a, b) => {
+    if (a.score > b.score + 1e-9) return -1;
+    if (a.score < b.score - 1e-9) return 1;
+    if (a.draw !== b.draw) return b.draw - a.draw;
+    return a.id < b.id ? -1 : 1;
+  });
+  return ranked;
+}
+
+/** If this pick opens a slate, count a compatible leftover partner on that slate. */
+function partnerBoost(hypothetical: DraftList, remaining: PersonId[], picked: PersonId): number {
+  const slate = getPerson(picked).slateId;
+  const already = slateCount(hypothetical.picks, slate);
+  if (already !== 1) return 0;
+  const mates = remaining.filter((id) => id !== picked && getPerson(id).slateId === slate);
+  if (mates.length === 0) return 0;
+  let best = 0;
+  for (const mate of mates) {
+    const chemistry = scoreCohesion([...hypothetical.picks, mate]);
+    const mass = placeList({ ...hypothetical, picks: [...hypothetical.picks, mate] }).massRaw;
+    const votes = effectiveVotes(mass, chemistry.cohesion, hubDraw(hypothetical.picks));
+    if (votes > best) best = votes;
+  }
+  return best;
+}
+
+function slateCount(picks: PersonId[], slate: SlateId): number {
+  return picks.filter((id) => getPerson(id).slateId === slate).length;
+}
+
+/** Almost always the max. Rare noise only among near-ties. */
+export function chooseCpuCandidate(ranked: CpuCandidate[], rand: number, greedyRate = GREEDY_RATE): PersonId {
+  if (ranked.length === 0) throw new Error("Empty pool");
+  const best = ranked[0]!;
+  const close = ranked
+    .filter((row) => row.score >= best.score * (1 - NOISE_BAND))
+    .slice(0, NOISE_TOP);
+  if (rand < greedyRate || close.length === 1) return best.id;
+  const t = Math.min(1, Math.max(0, (rand - greedyRate) / (1 - greedyRate)));
+  const index = Math.min(close.length - 1, Math.floor(t * close.length + 1e-9));
+  return close[index]!.id;
+}
+
+export function greedyCpuPick(
+  cpu: DraftList,
+  allLists: DraftList[],
+  remaining: PersonId[],
+  rand = 0,
+  hardMode = false,
+): PersonId {
+  return chooseCpuCandidate(rankCpuCandidates(cpu, allLists, remaining, hardMode), rand);
+}
+
+export function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

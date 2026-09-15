@@ -1,6 +1,6 @@
 # List Draft — agent brief
 
-Status: proposed · very small PoC, not started  
+Status: shipped · playable PoC  
 Last updated: 10 September 2026  
 Repo: this directory. Independent of Kalpi and of Election Lane Battler.
 
@@ -91,7 +91,7 @@ Controls: tap/click to pick; keyboard-focusable names; confirm on the focused pe
 
 `choose N → snake-draft with the tree visible → resolve mandates → read the why → replay`
 
-CPU: greedy. Each CPU pick maximises `hub_draw × compatibility_with_its_current_hub × remaining_neighborhood_mass`, with a penalty for overlapping a stronger existing list in the same cell. CPU uses the same visible rules as the player. No hidden stats.
+CPU: almost always the greedy max. Score is projected `effective_votes` of the ticket after the pick (split mass × cohesion^α × hub_draw) — the same formula as election night. In hard mode it also looks one partner ahead on a newly opened slate. Rare noise only among near-ties. Seeded per run so a replay can differ; same seed is deterministic. CPU uses the same visible rules as the player. No hidden stats.
 
 ---
 
@@ -101,13 +101,18 @@ Implement this formula. Do not replace it with a neural net or an LLM judge.
 
 ### Rank weights
 
-`w(rank) ≈ 1/rank` (PoC). Slot 1 may take an extra hub multiplier of `1.25`.
+Centroid still uses `w(rank) ≈ 1/rank`, with slot 1 × `1.25`.
 
-| Pair | Product of weights (approx) | Meaning |
+Pair edges (tree and cohesion) use draft order `x, y`:
+
+`pair_weight(x, y) = 2 × (1/x) × (1/y)`
+
+| Pair | Weight | Meaning |
 | --- | --- | --- |
-| 1 vs 2 | ~0.5–0.63 | The ticket. A veto here is campaign-ending. |
-| 1 vs 20 | ~0.05 | Sour name on the poster. Noticeable, not fatal. |
-| 19 vs 20 | ~0.003 | Backbencher noise. Almost no score, almost no UI. |
+| 1 vs 2 | 1.00 | The ticket. Max. A veto here is campaign-ending. |
+| 1 vs 6 | ~0.33 | Noticeable. |
+| 5 vs 6 | ~0.07 | Quiet. |
+| 19 vs 20 | ~0.005 | Backbencher noise. Almost no score, almost no UI. |
 
 ### Pair relation `s_ij`
 
@@ -116,11 +121,11 @@ Signed, from the edge list + vector distance:
 - **Veto / sourced will-not-sit / opposite pole:** large negative (PoC: `-1.0`).
 - **Opposite cell, no sourced veto:** medium negative (PoC: `-0.45`).
 - **Unknown / far but not opposed:** `0`.
-- **Same line / same faction / close cell / served together:** small positive (PoC: `+0.15`).
+- **Same line / same faction / close cell / served together:** small positive (PoC: `+0.15`). Same-slate is a belonging bonus, not a floor — aspect distance can still cool or tense an intra-party pair (Levin vs Saar).
 
-Green contribution must stay about **10–20%** the magnitude of a same-rank red. Stacking clones must not dominate.
+Green contribution must stay about **10–20%** the magnitude of a same-rank red. Stacking clones must not dominate. Backbenchers without a reason stay slate clones on purpose.
 
-**Veto versus the leader is never fully discounted.** If `s_ij` is a sourced veto and one index is slot 1, use at least `w(1) × max(w(j), 0.25)` so a rank-20 veto still cracks the tree.
+**Veto versus the leader is never fully discounted.** If `s_ij` is a sourced veto and one index is slot 1, use at least `2 × max(1/j, 0.25)` so a rank-20 veto still cracks the tree.
 
 ### Credibility (cohesion)
 
@@ -135,7 +140,7 @@ Leader is the hub for **UI and CPU**, not a second formula. The rank weights alr
 
 ### Demand (neighborhood mass)
 
-Each person has a cell in a small issue space (PoC: 2D is enough — e.g. security/religion axis and Netanyahu-as-person / “who serves” axis). Inherit the cell from their real 2022/2026 list when possible. CHES-Israel’s four factors (left–right, socio-cultural, economic, populism) are the research backing; do not require all four in the PoC.
+Each published name has a **toy-aspect** vector: `bibi`, `judicial`, `service`, `security`. A pair is those two people, not their parties. Faces with a public line get a reason override; everyone else is slate mean + role/wing tilt. Demand cell is the 2D projection (`service` → x, `bibi` → y) so hills stay stable. Courts and security-intensity color chemistry without inventing person-level polls. CHES-Israel’s four factors remain the research backing for slate means, not for MK-level scores.
 
 - List position = rank-weighted centroid of members.
 - **Neighborhood mass** `M` = how many toy voters live near that centroid. PoC: hand-set mass per cell from a tiny map (see starter data). Later: 2022 (and then 2026) list vote shares from data.gov.il projected onto the same cells.
@@ -210,7 +215,7 @@ Academic caution: Israeli party cohesion in roll-call is high (Rahat). Whip vote
 ## Trust and editorial
 
 - Disclose before first pick: toy, not a forecast; no party endorses the game; a mixed list is not a real alliance.
-- Factual fields (name, party, sourced edge) stay separate from game fields (draw, cell, `s_ij`).
+- Factual fields (name, party, sourced edge) stay separate from game fields (draw, cell, aspects, `s_ij`). Aspects are `toy-aspect`, never a poll.
 - Every real-person row and every `veto`/`split` edge needs a source URL, date, and review status: `draft` for PoC.
 - Do not fabricate totals, momentum, or “Israelis think.”
 - Sponsor/editorial identity: private PoC may say “independent prototype.” Public release needs a named responsible sponsor. Do not ship public political advocacy without that.
@@ -240,14 +245,14 @@ Quality floor: phone + desktop, visible focus, reduced motion, empty/disabled st
 
 **Must prove**
 
-- 12 real people in a shared pool (starter table below).
+- 12 real people in a shared pool (starter table below). **Shipped expansion (Sep 2026):** published 2026 top-10s per slate so N=2/3 can fill 6 slots. Short slates stay short — no invented names.
 - Player list of **6 slots** (not 20). Snake draft vs **N ∈ {1,2,3}** CPU lists of 6.
 - Tree or hub-and-spokes that recolours on pick, with at least a few sourced red edges.
 - Rank-weighted asymmetric cohesion + centroid demand + split + `α` conversion.
 - Threshold 3.25% + 120-seat allocation (simplified).
 - Why-line on the result.
 - Disclosure copy.
-- Local only. Deterministic given the same picks (seeded CPU only if you add noise; default greedy is deterministic).
+- Local only. Same player picks + same CPU seed are deterministic. Live runs use a fresh seed. CPU noise is rare and only among near-ties.
 
 **May fake, labeled**
 
@@ -276,7 +281,7 @@ Definition of done: a new player can finish one draft on a phone, see a contradi
 
 ## Starter pool (PoC — 12 people)
 
-Hand-place these. Cells are toy labels, not CHES scores. Adjust if a source contradicts identity; do not invent new people for the PoC.
+Hand-place these. Cells are toy labels projected from toy-aspects, not CHES scores. Adjust if a source contradicts identity; do not invent new people for the PoC.
 
 Cells (2D toy map):
 

@@ -6,4 +6,14 @@ This is not Election Lane Battler and not [Mandat 61](https://mandat61.vercel.ap
 
 **Start here:** [`AGENTS.md`](./AGENTS.md) — product thesis, scoring, trust rules, and the first PoC slice.
 
-PoC is not implemented yet.
+## Run the PoC
+
+```bash
+npm install
+npm test
+npm run dev
+```
+
+Open the local Vite URL. Hebrew UI, RTL. Toy mandate math — not a forecast.
+
+See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-memory.md).
