@@ -406,7 +406,7 @@ export function generatedPortrait(id: PersonId): string {
   <rect width="80" height="80" fill="#1c1f27"/>
   <circle cx="40" cy="36" r="24" fill="${ink}"/>
   <text x="40" y="43" text-anchor="middle" font-size="20" font-family="Rubik, Arial Hebrew, sans-serif" fill="#e4ddd0">${escapeXml(letters)}</text>
-  <text x="40" y="70" text-anchor="middle" font-size="9" font-family="Rubik, Arial Hebrew, sans-serif" fill="#c9a227">${escapeXml(last)}</text>
+  <text x="40" y="70" text-anchor="middle" font-size="9" font-family="Rubik, Arial Hebrew, sans-serif" fill="#f4d53b">${escapeXml(last)}</text>
 </svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }

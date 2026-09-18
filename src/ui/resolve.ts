@@ -16,7 +16,11 @@ import {
 } from "./meters";
 import { renderEdgeCard, renderTreeMap, type TreeHandlers } from "./tree";
 
-export function renderResolve(result: ElectionResult, onReplay: () => void): HTMLElement {
+export function renderResolve(
+  result: ElectionResult,
+  onReplay: () => void,
+  opts: { shareHint?: string; onShare?: () => Promise<void> | void } = {},
+): HTMLElement {
   const lists = result.lists.map((row) => row.list);
   const won = result.winnerId === "player";
   const root = el("div", { class: "screen resolve-screen" });
@@ -76,7 +80,17 @@ export function renderResolve(result: ElectionResult, onReplay: () => void): HTM
 
   const replay = el("button", { type: "button", class: "primary" }, copy.replay);
   replay.addEventListener("click", onReplay);
-  root.append(el("div", { class: "confirm-bar" }, replay));
+  const bar = el("div", { class: "confirm-bar is-split" }, replay);
+  if (opts.onShare) {
+    const share = el("button", { type: "button", class: "share-btn" }, copy.share);
+    share.addEventListener("click", async () => {
+      await opts.onShare?.();
+      share.textContent = copy.shared;
+    });
+    bar.append(share);
+  }
+  root.append(bar);
+  if (opts.shareHint) root.append(el("p", { class: "no-board" }, opts.shareHint));
   return root;
 }
 

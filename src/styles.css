@@ -1,15 +1,19 @@
 :root {
-  --bg: #101218;
-  --studio: #171a22;
-  --ink: #e4ddd0;
-  --muted: #9a9284;
-  --ochre: #c9a227;
+  --bg: #191817;
+  --studio: #262420;
+  --ink: #ede9e0;
+  --ink-deep: #1a1f2b;
+  --muted: #a8a291;
+  --yellow: #f4d53b;
+  --ochre: var(--yellow);
   --punch: #8a8274;
-  --ink-rgb: 228, 221, 208;
+  --paper: #f5f3ec;
+  --ground: #e9e6de;
+  --ink-rgb: 237, 233, 224;
   --bar: rgba(var(--ink-rgb), 0.34);
   --alert: #c45a4e;
   --ok: #6f9e7a;
-  --line: rgba(228, 221, 208, 0.1);
+  --line: rgba(237, 233, 224, 0.1);
   --display: "Rubik", "Arial Hebrew", sans-serif;
   --ui: "Assistant", "Avenir Next", sans-serif;
 }
@@ -235,8 +239,8 @@ input {
 .primary {
   appearance: none;
   border: 0;
-  background: var(--ochre);
-  color: #1a1608;
+  background: var(--yellow);
+  color: var(--ink-deep);
   font-weight: 700;
   font-size: 1.05rem;
   padding: 12px 20px;
@@ -1131,10 +1135,11 @@ input {
   font-size: 0.68rem;
   letter-spacing: 0.03em;
   padding: 2px 7px;
-  background: transparent;
-  color: inherit;
-  border: 1px solid rgba(26, 31, 43, 0.28);
-  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink-deep);
+  border: 0;
+  border-radius: 6px;
+  font-weight: 800;
 }
 
 .row-names,
@@ -1285,7 +1290,7 @@ input {
 }
 
 .resolve-screen {
-  --cream: #e4dfd4;
+  --cream: var(--paper);
   --ink-deep: #1a1f2b;
   --ink-rgb: 26, 31, 43;
   --bar: rgba(var(--ink-rgb), 0.34);
@@ -1422,4 +1427,180 @@ input {
   .member-grid {
     gap: 1px 6px;
   }
+}
+
+.mode-pick {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.mode-pick legend {
+  padding: 0;
+  color: var(--muted);
+}
+
+.mode-btn {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 10px 9px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  text-align: right;
+  cursor: pointer;
+}
+
+.mode-btn strong {
+  font-family: var(--display);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.mode-btn span {
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.mode-btn.is-on {
+  border-color: var(--yellow);
+  color: var(--ink);
+  box-shadow: inset 0 -3px 0 var(--yellow);
+}
+
+.mode-btn:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.create-screen {
+  height: 100%;
+  overflow: auto;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 20px 18px calc(40px + env(safe-area-inset-bottom));
+}
+
+.create-lede {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.create-name label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 18px 0 6px;
+}
+
+.create-name input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--studio);
+  color: var(--ink);
+}
+
+.create-name input:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.create-clash {
+  color: var(--alert);
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+}
+
+.axis-list {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0 0;
+}
+
+.axis-row {
+  display: grid;
+  gap: 6px;
+}
+
+.axis-row header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.axis-row header strong {
+  color: var(--ink);
+}
+
+.axis-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--yellow);
+}
+
+.axis-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.nearest-line {
+  margin: 18px 0 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.nearest-line span {
+  color: var(--yellow);
+}
+
+.text-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.text-btn:hover {
+  color: var(--ink);
+}
+
+.share-btn {
+  appearance: none;
+  border: 1px solid var(--yellow);
+  background: transparent;
+  color: var(--yellow);
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.resolve-screen .share-btn {
+  border-color: var(--ink-deep);
+  color: var(--ink-deep);
+}
+
+.confirm-bar.is-split {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.no-board {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 10px 0 0;
 }

@@ -27,6 +27,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("רמת קושי");
     expect(root.textContent).toContain("בלי הגבלת מפלגה");
     expect(root.textContent).toContain("שם אחד מכל מפלגה");
+    expect(root.textContent).toContain("צור מנהיג");
+    expect(root.textContent).toContain("אתגר היום");
+    expect(root.textContent).toContain("אין לוח שיאים חי");
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
@@ -88,5 +91,27 @@ describe("playable draft UI", () => {
     expect(root.querySelectorAll(".score-meter").length).toBeGreaterThan(0);
     expect(root.textContent).not.toContain("מה שהעץ");
     expect(root.textContent).not.toContain("מעבד");
+  });
+
+  it("opens create-leader and starts a locked hub draft from a share code", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    const create = [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) =>
+      btn.textContent?.includes("צור מנהיג"),
+    );
+    create?.click();
+    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    expect(root.textContent).toContain("הראש שלך");
+    const name = root.querySelector<HTMLInputElement>("#leader-name");
+    if (name) {
+      name.value = "איתי";
+      name.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    await vi.runOnlyPendingTimersAsync();
+    expect(root.textContent).toContain("איתי");
+    expect(root.textContent).toMatch(/הרשימה של איתי|שבץ/);
   });
 });

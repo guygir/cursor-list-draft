@@ -236,6 +236,11 @@ export const SLATE_ORDER: SlateId[] = [
 
 const byId = new Map(PEOPLE.map((p) => [p.id, p]));
 
+/** Runtime extras (invented hubs). Not published people. */
+export function registerPerson(person: Person): void {
+  byId.set(person.id, person);
+}
+
 export function getPerson(id: PersonId): Person {
   const person = byId.get(id);
   if (!person) {

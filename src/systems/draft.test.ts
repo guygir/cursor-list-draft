@@ -18,6 +18,16 @@ describe("snake draft", () => {
     expect(a.lists.map((l) => l.picks)).toEqual(b.lists.map((l) => l.picks));
   });
 
+  it("locks a hub as player slot 1 and lets the CPU pick next", () => {
+    const state = createDraft(1, 1, "open", "golan");
+    expect(state.lists[0]?.picks).toEqual(["golan"]);
+    expect(state.remaining).not.toContain("golan");
+    expect(currentList(state)?.isPlayer).toBe(false);
+    const after = applyCpuTurn(state);
+    expect(after.lists.find((list) => !list.isPlayer)?.picks).toHaveLength(1);
+    expect(after.lists[0]?.picks).toEqual(["golan"]);
+  });
+
   it("fills two lists of 10 against one CPU and leaves a leftover pool", () => {
     const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 1);
     expect(isDraftOver(end)).toBe(true);

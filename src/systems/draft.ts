@@ -65,15 +65,17 @@ export function createDraft(
   cpuCount: number,
   seed = 1,
   difficulty: DifficultyId = "open",
+  playerHub?: PersonId,
 ): DraftState {
   const n = clampCpus(cpuCount);
   const { slateCap } = difficultyById(difficulty);
+  const hub = playerHub ? getPerson(playerHub) : null;
   const lists: DraftList[] = [
     {
       id: "player",
-      labelHe: "המפלגה שלך",
-      labelEn: "Your party",
-      picks: [],
+      labelHe: hub ? `הרשימה של ${hub.nameHe}` : "המפלגה שלך",
+      labelEn: hub ? `${hub.nameEn}'s list` : "Your party",
+      picks: hub ? [hub.id] : [],
       isPlayer: true,
       draftOrder: 0,
     },
@@ -91,8 +93,12 @@ export function createDraft(
 
   return {
     lists,
-    remaining: [...POOL_IDS],
-    turnQueue: buildSnakeQueue(lists.length, LIST_SIZE),
+    remaining: POOL_IDS.filter((id) => id !== playerHub),
+    turnQueue: buildSnakeQueue(
+      lists.length,
+      LIST_SIZE,
+      lists.map((list) => list.picks.length),
+    ),
     turnCursor: 0,
     seed,
     rand: () => 0,
@@ -165,22 +171,33 @@ export function skipIfBlocked(state: DraftState): DraftState {
 }
 
 /** Snake order, skipping a list once it already has LIST_SIZE names. */
-export function buildSnakeQueue(listCount: number, listSize: number): number[] {
-  const queue: number[] = [];
+export function buildSnakeQueue(listCount: number, listSize: number, already: number[] = []): number[] {
+  const full: number[] = [];
   const filled = Array.from({ length: listCount }, () => 0);
   let forward = true;
-  const maxPicks = Math.min(listCount * listSize, POOL_IDS.length);
+  const target = Math.min(listCount * listSize, POOL_IDS.length + already.reduce((sum, n) => sum + n, 0));
 
-  while (queue.length < maxPicks) {
+  while (filled.reduce((sum, n) => sum + n, 0) < target) {
     const order = Array.from({ length: listCount }, (_, i) => i);
     const pass = forward ? order : [...order].reverse();
+    let progressed = false;
     for (const idx of pass) {
       if ((filled[idx] ?? 0) >= listSize) continue;
-      if (queue.length >= maxPicks) break;
-      queue.push(idx);
+      if (filled.reduce((sum, n) => sum + n, 0) >= target) break;
+      full.push(idx);
       filled[idx] = (filled[idx] ?? 0) + 1;
+      progressed = true;
     }
+    if (!progressed) break;
     forward = !forward;
   }
-  return queue;
+
+  const skip = Array.from({ length: listCount }, (_, i) => already[i] ?? 0);
+  return full.filter((idx) => {
+    if ((skip[idx] ?? 0) > 0) {
+      skip[idx] = (skip[idx] ?? 0) - 1;
+      return false;
+    }
+    return true;
+  });
 }

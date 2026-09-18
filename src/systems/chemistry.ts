@@ -137,24 +137,37 @@ export function pairRelation(a: PersonId, b: PersonId): PairRelation {
 
   if (pa.slateId === pb.slateId) {
     s = clamp(s + SAME_SLATE_BONUS, -0.35, 0.22);
+    const invented = pa.identitySource.note === "invented-leader" || pb.identitySource.note === "invented-leader";
     const intra =
-      s >= 0.12
-        ? {
-            kind: "same-line" as const,
-            reasonHe: "אותה מפלגה ב־2026. ירוק קל — שייכות, לא אהבה.",
-            reasonEn: "Same 2026 slate. Thin green — belonging, not warmth.",
-          }
-        : s >= 0
+      invented
+        ? s >= 0
           ? {
               kind: "same-line" as const,
-              reasonHe: `אותה מפלגה, אבל לא אותו קו. הפער: ${gap}.`,
-              reasonEn: `Same slate, not the same line. Gap: ${gap}.`,
+              reasonHe: "משבצת קרובה שציירת. לא חברות סיעה אמיתית.",
+              reasonEn: "Nearest painted cell. Not a real faction seat.",
             }
           : {
               kind: "tension" as const,
-              reasonHe: `אותה מפלגה, וחיכוך על ${gap}. לא וטו — פרופיל צעצוע.`,
-              reasonEn: `Same slate, friction on ${gap}. Not a veto — toy profile.`,
-            };
+              reasonHe: `משבצת קרובה, וחיכוך על ${gap}. מומצא, לא וטו.`,
+              reasonEn: `Nearest cell, friction on ${gap}. Invented, not a veto.`,
+            }
+        : s >= 0.12
+          ? {
+              kind: "same-line" as const,
+              reasonHe: "אותה מפלגה ב־2026. ירוק קל — שייכות, לא אהבה.",
+              reasonEn: "Same 2026 slate. Thin green — belonging, not warmth.",
+            }
+          : s >= 0
+            ? {
+                kind: "same-line" as const,
+                reasonHe: `אותה מפלגה, אבל לא אותו קו. הפער: ${gap}.`,
+                reasonEn: `Same slate, not the same line. Gap: ${gap}.`,
+              }
+            : {
+                kind: "tension" as const,
+                reasonHe: `אותה מפלגה, וחיכוך על ${gap}. לא וטו — פרופיל צעצוע.`,
+                reasonEn: `Same slate, friction on ${gap}. Not a veto — toy profile.`,
+              };
     return {
       a,
       b,
