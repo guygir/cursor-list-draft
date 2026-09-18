@@ -33,8 +33,8 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 From **Workers & Pages → Create application → import this GitHub repo**:
 
 1. Project name: `cursor-list-draft` (must match `wrangler.toml`).
-2. Build command: `npm run build`
-3. Deploy command: `npx wrangler deploy`
+2. Build command: can stay empty. `wrangler.toml` runs `npm run build` before upload.
+3. Deploy command: `npx wrangler deploy` (non-production: `npx wrangler versions upload`).
 4. Builds for non-production branches: on. Access: off.
 5. Deploy.
 
