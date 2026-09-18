@@ -5,7 +5,8 @@
   --muted: #9a9284;
   --ochre: #c9a227;
   --punch: #8a8274;
-  --bar: rgba(228, 221, 208, 0.4);
+  --ink-rgb: 228, 221, 208;
+  --bar: rgba(var(--ink-rgb), 0.34);
   --alert: #c45a4e;
   --ok: #6f9e7a;
   --line: rgba(228, 221, 208, 0.1);
@@ -1231,14 +1232,14 @@ input {
     90deg,
     transparent 0,
     transparent calc(10% - 1px),
-    rgba(228, 221, 208, 0.09) calc(10% - 1px),
-    rgba(228, 221, 208, 0.09) 10%
+    rgba(var(--ink-rgb), 0.09) calc(10% - 1px),
+    rgba(var(--ink-rgb), 0.09) 10%
   );
 }
 
 .score-meter-track {
   height: 6px;
-  background: rgba(228, 221, 208, 0.08);
+  background: rgba(var(--ink-rgb), 0.08);
 }
 
 .score-meter-fill,
@@ -1246,6 +1247,8 @@ input {
   position: relative;
   height: 100%;
   width: var(--from, 0%);
+  border-radius: 3px;
+  background: var(--bar);
   animation: fermi-grow var(--grow-ms, 560ms) cubic-bezier(0.16, 1, 0.3, 1) var(--grow-delay, 0ms) both;
 }
 
@@ -1253,10 +1256,6 @@ input {
   to {
     width: var(--target, 0%);
   }
-}
-
-.score-meter-fill {
-  background: var(--bar);
 }
 
 .list-col .score-meters-wrap,
@@ -1282,17 +1281,14 @@ input {
 
 .bar-track {
   height: 8px;
-  background: rgba(228, 221, 208, 0.08);
-}
-
-.bar-fill {
-  background: var(--bar);
+  background: rgba(var(--ink-rgb), 0.08);
 }
 
 .resolve-screen {
   --cream: #e4dfd4;
   --ink-deep: #1a1f2b;
-  --bar: rgba(26, 31, 43, 0.2);
+  --ink-rgb: 26, 31, 43;
+  --bar: rgba(var(--ink-rgb), 0.34);
 }
 
 .resolve-screen .banner.win {
@@ -1305,11 +1301,6 @@ input {
   border-radius: 16px;
   padding: 16px 16px 14px;
   animation: fermi-rise 640ms cubic-bezier(0.16, 1, 0.3, 1) var(--row-delay, 0ms) both;
-}
-
-.resolve-screen .mandate-row.is-player {
-  background: #d8d3c8;
-  box-shadow: inset 0 0 0 1px rgba(26, 31, 43, 0.2);
 }
 
 .resolve-screen .mandate-row .row-names,
@@ -1331,22 +1322,12 @@ input {
 
 .resolve-screen .mandate-row .bar-track,
 .resolve-screen .mandate-row .score-meter-track {
-  background: rgba(26, 31, 43, 0.08);
-}
-
-.resolve-screen .mandate-row .bar-fill,
-.resolve-screen .mandate-row .score-meter-fill {
-  background: var(--bar);
+  height: 10px;
+  background: rgba(var(--ink-rgb), 0.08);
 }
 
 .resolve-screen .mandate-row .meter-ticks {
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0,
-    transparent calc(10% - 1px),
-    rgba(26, 31, 43, 0.08) calc(10% - 1px),
-    rgba(26, 31, 43, 0.08) 10%
-  );
+  display: none;
 }
 
 .resolve-screen .mandate-row .tone-red {
