@@ -70,11 +70,15 @@ export function sortBoard(rows: BoardEntry[]): BoardEntry[] {
   return [...rows].sort((a, b) => b.seats - a.seats || b.cohesion - a.cohesion || b.at - a.at);
 }
 
-export function boardForMode(rows: BoardEntry[], mode: BoardMode, dayKey?: string): BoardEntry[] {
+export function boardForMode(
+  rows: BoardEntry[],
+  query: { mode: BoardMode; dayKey?: string; difficulty?: string },
+): BoardEntry[] {
   return sortBoard(
     rows.filter((row) => {
-      if (row.mode !== mode) return false;
-      if (mode === "daily" && dayKey) return row.dayKey === dayKey;
+      if (row.mode !== query.mode) return false;
+      if (query.mode === "daily" && query.dayKey && row.dayKey !== query.dayKey) return false;
+      if (query.difficulty && (row.difficulty || "open") !== query.difficulty) return false;
       return true;
     }),
   );

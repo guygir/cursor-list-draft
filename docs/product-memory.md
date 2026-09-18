@@ -26,7 +26,7 @@ Identity and sourced veto/split edges are labeled `draft`. Mixed lists are playe
 - Every published name has an image: Wikipedia thumbnail when an exact-title page has a free photo, otherwise a slate-colored initials card (first+last). Fuzzy wiki search is allowed only if first and last name are title tokens and the hit is political (Knesset / 2026 slate). Reviewed keeps: Mishraki, Omri Ronen, Somaya Bashir. Rejected same-name strangers (Ran Gvili, Michal Negrin, film-director Rosenthal, professor David Ohana, professor Amos Drory). Talik Gvili still has no matching page. Identity art, not an endorsement.
 - Five pips under a name are the toy axes (Bibi / courts / service / security / economy). The side stripe is `teamRelation` — rank-weighted mean of `pairRelation` vs the whole current ticket (`w(1)=1.25`). Tooltip names the sharpest pair. Tree edges stay every pair: color maps `s` from −1 (veto red) through muted 0 to +0.22 (thin green); thickness is rank-weighted.
 - Credibility and demand meters sit on the draft rail from the first pick and recompute after every pick. Hover (desktop) or tap (phone) opens a one-line explainer: tree vs hill. Bars grow and numbers count up (Fermi.gg motion). The site uses Fermi’s gray-and-yellow: dark page `#191817`, paper `#f5f3ec` (not cardboard), punch `#f4d53b`. Every bar is ink at 34%. Reduced motion snaps.
-- Modes on setup: open draft; **צור מנהיג** (paint five toy axes, lock that invented hub at slot 1, share `?c=slate_digits_name` like Mandat 61’s custom candidate — still our draft, not their campaign); **אתגר היום** (published slot-1 leader of the Israel date, `?day=`). Leaderboard is local-first: every finish writes `localStorage` immediately. On Cloudflare Pages, `GET/POST /api/board` (D1) hydrates and posts in the background — no spinner. A missing API is a no-op. Do not invent a global player count from an empty store.
+- Modes on setup: open draft; **צור מנהיג** (paint five toy axes, lock that invented hub at slot 1, share `?c=slate_digits_name` like Mandat 61’s custom candidate — still our draft, not their campaign); **אתגר היום** (published slot-1 leader of the Israel date, `?day=`). Leaderboard is local-first: every finish writes `localStorage` immediately. Boards split like modes: daily (today), then create × each difficulty, then draft × each difficulty. Rank is seats, then cohesion. On Cloudflare, `GET/POST /api/board` (D1) hydrates and posts in the background — no spinner. A missing API is a no-op. Do not invent a global player count from an empty store.
 - Election night leads with yellow like the create screen: the player card is Fermi yellow, CPU cards stay paper, why-line is yellow.
 - Opponent picks this snake pass show as side notices on the draft graph.
 - CPU always takes the greedy max of projected election-night votes (cohesion + split hill + hub). Party-cap levels look one partner ahead when a second name from the same slate is still legal. No near-tie noise.
@@ -50,11 +50,9 @@ Do not invent chemistry from a web pair-scan, person-level polls, or a Mandat-61
 
 **Cloudflare Workers + D1** for the board (already live). **Vercel Hobby** only for a free `*.vercel.app` host like Mandat 61 — static Vite + rewrite `/api/board` to the Worker. Do not add Supabase or Neon; they pause. D1 does not.
 
-Why: the brief is *fast, no loads, $0*. Workers serve the Vite build from the edge and run the board in the same isolate — no Vercel-style function cold starts. D1 stays on the free tier. The client never waits on it.
+Why: $0 and no loads. D1 does not pause. The client never waits on the board. Vercel is only a prettier hostname (`*.vercel.app`); it does not hold the scores.
 
-Why not the usual stack: Supabase free projects pause after about a week of inactivity; the wake can take minutes (a load). Vercel Hobby has no database; pairing it with Supabase or a sleeping Neon branch reintroduces that pause. Vercel Functions cold-start. We only need one JSON board, not auth or Postgres.
-
-Local `npm run dev` has no `/api/board` — ignored. Production is Workers & Pages → Create application → this GitHub repo, then bind D1 as `DB`.
+Local `npm run dev` has no `/api/board` — ignored. Cloudflare Worker is live; bind D1 as `DB` there.
 
 ## Next (still parked)
 

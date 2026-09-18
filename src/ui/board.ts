@@ -7,14 +7,16 @@ import { el } from "./dom";
 export function renderBoardPanel(opts: {
   mode: BoardMode;
   dayKey?: string;
+  difficulty?: string;
   currentId?: string;
   compact?: boolean;
   title?: string;
 }): HTMLElement {
-  const rows = boardForMode(readVisibleBoard(globalThis.localStorage ?? null), opts.mode, opts.dayKey).slice(
-    0,
-    opts.compact ? 5 : 12,
-  );
+  const rows = boardForMode(readVisibleBoard(globalThis.localStorage ?? null), {
+    mode: opts.mode,
+    ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
+    ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
+  }).slice(0, opts.compact ? 5 : 12);
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
   wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
   wrap.append(el("p", { class: "board-note" }, copy.boardLocal));

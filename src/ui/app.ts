@@ -193,6 +193,7 @@ function render(): void {
         shareHint: copy.boardLocal,
         onShare: shareRun,
         boardMode: state.playMode,
+        difficulty: state.difficulty,
         ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
         ...(state.boardEntry ? { boardEntry: state.boardEntry } : {}),
       }),
@@ -333,9 +334,32 @@ function renderBoardScreen(): HTMLElement {
       el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
     ),
   );
-  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey, title: copy.modeDaily }));
-  screen.append(renderBoardPanel({ mode: "create", title: copy.modeCreate }));
-  screen.append(renderBoardPanel({ mode: "draft", title: copy.modeDraft }));
+  screen.append(
+    renderBoardPanel({
+      mode: "daily",
+      dayKey: state.dayKey,
+      difficulty: "open",
+      title: copy.modeDaily,
+    }),
+  );
+  for (const row of DIFFICULTIES) {
+    screen.append(
+      renderBoardPanel({
+        mode: "create",
+        difficulty: row.id,
+        title: `${copy.modeCreate} · ${row.labelHe}`,
+      }),
+    );
+  }
+  for (const row of DIFFICULTIES) {
+    screen.append(
+      renderBoardPanel({
+        mode: "draft",
+        difficulty: row.id,
+        title: `${copy.modeDraft} · ${row.labelHe}`,
+      }),
+    );
+  }
   const back = el("button", { type: "button", class: "primary" }, copy.createBack);
   back.addEventListener("click", () => {
     state.screen = "setup";

@@ -1,5 +1,6 @@
 import { getPerson } from "../data/pool";
 import type { BoardEntry, BoardMode } from "../systems/board";
+import { difficultyById, type DifficultyId } from "../systems/draft";
 import type { ElectionResult, ListScore } from "../systems/resolve";
 import { DEMAND_SCALE } from "../systems/scores";
 import { KNESSET_SEATS } from "../systems/seats";
@@ -26,6 +27,7 @@ export function renderResolve(
     onShare?: () => Promise<void> | void;
     boardMode?: BoardMode;
     dayKey?: string;
+    difficulty?: string;
     boardEntry?: BoardEntry;
   } = {},
 ): HTMLElement {
@@ -61,9 +63,10 @@ export function renderResolve(
     root.append(
       renderBoardPanel({
         mode: opts.boardMode,
-        title: copy.boardTitle,
+        title: nightBoardTitle(opts.boardMode, opts.difficulty),
         compact: true,
         ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
+        ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
         ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
       }),
     );
@@ -150,4 +153,11 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );
   return item;
+}
+
+function nightBoardTitle(mode: BoardMode, difficulty?: string): string {
+  if (mode === "daily") return copy.modeDaily;
+  const level = difficultyById((difficulty ?? "open") as DifficultyId).labelHe;
+  const modeHe = mode === "create" ? copy.modeCreate : copy.modeDraft;
+  return `${modeHe} · ${level}`;
 }
