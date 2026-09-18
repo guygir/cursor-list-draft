@@ -90,7 +90,7 @@ function renderHeader(view: DraftView, player: DraftList | undefined): HTMLEleme
       view.difficulty !== "open"
         ? el("p", { class: "hard-badge" }, difficultyById(view.difficulty).labelHe)
         : null,
-      el("p", { class: "pick-count" }, copy.pickN(Math.min(filled + (view.canPick ? 1 : 0), LIST_SIZE), LIST_SIZE)),
+      el("p", { class: "pick-count" }, copy.pickN(Math.min(filled + 1, LIST_SIZE), LIST_SIZE)),
       renderHowCalc(),
     ),
   );

@@ -139,5 +139,6 @@ describe("playable draft UI", () => {
     await vi.runOnlyPendingTimersAsync();
     expect(root.textContent).toContain("איתי");
     expect(root.textContent).toMatch(/הרשימה של איתי|שבץ/);
+    expect(root.textContent).toContain("בחירה 2 מתוך 10");
   });
 });
