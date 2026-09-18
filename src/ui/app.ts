@@ -331,9 +331,9 @@ function renderBoardScreen(): HTMLElement {
       el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
     ),
   );
-  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey }));
-  screen.append(renderBoardPanel({ mode: "create" }));
-  screen.append(renderBoardPanel({ mode: "draft" }));
+  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey, title: copy.modeDaily }));
+  screen.append(renderBoardPanel({ mode: "create", title: copy.modeCreate }));
+  screen.append(renderBoardPanel({ mode: "draft", title: copy.modeDraft }));
   const back = el("button", { type: "button", class: "primary" }, copy.createBack);
   back.addEventListener("click", () => {
     state.screen = "setup";

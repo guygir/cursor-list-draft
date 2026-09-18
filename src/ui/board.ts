@@ -8,10 +8,11 @@ export function renderBoardPanel(opts: {
   dayKey?: string;
   currentId?: string;
   compact?: boolean;
+  title?: string;
 }): HTMLElement {
   const rows = boardForMode(readBoard(), opts.mode, opts.dayKey).slice(0, opts.compact ? 5 : 12);
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
-  wrap.append(el("h2", {}, copy.boardTitle));
+  wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
   wrap.append(el("p", { class: "board-note" }, copy.boardLocal));
   if (!rows.length) {
     wrap.append(el("p", { class: "board-empty" }, copy.boardEmpty));

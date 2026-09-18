@@ -61,6 +61,7 @@ export function renderResolve(
     root.append(
       renderBoardPanel({
         mode: opts.boardMode,
+        title: copy.boardTitle,
         compact: true,
         ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
         ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
