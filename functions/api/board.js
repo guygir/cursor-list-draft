@@ -127,9 +127,19 @@ function clamp01(n) {
   return Math.min(1, Math.max(0, n));
 }
 
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type, accept",
+};
+
+export function onRequestOptions() {
+  return new Response(null, { status: 204, headers: { ...CORS, "cache-control": "no-store" } });
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...CORS },
   });
 }

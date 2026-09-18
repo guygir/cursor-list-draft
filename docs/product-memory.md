@@ -48,7 +48,7 @@ Do not invent chemistry from a web pair-scan, person-level polls, or a Mandat-61
 
 ## Deploy (shipped path · Sep 2026)
 
-**Cloudflare Workers + static assets + D1**, not Vercel + Supabase. The 2026 dashboard create flow is Worker-only (no Pages-only button). Same idea: edge static `dist`, `/api/board` in `worker.js`, D1 bound in the dashboard after the first deploy.
+**Cloudflare Workers + D1** for the board (already live). **Vercel Hobby** only for a free `*.vercel.app` host like Mandat 61 — static Vite + rewrite `/api/board` to the Worker. Do not add Supabase or Neon; they pause. D1 does not.
 
 Why: the brief is *fast, no loads, $0*. Workers serve the Vite build from the edge and run the board in the same isolate — no Vercel-style function cold starts. D1 stays on the free tier. The client never waits on it.
 

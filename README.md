@@ -22,13 +22,19 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 
 ## Deploy (free, no loads)
 
-**Use Cloudflare Workers + D1** (the current dashboard no longer has a separate Pages-only create button). Same $0, same edge static files, same isolate for `/api/board`.
+**Pretty free URL:** Vercel Hobby `*.vercel.app` (same idea as [mandat61.vercel.app](https://mandat61.vercel.app/)). **Database stays Cloudflare D1** — do not add Supabase, Neon, or Vercel Postgres. Those free tiers sleep; the wake is a load. D1 already works and does not pause.
 
-| Stack | Why not (for this PoC) |
+`vercel.json` proxies `/api/board` to the live Worker, so the Vercel site and the Worker share one board. The client still paints `localStorage` first.
+
+| Stack | Use? |
 | --- | --- |
-| Vercel + Supabase | Supabase free pauses after ~7 idle days; wake can take minutes. Vercel Functions cold-start. No built-in SQL on Hobby. |
-| Vercel + Neon | Neon free also suspends. Same cold-start on the function. |
-| This repo | Static assets on the Cloudflare edge. `worker.js` serves `/api/board`; Vite `dist` is the site. Client merges in the background. |
+| Vercel static + this D1 proxy | Yes — clean URL, $0, no sleeping DB. |
+| Cloudflare Worker only | Yes — already live, uglier host. |
+| Vercel + Supabase / Neon / Vercel Postgres | No — idle pause. |
+
+**Vercel (the Mandat 61-style link):** [vercel.com](https://vercel.com) → Add New → this GitHub repo → Vite → Deploy. Name it `list-draft` (or `harishima`) to get `list-draft.vercel.app`. No env vars. No Vercel database.
+
+**Cloudflare Worker (already live):** https://cursor-list-draft.guygir-728.workers.dev/ — keep this; it is the D1 API.
 
 From **Workers & Pages → Create application → import this GitHub repo**:
 
