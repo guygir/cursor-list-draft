@@ -77,6 +77,8 @@ export async function pullRemoteBoard(): Promise<BoardEntry[] | null> {
   try {
     const res = await fetch("/api/board", { headers: { accept: "application/json" } });
     if (!res.ok) return null;
+    const type = res.headers.get("content-type") ?? "";
+    if (!type.includes("application/json")) return null;
     const data = (await res.json()) as { rows?: BoardEntry[] };
     if (!Array.isArray(data.rows)) return null;
     return data.rows.map((row) => sanitizePostedEntry(row)).filter((row): row is BoardEntry => row !== null);
