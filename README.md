@@ -22,25 +22,26 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 
 ## Deploy (free, no loads)
 
-**Use Cloudflare Pages + D1.** That is the $0 path that stays fast.
+**Use Cloudflare Workers + D1** (the current dashboard no longer has a separate Pages-only create button). Same $0, same edge static files, same isolate for `/api/board`.
 
 | Stack | Why not (for this PoC) |
 | --- | --- |
 | Vercel + Supabase | Supabase free pauses after ~7 idle days; wake can take minutes. Vercel Functions cold-start. No built-in SQL on Hobby. |
 | Vercel + Neon | Neon free also suspends. Same cold-start on the function. |
-| This repo | Static assets on the Cloudflare edge. `/api/board` is a Pages Function + D1 in the same isolate. Client merges in the background. |
+| This repo | Static assets on the Cloudflare edge. `worker.js` serves `/api/board`; Vite `dist` is the site. Client merges in the background. |
 
-No local CLI. Same idea as connecting a repo on Vercel — but pick **Pages**, not Worker.
+From **Workers & Pages → Create application → import this GitHub repo**:
 
-1. [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → **Create application → Pages → Connect to Git** → this repo.
-2. If the form has a **Deploy command** (`npx wrangler deploy`), you are on the Worker wizard. Back out.
-3. Pages fields: framework Vite (or none), build `npm run build`, output directory `dist`. Production branch can stay `main`; this PR gets a preview URL if non-production builds are on.
-4. After the first deploy: Settings → Bindings → D1 → create `list-draft` → bind as `DB`. Redeploy once so `/api/board` has a database.
+1. Project name: `cursor-list-draft` (must match `wrangler.toml`).
+2. Build command: `npm run build`
+3. Deploy command: `npx wrangler deploy`
+4. Builds for non-production branches: on. Access: off.
+5. Deploy.
 
-The first production push then has a database. Until D1 is bound, the board stays on the device and `/api/board` is a no-op.
+Until this branch is merged, production-on-`main` is the old game. Leave non-production builds on and open the **preview URL** for this PR, or point production at this branch.
 
-Optional CLI (any machine already logged into Cloudflare, including this agent if you add a token): `npx wrangler d1 create list-draft`, paste the id into `wrangler.toml`, `npm run deploy`.
+**Next:** Settings → Bindings → D1 → create `list-draft` → bind as `DB` → retry the latest deployment. Until then the board stays on the device.
 
-`npm run pages` is a local Pages + Function preview. Vite-only (`npm run dev`) stays local-only if `/api/board` is missing or returns HTML.
+`npm run pages` is local `wrangler dev`. Vite-only (`npm run dev`) stays local if `/api/board` is missing.
 
 The board is scores people already posted — not a live player count, not a 2026 forecast.

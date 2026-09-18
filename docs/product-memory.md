@@ -48,13 +48,13 @@ Do not invent chemistry from a web pair-scan, person-level polls, or a Mandat-61
 
 ## Deploy (shipped path · Sep 2026)
 
-**Cloudflare Pages + D1**, not Vercel + Supabase.
+**Cloudflare Workers + static assets + D1**, not Vercel + Supabase. The 2026 dashboard create flow is Worker-only (no Pages-only button). Same idea: edge static `dist`, `/api/board` in `worker.js`, D1 bound in the dashboard after the first deploy.
 
-Why: the brief is *fast, no loads, $0*. Pages serves the Vite static build from the edge. A Pages Function talks to D1 in the same isolate — Workers do not have Vercel-style function cold starts. D1 stays on the free tier (5 GB, millions of reads). The client never waits on it.
+Why: the brief is *fast, no loads, $0*. Workers serve the Vite build from the edge and run the board in the same isolate — no Vercel-style function cold starts. D1 stays on the free tier. The client never waits on it.
 
 Why not the usual stack: Supabase free projects pause after about a week of inactivity; the wake can take minutes (a load). Vercel Hobby has no database; pairing it with Supabase or a sleeping Neon branch reintroduces that pause. Vercel Functions cold-start. We only need one JSON board, not auth or Postgres.
 
-Local `npm run dev` has no `/api/board` — ignored. Production is Cloudflare dashboard → connect this GitHub repo (no laptop CLI). Bind a D1 database named `list-draft` as `DB`. Wrangler is optional if an API token exists.
+Local `npm run dev` has no `/api/board` — ignored. Production is Workers & Pages → Create application → this GitHub repo, then bind D1 as `DB`.
 
 ## Next (still parked)
 

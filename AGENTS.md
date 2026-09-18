@@ -51,7 +51,7 @@ Draft a list that looks like a real party, sits on a voter hill other lists have
 - Hebrew UI first, RTL, English data.
 - Visual vibe: election-night broadcast, mandate ticker, share card. Distinct from Mandat 61 and from the lane battler. No generic AI card-grid default.
 - Optional later: hotseat, online rooms.
-- Shipped (Sep 2026): local daily hub (`?day=`), invented create-leader (`?c=`), local-first leaderboard. Deploy path is Cloudflare Pages + D1 (`/api/board`); the client paints localStorage immediately and hydrates in the background. No spinner, no fabricated player counts.
+- Shipped (Sep 2026): local daily hub (`?day=`), invented create-leader (`?c=`), local-first leaderboard. Deploy path is Cloudflare Workers + D1 (`/api/board`); the client paints localStorage immediately and hydrates in the background. No spinner, no fabricated player counts.
 - Optional climate knob that boosts a bloc for a run. Not “tonight’s poll.”
 
 ## Parked
@@ -342,7 +342,7 @@ Toy scenarios the sim must get right enough to feel:
 - Data: one typed TS module or JSON for people, cells, edges, masses.
 - Tests: unit-test cohesion, split, threshold, and the four toy scenarios. Then a thin UI.
 - Accessibility: keyboard pick, focus, reduced motion, RTL.
-- Persistence: localStorage first. Optional Cloudflare D1 hall of fame via Pages Function `/api/board` — merge in the background, never block paint. See `README.md` deploy.
+- Persistence: localStorage first. Optional Cloudflare D1 hall of fame via Worker `/api/board` — merge in the background, never block paint. See `README.md` deploy.
 
 Suggested first files:
 
