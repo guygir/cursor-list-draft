@@ -1308,6 +1308,16 @@ input {
   animation: fermi-rise 640ms cubic-bezier(0.16, 1, 0.3, 1) var(--row-delay, 0ms) both;
 }
 
+.resolve-screen .mandate-row.is-player {
+  background: var(--yellow);
+  color: var(--ink-deep);
+}
+
+.resolve-screen .mandate-row.is-player .you-pill {
+  background: var(--ink-deep);
+  color: var(--yellow);
+}
+
 .resolve-screen .mandate-row .row-names,
 .resolve-screen .mandate-row .hill-note,
 .resolve-screen .mandate-row .seat-unit,
@@ -1589,8 +1599,9 @@ input {
 }
 
 .resolve-screen .share-btn {
-  border-color: var(--ink-deep);
+  border-color: var(--yellow);
   color: var(--ink-deep);
+  background: var(--yellow);
 }
 
 .confirm-bar.is-split {
@@ -1603,4 +1614,113 @@ input {
   color: var(--muted);
   font-size: 0.8rem;
   margin: 10px 0 0;
+}
+
+.board-open {
+  font-weight: 700;
+  color: var(--yellow);
+}
+
+.board-panel {
+  margin: 28px 0 0;
+  padding: 16px 16px 12px;
+  background: var(--studio);
+  border: 1px solid var(--line);
+}
+
+.board-panel h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  color: var(--yellow);
+}
+
+.board-note,
+.board-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+
+.board-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.board-rank {
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+.board-hub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-mode {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.board-seats {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-unit {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.board-row.is-you {
+  color: var(--ink-deep);
+  background: var(--yellow);
+  margin: 0 -16px;
+  padding: 8px 16px;
+  border-top: 0;
+}
+
+.board-row.is-you .board-rank,
+.board-row.is-you .board-mode,
+.board-row.is-you .board-unit {
+  color: inherit;
+}
+
+.resolve-screen .board-panel {
+  background: var(--paper);
+  color: var(--ink-deep);
+  border: 0;
+}
+
+.resolve-screen .board-panel h2 {
+  color: var(--ink-deep);
+}
+
+.resolve-screen .board-note,
+.resolve-screen .board-empty,
+.resolve-screen .board-mode,
+.resolve-screen .board-unit {
+  color: rgba(26, 31, 43, 0.62);
+}
+
+.resolve-screen .board-rank {
+  color: #8a6d00;
+}
+
+.resolve-screen .why-line {
+  color: var(--yellow);
 }

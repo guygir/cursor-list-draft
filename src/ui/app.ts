@@ -15,6 +15,7 @@ import {
   type DifficultyId,
   type DraftState,
 } from "../systems/draft";
+import { recordRun, type BoardEntry } from "../systems/board";
 import {
   customSharePath,
   dailyHubId,
@@ -31,6 +32,7 @@ import {
 } from "../systems/modes";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
 import { copy } from "./copy";
+import { renderBoardPanel } from "./board";
 import { renderCreateLeader } from "./create";
 import { el, prefersReducedMotion } from "./dom";
 import { renderHowCalc } from "./info";
@@ -39,7 +41,7 @@ import { resetMeters } from "./meters";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
-type Screen = "setup" | "create" | "draft" | "resolve";
+type Screen = "setup" | "create" | "draft" | "resolve" | "board";
 type PlayMode = "draft" | "create" | "daily";
 
 interface AppState {
@@ -60,6 +62,7 @@ interface AppState {
   customName: string;
   customAspects: PersonAspects;
   dayKey: string;
+  boardEntry: BoardEntry | null;
 }
 
 let state: AppState = freshState(1);
@@ -72,7 +75,7 @@ export function mount(appRoot: HTMLElement): void {
   state = freshState(1);
   if (first) document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (state.screen === "create") {
+    if (state.screen === "create" || state.screen === "board") {
       state.screen = "setup";
       render();
       return;
@@ -111,6 +114,7 @@ function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: 
     customName: "",
     customAspects: defaultAspects(),
     dayKey: israelDateKey(),
+    boardEntry: null,
   };
 }
 
@@ -124,6 +128,8 @@ function render(): void {
   root.replaceChildren();
   if (state.screen === "setup") {
     root.append(renderSetup());
+  } else if (state.screen === "board") {
+    root.append(renderBoardScreen());
   } else if (state.screen === "create") {
     root.append(
       renderCreateLeader({
@@ -182,8 +188,11 @@ function render(): void {
   } else if (state.result) {
     root.append(
       renderResolve(state.result, replay, {
-        shareHint: copy.noBoard,
+        shareHint: copy.boardLocal,
         onShare: shareRun,
+        boardMode: state.playMode,
+        ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+        ...(state.boardEntry ? { boardEntry: state.boardEntry } : {}),
       }),
     );
   }
@@ -303,8 +312,34 @@ function renderSetup(): HTMLElement {
 
   const start = el("button", { type: "button", class: "primary" }, startLabel());
   start.addEventListener("click", beginFromSetup);
-  screen.append(el("div", { class: "confirm-bar" }, start));
-  screen.append(el("p", { class: "no-board" }, copy.noBoard));
+  const boardBtn = el("button", { type: "button", class: "text-btn board-open" }, copy.boardOpen);
+  boardBtn.addEventListener("click", () => {
+    state.screen = "board";
+    render();
+  });
+  screen.append(el("div", { class: "confirm-bar is-split" }, start, boardBtn));
+  screen.append(el("p", { class: "no-board" }, copy.boardLocal));
+  return screen;
+}
+
+function renderBoardScreen(): HTMLElement {
+  const screen = el("div", { class: "screen setup-screen" });
+  screen.append(
+    el(
+      "header",
+      { class: "mast tall" },
+      el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
+    ),
+  );
+  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey }));
+  screen.append(renderBoardPanel({ mode: "create" }));
+  screen.append(renderBoardPanel({ mode: "draft" }));
+  const back = el("button", { type: "button", class: "primary" }, copy.createBack);
+  back.addEventListener("click", () => {
+    state.screen = "setup";
+    render();
+  });
+  screen.append(el("div", { class: "confirm-bar" }, back));
   return screen;
 }
 
@@ -479,6 +514,20 @@ function finish(): void {
   state.result = resolveElection(state.draft.lists);
   state.screen = "resolve";
   state.liveText = state.result.why.he;
+  const player = state.result.lists.find((row) => row.list.isPlayer);
+  const hubId = player?.list.picks[0];
+  state.boardEntry = recordRun({
+    mode: state.playMode,
+    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+    hubName: hubId ? getPerson(hubId).nameHe : copy.yourParty,
+    seats: player?.seats ?? 0,
+    cohesion: player?.cohesion ?? 0,
+    demand: player?.massAfterSplit ?? 0,
+    won: state.result.winnerId === "player",
+    nCpus: state.nCpus,
+    difficulty: state.difficulty,
+    share: location.search || "/",
+  });
   resetMeters();
   render();
 }

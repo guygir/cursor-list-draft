@@ -51,7 +51,7 @@ Draft a list that looks like a real party, sits on a voter hill other lists have
 - Hebrew UI first, RTL, English data.
 - Visual vibe: election-night broadcast, mandate ticker, share card. Distinct from Mandat 61 and from the lane battler. No generic AI card-grid default.
 - Optional later: hotseat, online rooms.
-- Shipped (Sep 2026): local daily hub (`?day=`), invented create-leader (`?c=`). No server leaderboard.
+- Shipped (Sep 2026): local daily hub (`?day=`), invented create-leader (`?c=`), local device leaderboard. No server hall of fame.
 - Optional climate knob that boosts a bloc for a run. Not “tonight’s poll.”
 
 ## Parked

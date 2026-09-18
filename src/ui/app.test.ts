@@ -29,7 +29,8 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("שם אחד מכל מפלגה");
     expect(root.textContent).toContain("צור מנהיג");
     expect(root.textContent).toContain("אתגר היום");
-    expect(root.textContent).toContain("אין לוח שיאים חי");
+    expect(root.textContent).toContain("לוח שיאים");
+    expect(root.textContent).toContain("על המכשיר הזה");
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
@@ -91,6 +92,8 @@ describe("playable draft UI", () => {
     expect(root.querySelectorAll(".score-meter").length).toBeGreaterThan(0);
     expect(root.textContent).not.toContain("מה שהעץ");
     expect(root.textContent).not.toContain("מעבד");
+    expect(root.textContent).toContain("לוח שיאים");
+    expect(root.querySelector(".board-panel")?.textContent).toMatch(/מנדטים|עוד אין/);
   });
 
   it("opens create-leader and starts a locked hub draft from a share code", async () => {

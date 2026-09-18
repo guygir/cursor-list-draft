@@ -1,7 +1,9 @@
 import { getPerson } from "../data/pool";
+import type { BoardEntry, BoardMode } from "../systems/board";
 import type { ElectionResult, ListScore } from "../systems/resolve";
 import { DEMAND_SCALE } from "../systems/scores";
 import { KNESSET_SEATS } from "../systems/seats";
+import { renderBoardPanel } from "./board";
 import { copy } from "./copy";
 import { el } from "./dom";
 import { renderHowCalc } from "./info";
@@ -19,7 +21,13 @@ import { renderEdgeCard, renderTreeMap, type TreeHandlers } from "./tree";
 export function renderResolve(
   result: ElectionResult,
   onReplay: () => void,
-  opts: { shareHint?: string; onShare?: () => Promise<void> | void } = {},
+  opts: {
+    shareHint?: string;
+    onShare?: () => Promise<void> | void;
+    boardMode?: BoardMode;
+    dayKey?: string;
+    boardEntry?: BoardEntry;
+  } = {},
 ): HTMLElement {
   const lists = result.lists.map((row) => row.list);
   const won = result.winnerId === "player";
@@ -49,6 +57,16 @@ export function renderResolve(
   root.append(
     el("section", { class: "why-block" }, el("h2", {}, copy.why), el("p", { class: "why-line" }, result.why.he)),
   );
+  if (opts.boardMode) {
+    root.append(
+      renderBoardPanel({
+        mode: opts.boardMode,
+        compact: true,
+        ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
+        ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
+      }),
+    );
+  }
 
   const treeWrap = el("section", { class: "result-tree" });
   const edgeDock = el("div", { class: "result-edge" }, renderEdgeCard(null));
