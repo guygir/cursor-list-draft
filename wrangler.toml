@@ -2,8 +2,8 @@ name = "list-draft"
 compatibility_date = "2026-09-18"
 pages_build_output_dir = "dist"
 
-# Create once: npx wrangler d1 create list-draft
-# Then paste the id here. Local `wrangler pages dev` works without it.
+# Optional. Production can bind D1 in the Cloudflare dashboard instead.
+# CLI: npx wrangler d1 create list-draft — then paste the id.
 [[d1_databases]]
 binding = "DB"
 database_name = "list-draft"

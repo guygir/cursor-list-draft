@@ -30,19 +30,16 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 | Vercel + Neon | Neon free also suspends. Same cold-start on the function. |
 | This repo | Static assets on the Cloudflare edge. `/api/board` is a Pages Function + D1 in the same isolate. Client merges in the background. |
 
-One-time:
+No local CLI. Same idea as connecting a repo on Vercel:
 
-```bash
-npx wrangler login
-npx wrangler d1 create list-draft
-```
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create → Connect to Git → this repo.
+2. Build command `npm run build`, output `dist`.
+3. Storage → D1 → Create `list-draft` → bind it to the Pages project as `DB`.
 
-Paste the printed `database_id` into `wrangler.toml`. Then:
+The first production push then has a database. Until D1 is bound, the board stays on the device and `/api/board` is a no-op.
 
-```bash
-npm run deploy
-```
+Optional CLI (any machine already logged into Cloudflare, including this agent if you add a token): `npx wrangler d1 create list-draft`, paste the id into `wrangler.toml`, `npm run deploy`.
 
-`npm run pages` is a local Pages + Function preview. Vite-only (`npm run dev`) stays local-only if `/api/board` 404s.
+`npm run pages` is a local Pages + Function preview. Vite-only (`npm run dev`) stays local-only if `/api/board` is missing or returns HTML.
 
 The board is scores people already posted — not a live player count, not a 2026 forecast.

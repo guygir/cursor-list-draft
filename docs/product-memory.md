@@ -54,7 +54,7 @@ Why: the brief is *fast, no loads, $0*. Pages serves the Vite static build from 
 
 Why not the usual stack: Supabase free projects pause after about a week of inactivity; the wake can take minutes (a load). Vercel Hobby has no database; pairing it with Supabase or a sleeping Neon branch reintroduces that pause. Vercel Functions cold-start. We only need one JSON board, not auth or Postgres.
 
-Local `npm run dev` has no `/api/board` — 404 is ignored. `npx wrangler d1 create list-draft`, paste the id into `wrangler.toml`, then `npm run deploy`.
+Local `npm run dev` has no `/api/board` — ignored. Production is Cloudflare dashboard → connect this GitHub repo (no laptop CLI). Bind a D1 database named `list-draft` as `DB`. Wrangler is optional if an API token exists.
 
 ## Next (still parked)
 
