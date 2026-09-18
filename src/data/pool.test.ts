@@ -23,9 +23,9 @@ describe("2026 slate pool", () => {
     expect(getPerson("ahmed-darawshe").listSlot).toBe(9);
   });
 
-  it("sits every published name on the four toy axes", () => {
+  it("sits every published name on the five toy axes", () => {
     for (const person of PEOPLE) {
-      for (const key of ["bibi", "judicial", "service", "security"] as const) {
+      for (const key of ["bibi", "judicial", "service", "security", "economy"] as const) {
         expect(person.aspects[key]).toBeGreaterThanOrEqual(0);
         expect(person.aspects[key]).toBeLessThanOrEqual(1);
       }
@@ -35,5 +35,12 @@ describe("2026 slate pool", () => {
     expect(getPerson("israel-katz").aspects.security).toBeGreaterThan(getPerson("ohana").aspects.security);
     expect(getPerson("tibon").aspects.security).toBeLessThan(getPerson("avisar").aspects.security);
     expect(getPerson("talik-gvili").aspects).not.toEqual(SLATE_ASPECTS.likud);
+    expect(getPerson("deri").aspects.economy).toBeGreaterThan(getPerson("liberman").aspects.economy);
+    expect(getPerson("golan").aspects.economy).toBeGreaterThan(getPerson("lapid").aspects.economy);
+    expect(SLATE_ASPECTS.shas.economy).toBeGreaterThan(SLATE_ASPECTS.likud.economy);
+    expect(getPerson("bennett").cell).toEqual({
+      x: getPerson("bennett").aspects.service,
+      y: getPerson("bennett").aspects.bibi,
+    });
   });
 });

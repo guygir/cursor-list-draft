@@ -2,14 +2,14 @@ import { ASPECT_IDS, ASPECT_LABEL_HE, peakAspect } from "../data/aspects";
 import { getPerson, slateLabelHe } from "../data/pool";
 import { bindPortrait, hasWikiPortrait, portraitSrc } from "../data/portraits";
 import type { Person, PersonId, SlateId } from "../data/types";
-import { pairRelation, relationColor } from "../systems/chemistry";
+import { relationColor, teamRelation } from "../systems/chemistry";
 import { copy } from "./copy";
 import { el } from "./dom";
 
 export function renderMemberPicker(opts: {
   ids: PersonId[];
   slate: SlateId;
-  hub: PersonId | null;
+  picks: PersonId[];
   focusId: PersonId | null;
   canPick: boolean;
   variant: "stage" | "dock";
@@ -18,7 +18,8 @@ export function renderMemberPicker(opts: {
   onPick: (id: PersonId) => void;
   onCloseSlate: () => void;
 }): HTMLElement {
-  const { ids, slate, hub, focusId, canPick, variant } = opts;
+  const { ids, slate, picks, focusId, canPick, variant } = opts;
+  const hasTeam = picks.length > 0;
   const wrap = el("div", { class: `member-picker is-${variant}`, "aria-label": copy.chooseMember });
   const back = el("button", { type: "button", class: "back-btn" }, copy.backToParties);
   back.addEventListener("click", () => opts.onCloseSlate());
@@ -32,25 +33,28 @@ export function renderMemberPicker(opts: {
     el(
       "p",
       { class: "member-legend" },
-      hub ? `${copy.aspectLegend} · ${copy.sideTone}` : copy.aspectLegend,
+      hasTeam ? `${copy.aspectLegend} · ${copy.sideTone}` : copy.aspectLegend,
     ),
   );
 
   const grid = el("div", { class: "member-grid" });
   for (const id of ids) {
     const person = getPerson(id);
-    const rel = hub ? pairRelation(hub, id) : null;
+    const team = hasTeam ? teamRelation(picks, id) : null;
     const photo = portraitSrc(id);
+    const title = team
+      ? `${copy.sideTone}. ${copy.sideToneHint} ${team.reasonHe}`
+      : undefined;
     const btn = el(
       "button",
       {
         type: "button",
-        class: `name-btn ${rel ? "has-tone" : ""} ${focusId === id ? "is-focused" : ""}`,
+        class: `name-btn ${team ? "has-tone" : ""} ${focusId === id ? "is-focused" : ""}`,
         "data-person": id,
         tabindex: focusId === id || (!focusId && id === ids[0]) ? 0 : -1,
-        title: rel ? `${copy.sideTone}. ${copy.sideToneHint}` : undefined,
-        ...(rel
-          ? { style: `--tone:${relationColor(rel.s)};--tone-w:${(2 + Math.abs(rel.s) * 3).toFixed(2)}px` }
+        title,
+        ...(team
+          ? { style: `--tone:${relationColor(team.s)};--tone-w:${(2 + Math.abs(team.s) * 3).toFixed(2)}px` }
           : {}),
       },
       bindPortrait(

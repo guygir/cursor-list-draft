@@ -4,6 +4,7 @@
   --ink: #e4ddd0;
   --muted: #9a9284;
   --ochre: #c9a227;
+  --punch: #ff5e3a;
   --alert: #c45a4e;
   --ok: #6f9e7a;
   --line: rgba(228, 221, 208, 0.1);
@@ -1156,14 +1157,46 @@ input {
   font-size: 1.05rem;
 }
 
+.score-meter-track,
+.bar-track {
+  position: relative;
+  overflow: hidden;
+}
+
+.meter-ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(10% - 1px),
+    rgba(228, 221, 208, 0.09) calc(10% - 1px),
+    rgba(228, 221, 208, 0.09) 10%
+  );
+}
+
 .score-meter-track {
   height: 6px;
   background: rgba(228, 221, 208, 0.08);
 }
 
-.score-meter-fill {
+.score-meter-fill,
+.bar-fill {
+  position: relative;
   height: 100%;
-  width: var(--target, 0%);
+  width: var(--from, 0%);
+  animation: fermi-grow 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.score-meter.is-demand .score-meter-fill {
+  animation-delay: 80ms;
+}
+
+@keyframes fermi-grow {
+  to {
+    width: var(--target, 0%);
+  }
 }
 
 .score-meter.is-cred .score-meter-fill {
@@ -1171,8 +1204,7 @@ input {
 }
 
 .score-meter.is-demand .score-meter-fill {
-  background: var(--ink);
-  opacity: 0.55;
+  background: var(--punch);
 }
 
 .list-col .score-meters-wrap,
@@ -1202,14 +1234,15 @@ input {
 }
 
 .bar-fill {
-  height: 100%;
-  width: 0;
   background: var(--ochre);
-  transition: width 0.7s ease;
 }
 
 .mandate-row.is-player .bar-fill {
-  background: var(--ink);
+  background: var(--punch);
+}
+
+.mandate-row.is-player .seat-num {
+  color: var(--punch);
 }
 
 .why-line {
@@ -1220,8 +1253,10 @@ input {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .score-meter-fill,
   .bar-fill {
-    transition: none;
+    animation: none;
+    width: var(--target, 0%);
   }
 }
 

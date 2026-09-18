@@ -5,7 +5,7 @@ import { KNESSET_SEATS } from "../systems/seats";
 import { copy } from "./copy";
 import { el } from "./dom";
 import { renderHowCalc } from "./info";
-import { scoreMeters } from "./meters";
+import { countUp, scoreMeters } from "./meters";
 import { renderEdgeCard, renderTreeMap, type TreeHandlers } from "./tree";
 
 export function renderResolve(result: ElectionResult, onReplay: () => void): HTMLElement {
@@ -77,6 +77,8 @@ function renderListBar(row: ListScore, winnerId: string): HTMLElement {
   const pct = (row.seats / KNESSET_SEATS) * 100;
   const cohesionPct = Math.round(row.cohesion * 100);
   const demandPct = Math.round(Math.min(100, (row.massAfterSplit / DEMAND_SCALE) * 100));
+  const seatNum = el("strong", { class: "seat-num" }, "0");
+  countUp(seatNum, 0, row.seats, row.list.isPlayer ? 0 : 80);
   const item = el(
     "article",
     { class: `mandate-row ${row.list.id === winnerId ? "is-winner" : ""} ${row.list.isPlayer ? "is-player" : ""}` },
@@ -84,16 +86,17 @@ function renderListBar(row: ListScore, winnerId: string): HTMLElement {
       "header",
       {},
       el("h3", {}, row.list.labelHe),
-      el("strong", { class: "seat-num" }, String(row.seats)),
+      seatNum,
       el("span", { class: "seat-unit" }, copy.seats),
     ),
     el("p", { class: "row-names" }, names),
     el(
       "div",
       { class: "bar-track", "aria-hidden": "true" },
-      el("div", { class: "bar-fill is-seats", style: `--target:${pct}%;width:${pct}%` }),
+      el("span", { class: "meter-ticks", "aria-hidden": "true" }),
+      el("div", { class: "bar-fill is-seats", style: `--from:0%;--target:${pct}%` }),
     ),
-    scoreMeters(cohesionPct, demandPct),
+    scoreMeters(cohesionPct, demandPct, "fresh"),
     el("p", { class: "hill-note" }, row.neighborhood.labelHe),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );

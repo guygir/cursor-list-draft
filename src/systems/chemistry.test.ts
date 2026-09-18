@@ -14,6 +14,7 @@ import {
   RELATION_S_MAX,
   RELATION_S_MIN,
   scoreCohesion,
+  teamRelation,
 } from "./chemistry";
 
 describe("rank weights", () => {
@@ -148,6 +149,29 @@ describe("pair contributions", () => {
     const w20 = pairWeight(1, 20, veto);
     expect(w20).toBeCloseTo(2 * 0.25);
     expect(w20).toBeGreaterThan(pairRankWeight(1, 20));
+  });
+});
+
+describe("team-weighted side tone", () => {
+  it("matches the hub pair when the ticket is only the leader", () => {
+    const team = teamRelation(["bennett"], "deri");
+    expect(team.s).toBeCloseTo(pairRelation("bennett", "deri").s);
+    expect(team.worst?.id).toBe("bennett");
+  });
+
+  it("pulls toward the whole ticket, not only the leader", () => {
+    const hubOnly = teamRelation(["bennett"], "eisenkot").s;
+    const mixed = teamRelation(["bennett", "deri"], "eisenkot").s;
+    expect(hubOnly).toBeGreaterThan(0);
+    expect(mixed).toBeLessThan(hubOnly);
+    expect(mixed).toBeGreaterThan(pairRelation("deri", "eisenkot").s);
+  });
+
+  it("keeps a leader veto red even after later green fillers", () => {
+    const team = teamRelation(["liberman", "eisenkot"], "netanyahu");
+    expect(team.s).toBeLessThan(-0.4);
+    expect(team.worst?.id).toBe("liberman");
+    expect(team.worst?.relation.kind).toBe("veto");
   });
 });
 

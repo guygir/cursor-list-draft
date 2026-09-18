@@ -1,13 +1,14 @@
 import type { AspectId, CellPoint, PersonAspects, PersonId, Role, SlateId } from "./types";
 
-export const ASPECT_IDS: AspectId[] = ["bibi", "judicial", "service", "security"];
+export const ASPECT_IDS: AspectId[] = ["bibi", "judicial", "service", "security", "economy"];
 
-/** Bloc and courts weigh more than security-intensity. */
+/** Bloc and courts weigh more than security or economy. */
 export const ASPECT_WEIGHTS: Record<AspectId, number> = {
   bibi: 1,
   judicial: 0.9,
   service: 0.7,
   security: 0.55,
+  economy: 0.45,
 };
 
 export const ASPECT_LABEL_HE: Record<AspectId, string> = {
@@ -15,29 +16,31 @@ export const ASPECT_LABEL_HE: Record<AspectId, string> = {
   judicial: "משפט",
   service: "שירות",
   security: "ביטחון",
+  economy: "כלכלה",
 };
 
 /**
  * Slate means. service/bibi stay near the old toy-cell so hills do not jump.
- * judicial/security are chemistry-only extras. toy-aspect, not CHES.
+ * judicial/security/economy are chemistry-only extras. toy-aspect, not CHES scores.
+ * economy direction follows CHES-Israel lrecon (Zur & Bakker): high = more state / redistribution.
  */
 export const SLATE_ASPECTS: Record<SlateId, PersonAspects> = {
-  likud: { bibi: 0.9, judicial: 0.72, service: 0.4, security: 0.7 },
-  otzma: { bibi: 0.85, judicial: 0.78, service: 0.55, security: 0.88 },
-  rz: { bibi: 0.8, judicial: 0.82, service: 0.6, security: 0.8 },
-  shas: { bibi: 0.75, judicial: 0.7, service: 0.9, security: 0.55 },
-  utj: { bibi: 0.7, judicial: 0.68, service: 0.92, security: 0.45 },
-  together: { bibi: 0.22, judicial: 0.28, service: 0.28, security: 0.52 },
-  yashar: { bibi: 0.22, judicial: 0.32, service: 0.3, security: 0.62 },
-  democrats: { bibi: 0.15, judicial: 0.18, service: 0.15, security: 0.48 },
-  "yisrael-beiteinu": { bibi: 0.45, judicial: 0.4, service: 0.1, security: 0.75 },
-  raam: { bibi: 0.05, judicial: 0.35, service: 0.5, security: 0.35 },
-  "blue-white": { bibi: 0.35, judicial: 0.38, service: 0.28, security: 0.6 },
-  "joint-list": { bibi: 0.08, judicial: 0.22, service: 0.52, security: 0.3 },
+  likud: { bibi: 0.9, judicial: 0.72, service: 0.4, security: 0.7, economy: 0.38 },
+  otzma: { bibi: 0.85, judicial: 0.78, service: 0.55, security: 0.88, economy: 0.36 },
+  rz: { bibi: 0.8, judicial: 0.82, service: 0.6, security: 0.8, economy: 0.4 },
+  shas: { bibi: 0.75, judicial: 0.7, service: 0.9, security: 0.55, economy: 0.82 },
+  utj: { bibi: 0.7, judicial: 0.68, service: 0.92, security: 0.45, economy: 0.8 },
+  together: { bibi: 0.22, judicial: 0.28, service: 0.28, security: 0.52, economy: 0.32 },
+  yashar: { bibi: 0.22, judicial: 0.32, service: 0.3, security: 0.62, economy: 0.4 },
+  democrats: { bibi: 0.15, judicial: 0.18, service: 0.15, security: 0.48, economy: 0.74 },
+  "yisrael-beiteinu": { bibi: 0.45, judicial: 0.4, service: 0.1, security: 0.75, economy: 0.3 },
+  raam: { bibi: 0.05, judicial: 0.35, service: 0.5, security: 0.35, economy: 0.72 },
+  "blue-white": { bibi: 0.35, judicial: 0.38, service: 0.28, security: 0.6, economy: 0.38 },
+  "joint-list": { bibi: 0.08, judicial: 0.22, service: 0.52, security: 0.3, economy: 0.7 },
 };
 
-const BYACHAD: PersonAspects = { bibi: 0.25, judicial: 0.3, service: 0.22, security: 0.68 };
-const YESH_ATID: PersonAspects = { bibi: 0.18, judicial: 0.22, service: 0.2, security: 0.48 };
+const BYACHAD: PersonAspects = { bibi: 0.25, judicial: 0.3, service: 0.22, security: 0.68, economy: 0.36 };
+const YESH_ATID: PersonAspects = { bibi: 0.18, judicial: 0.22, service: 0.2, security: 0.48, economy: 0.28 };
 
 interface AspectOverride {
   aspects: Partial<PersonAspects>;
@@ -135,9 +138,9 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteEn: "Courts and settlement more than ordinary Likud.",
   },
   feiglin: {
-    aspects: { bibi: 0.7, judicial: 0.7, service: 0.42, security: 0.78 },
-    noteHe: "זהות חירות — פחות חרדי, יותר אזרחי-ימין.",
-    noteEn: "Zehut liberty line — less haredi, more civic-right.",
+    aspects: { bibi: 0.7, judicial: 0.7, service: 0.42, security: 0.78, economy: 0.18 },
+    noteHe: "זהות חירות — שוק, פחות חרדי, יותר אזרחי-ימין.",
+    noteEn: "Zehut liberty line — market, less haredi, more civic-right.",
   },
   strook: {
     aspects: { bibi: 0.8, judicial: 0.84, service: 0.64, security: 0.82 },
@@ -160,9 +163,9 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteEn: "Hilltop line. Toy profile.",
   },
   deri: {
-    aspects: { bibi: 0.76, judicial: 0.72, service: 0.92, security: 0.5 },
-    noteHe: "חרדי מובהק. הפער הוא שירות, לא ביבי.",
-    noteEn: "Clearly haredi. The gap is service, not Bibi.",
+    aspects: { bibi: 0.76, judicial: 0.72, service: 0.92, security: 0.5, economy: 0.86 },
+    noteHe: "חרדי מובהק. שירות ורווחה. פרופיל משחק.",
+    noteEn: "Clearly haredi. Service and welfare. Toy profile.",
   },
   azoulay: {
     aspects: { bibi: 0.74, judicial: 0.7, service: 0.94, security: 0.48 },
@@ -200,9 +203,9 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteEn: "Aguda / Hasidic. Toy profile.",
   },
   liberman: {
-    aspects: { bibi: 0.42, judicial: 0.38, service: 0.08, security: 0.8 },
-    noteHe: "חילוני-ביטחוני. נמוך בשירות, באמצע על ביבי.",
-    noteEn: "Secular-security. Low on exemptions, mid on Bibi.",
+    aspects: { bibi: 0.42, judicial: 0.38, service: 0.08, security: 0.8, economy: 0.22 },
+    noteHe: "חילוני-ביטחוני. שוק יותר ממדינה. פרופיל משחק.",
+    noteEn: "Secular-security. More market than state. Toy profile.",
   },
   forer: {
     aspects: { bibi: 0.44, judicial: 0.4, service: 0.1, security: 0.72 },
@@ -230,9 +233,9 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteEn: "Service first, high security for the change camp.",
   },
   lapid: {
-    aspects: { bibi: 0.18, judicial: 0.22, service: 0.2, security: 0.48 },
-    noteHe: "יותר אזרחי, פחות ביטחוני מבנט.",
-    noteEn: "More civic, less security-first than Bennett.",
+    aspects: { bibi: 0.18, judicial: 0.22, service: 0.2, security: 0.48, economy: 0.26 },
+    noteHe: "יותר אזרחי ושוק, פחות ביטחוני מבנט.",
+    noteEn: "More civic and market, less security-first than Bennett.",
   },
   "ben-ari": {
     aspects: { bibi: 0.18, judicial: 0.22, service: 0.2, security: 0.5 },
@@ -280,9 +283,9 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteEn: "More social than security. Toy profile.",
   },
   golan: {
-    aspects: { bibi: 0.12, judicial: 0.12, service: 0.14, security: 0.42 },
-    noteHe: "הקוטב הנגדי למשפט ולביבי.",
-    noteEn: "The opposite pole on courts and Bibi.",
+    aspects: { bibi: 0.12, judicial: 0.12, service: 0.14, security: 0.42, economy: 0.78 },
+    noteHe: "הקוטב הנגדי למשפט ולביבי. שמאל כלכלי.",
+    noteEn: "The opposite pole on courts and Bibi. Left-econ.",
   },
   lazimi: {
     aspects: { bibi: 0.14, judicial: 0.16, service: 0.14, security: 0.44 },
@@ -422,7 +425,7 @@ function applyRoleTilt(base: PersonAspects, slateId: SlateId, role: Role): Perso
   if (role === "leader") return { ...base, [peak]: clamp01(base[peak] + 0.04) };
   if (role === "minister") return { ...base, security: clamp01(base.security + 0.04) };
   if (role === "mk") return { ...base, [peak]: clamp01(base[peak] + 0.015) };
-  return mix(base, { bibi: 0.5, judicial: 0.5, service: 0.5, security: 0.5 }, 0.18);
+  return mix(base, { bibi: 0.5, judicial: 0.5, service: 0.5, security: 0.5, economy: 0.5 }, 0.18);
 }
 
 function peakAxis(aspects: PersonAspects): AspectId {
@@ -438,12 +441,11 @@ function peakAxis(aspects: PersonAspects): AspectId {
 }
 
 function mix(a: PersonAspects, b: PersonAspects, t: number): PersonAspects {
-  return {
-    bibi: a.bibi + (b.bibi - a.bibi) * t,
-    judicial: a.judicial + (b.judicial - a.judicial) * t,
-    service: a.service + (b.service - a.service) * t,
-    security: a.security + (b.security - a.security) * t,
-  };
+  const out = { ...a };
+  for (const id of ASPECT_IDS) {
+    out[id] = a[id] + (b[id] - a[id]) * t;
+  }
+  return out;
 }
 
 export function cellFromAspects(aspects: PersonAspects): CellPoint {
@@ -451,12 +453,7 @@ export function cellFromAspects(aspects: PersonAspects): CellPoint {
 }
 
 export function aspectDistance(a: PersonAspects, b: PersonAspects): number {
-  return Math.hypot(
-    (a.bibi - b.bibi) * ASPECT_WEIGHTS.bibi,
-    (a.judicial - b.judicial) * ASPECT_WEIGHTS.judicial,
-    (a.service - b.service) * ASPECT_WEIGHTS.service,
-    (a.security - b.security) * ASPECT_WEIGHTS.security,
-  );
+  return Math.hypot(...ASPECT_IDS.map((id) => (a[id] - b[id]) * ASPECT_WEIGHTS[id]));
 }
 
 export function largestAspectGap(a: PersonAspects, b: PersonAspects): AspectId {
@@ -489,12 +486,9 @@ export function peakAspect(aspects: PersonAspects, slateId: SlateId): AspectId {
 }
 
 function clampAspects(aspects: PersonAspects): PersonAspects {
-  return {
-    bibi: clamp01(aspects.bibi),
-    judicial: clamp01(aspects.judicial),
-    service: clamp01(aspects.service),
-    security: clamp01(aspects.security),
-  };
+  const out = { ...aspects };
+  for (const id of ASPECT_IDS) out[id] = clamp01(aspects[id]);
+  return out;
 }
 
 function clamp01(n: number): number {

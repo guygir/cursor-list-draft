@@ -35,7 +35,7 @@ describe("playable draft UI", () => {
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
-    expect(root.textContent).toContain("נתניהו · משפט · שירות · ביטחון");
+    expect(root.textContent).toContain("נתניהו · משפט · שירות · ביטחון · כלכלה");
     expect(root.textContent).not.toContain("איתמר בן גביר");
     expect(root.querySelectorAll(".party-btn").length).toBe(0);
 
@@ -54,7 +54,7 @@ describe("playable draft UI", () => {
     if (!root.querySelector(".name-btn")) {
       root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     }
-    expect(root.textContent).toContain("הפס בצד = מול ראש הרשימה בלבד");
+    expect(root.textContent).toContain("הפס בצד = מול כל הרשימה, משוקלל");
     root.querySelector<HTMLButtonElement>(".name-btn")?.click();
     root.querySelector<HTMLButtonElement>(".confirm-btn:not([disabled])")?.click();
     await vi.runOnlyPendingTimersAsync();

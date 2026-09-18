@@ -20,6 +20,7 @@ import { copy } from "./copy";
 import { el, prefersReducedMotion } from "./dom";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
+import { resetMeters } from "./meters";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
@@ -98,7 +99,7 @@ function render(): void {
           if (state.hoverId === id) return;
           state.hoverId = id;
           const player = state.draft.lists.find((list) => list.isPlayer);
-          hoverPerson(root, id, state.focusId, player?.picks[0] ?? null);
+          hoverPerson(root, id, state.focusId, player?.picks ?? []);
         },
         onFocus: (id) => {
           if (state.focusId === id) return;
@@ -118,7 +119,7 @@ function render(): void {
           hoverEdge(
             root,
             key ?? state.selectedEdge,
-            hintFor(state.hoverId ?? state.focusId, player?.picks[0] ?? null),
+            hintFor(state.hoverId ?? state.focusId, player?.picks ?? []),
           );
         },
         onOpenSlate: (id) => {
@@ -231,6 +232,7 @@ function renderSetup(): HTMLElement {
 
   const start = el("button", { type: "button", class: "primary" }, copy.start);
   start.addEventListener("click", () => {
+    resetMeters();
     state = { ...freshState(state.nCpus, state.difficulty), screen: "draft", liveText: copy.yourTurn };
     render();
   });
@@ -310,11 +312,13 @@ function finish(): void {
   state.result = resolveElection(state.draft.lists);
   state.screen = "resolve";
   state.liveText = state.result.why.he;
+  resetMeters();
   render();
 }
 
 function replay(): void {
   window.clearTimeout(cpuTimer);
+  resetMeters();
   state = freshState(state.nCpus, state.difficulty);
   render();
 }

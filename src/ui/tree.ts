@@ -10,6 +10,7 @@ import {
   relationOpacity,
   relationStrokeWidth,
   shortReasonHe,
+  teamRelation,
 } from "../systems/chemistry";
 import { nearestNeighborhood } from "../systems/demand";
 import { copy } from "./copy";
@@ -72,7 +73,7 @@ export function renderTreeMap(view: TreeView, handlers: TreeHandlers): HTMLEleme
       renderMemberPicker({
         ids: peopleInSlate(view.remaining, view.openSlate),
         slate: view.openSlate,
-        hub: null,
+        picks: [],
         focusId: view.focusId,
         canPick: view.canPick,
         variant: "stage",
@@ -141,18 +142,19 @@ function fillEdgeReason(box: HTMLElement, key: string): void {
   }
 }
 
-export function hintFor(id: PersonId | null, hub: PersonId | null, edgeKeyValue: string | null = null): string {
+export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: string | null = null): string {
   if (edgeKeyValue) return edgeLine(edgeKeyValue);
-  if (!id) return hub ? copy.noHubAfter : copy.chooseParty;
+  if (!id) return picks.length ? copy.noHubAfter : copy.chooseParty;
   const person = getPerson(id);
   const hill = nearestNeighborhood(person.cell).labelHe;
   const peak = ASPECT_LABEL_HE[peakAspect(person.aspects, person.slateId)];
-  if (!hub || hub === id) {
+  if (!picks.length || picks[0] === id) {
     const note = person.aspectsNoteHe ? ` · ${person.aspectsNoteHe}` : "";
     return `${person.nameHe} · ${person.partyHe} · ${peak} · ${hill}${note}`;
   }
-  const rel = pairRelation(hub, id);
-  return `${person.nameHe} · ${shortReasonHe(rel)} · ${peak} · ${hill}`;
+  const team = teamRelation(picks, id);
+  const tag = team.worst ? shortReasonHe(team.worst.relation) : shortReasonHe(pairRelation(picks[0]!, id));
+  return `${person.nameHe} · ${tag} · ${peak} · ${hill}`;
 }
 
 function renderPartyField(view: TreeView, handlers: TreeHandlers): HTMLElement {

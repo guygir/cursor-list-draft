@@ -38,7 +38,6 @@ export interface DraftView extends TreeView {
 
 export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLElement {
   const player = view.lists.find((l) => l.isPlayer);
-  const hub = player?.picks[0] ?? null;
   const focus = view.focusId ? getPerson(view.focusId) : null;
   const inspectId = view.hoverId ?? view.focusId;
   const root = el("div", { class: "screen draft-screen" });
@@ -50,10 +49,10 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   stage.append(renderNotices(view.notices));
   stage.append(renderTreeMap(view, handlers));
   stage.append(renderEdgeTip(view.hoverEdge ?? view.selectedEdge));
-  stage.append(el("p", { class: "hint-line" }, hintFor(inspectId, hub, view.hoverEdge ?? view.selectedEdge)));
+  stage.append(el("p", { class: "hint-line" }, hintFor(inspectId, player?.picks ?? [], view.hoverEdge ?? view.selectedEdge)));
   root.append(stage);
 
-  root.append(renderPickDock(view, handlers, hub));
+  root.append(renderPickDock(view, handlers, player?.picks ?? []));
 
   const confirm = el(
     "button",
@@ -134,14 +133,14 @@ function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLEle
   return wrap;
 }
 
-function renderPickDock(view: DraftView, handlers: DraftHandlers, hub: PersonId | null): HTMLElement {
+function renderPickDock(view: DraftView, handlers: DraftHandlers, picks: PersonId[]): HTMLElement {
   const dock = el("section", { class: "pick-dock", "aria-label": copy.pool });
-  if (view.openSlate && hub) {
+  if (view.openSlate && picks.length) {
     dock.append(
       renderMemberPicker({
         ids: peopleInSlate(view.remaining, view.openSlate),
         slate: view.openSlate,
-        hub,
+        picks,
         focusId: view.focusId,
         canPick: view.canPick,
         variant: "dock",
@@ -151,7 +150,7 @@ function renderPickDock(view: DraftView, handlers: DraftHandlers, hub: PersonId 
         onCloseSlate: handlers.onCloseSlate,
       }),
     );
-  } else if (hub) {
+  } else if (picks.length) {
     dock.append(el("p", { class: "dock-kicker" }, copy.chooseParty));
     dock.append(renderPartyChips(view, handlers));
   } else if (!view.openSlate) {
@@ -224,7 +223,7 @@ export function hoverEdge(root: HTMLElement, key: string | null, personHint: str
   if (hint) hint.textContent = key ? edgeLine(key) : personHint;
 }
 
-export function hoverPerson(root: HTMLElement, id: PersonId | null, fallback: PersonId | null, hub: PersonId | null): void {
+export function hoverPerson(root: HTMLElement, id: PersonId | null, fallback: PersonId | null, picks: PersonId[]): void {
   root.querySelectorAll(".person-node.is-hot").forEach((node) => node.classList.remove("is-hot"));
   root.querySelectorAll(".name-btn.is-hot").forEach((node) => node.classList.remove("is-hot"));
   const shown = id ?? fallback;
@@ -232,5 +231,5 @@ export function hoverPerson(root: HTMLElement, id: PersonId | null, fallback: Pe
     root.querySelectorAll(`[data-person="${shown}"]`).forEach((node) => node.classList.add("is-hot"));
   }
   const hint = root.querySelector(".hint-line");
-  if (hint) hint.textContent = hintFor(shown, hub);
+  if (hint) hint.textContent = hintFor(shown, picks);
 }

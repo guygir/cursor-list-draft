@@ -73,7 +73,7 @@ export function cellAffinity(a: PersonId, b: PersonId): number {
   return clamp(0.22 - dist * 1.15, -0.75, 0.22);
 }
 
-/** Graded 4D tension. Same-slate pairs can still go cold. */
+/** Graded 5D tension (bibi / courts / service / security / economy). Same-slate pairs can still go cold. */
 export function aspectAffinity(a: PersonId, b: PersonId): number {
   const dist = aspectDistance(getPerson(a).aspects, getPerson(b).aspects);
   return clamp(0.22 - dist * 1.05, -0.75, 0.22);
@@ -313,6 +313,53 @@ function clamp01(n: number): number {
 
 export function compatibilityWithHub(hub: PersonId, candidate: PersonId): number {
   return 1 + pairRelation(hub, candidate).s;
+}
+
+export interface TeamPair {
+  id: PersonId;
+  rank: number;
+  weight: number;
+  relation: PairRelation;
+}
+
+/** Rank-weighted mean of pairRelation vs the current ticket. Slot 1 still dominates. */
+export interface TeamRelation {
+  s: number;
+  pairs: TeamPair[];
+  worst: TeamPair | null;
+  reasonHe: string;
+  reasonEn: string;
+}
+
+export function teamRelation(picks: PersonId[], candidate: PersonId): TeamRelation {
+  const pairs: TeamPair[] = [];
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < picks.length; i++) {
+    const id = picks[i];
+    if (!id || id === candidate) continue;
+    const relation = pairRelation(id, candidate);
+    const weight = rankWeight(i + 1);
+    pairs.push({ id, rank: i + 1, weight, relation });
+    num += weight * relation.s;
+    den += weight;
+  }
+  const s = den === 0 ? 0 : num / den;
+  let worst: TeamPair | null = null;
+  for (const row of pairs) {
+    if (!worst || row.relation.s < worst.relation.s) worst = row;
+  }
+  if (!worst) {
+    return { s, pairs, worst: null, reasonHe: "", reasonEn: "" };
+  }
+  const name = getPerson(worst.id).nameHe;
+  return {
+    s,
+    pairs,
+    worst,
+    reasonHe: `מול הרשימה, משוקלל לפי מקום. הכי חד מול ${name}: ${worst.relation.reasonHe}`,
+    reasonEn: `Vs the ticket, rank-weighted. Sharpest vs ${getPerson(worst.id).nameEn}: ${worst.relation.reasonEn}`,
+  };
 }
 
 const MUTED_RGB: Rgb = [90, 86, 76];

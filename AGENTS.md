@@ -140,7 +140,7 @@ Leader is the hub for **UI and CPU**, not a second formula. The rank weights alr
 
 ### Demand (neighborhood mass)
 
-Each published name has a **toy-aspect** vector: `bibi`, `judicial`, `service`, `security`. A pair is those two people, not their parties. Faces with a public line get a reason override; everyone else is slate mean + role/wing tilt. Demand cell is the 2D projection (`service` → x, `bibi` → y) so hills stay stable. Courts and security-intensity color chemistry without inventing person-level polls. CHES-Israel’s four factors remain the research backing for slate means, not for MK-level scores.
+Each published name has a **toy-aspect** vector: `bibi`, `judicial`, `service`, `security`, `economy`. A pair is those two people, not their parties. Faces with a public line get a reason override; everyone else is slate mean + role/wing tilt. Demand cell is the 2D projection (`service` → x, `bibi` → y) so hills stay stable. Courts, security-intensity, and economy color chemistry without inventing person-level polls. Economy follows CHES-Israel *lrecon* at slate-mean level (high = more state / redistribution) and does not move the demand map. CHES factor 4 (populism) stays parked. CHES-Israel’s factors remain the research backing for slate means, not for MK-level scores.
 
 - List position = rank-weighted centroid of members.
 - **Neighborhood mass** `M` = how many toy voters live near that centroid. PoC: hand-set mass per cell from a tiny map (see starter data). Later: 2022 (and then 2026) list vote shares from data.gov.il projected onto the same cells.
