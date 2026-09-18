@@ -114,6 +114,7 @@ describe("pair relation", () => {
     expect(none).toMatch(/rgb\(90, 86, 76\)/);
     expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-0.2, 1));
     expect(relationOpacity(-1)).toBeGreaterThan(relationOpacity(-0.2));
+    expect(relationOpacity(0)).toBeGreaterThan(0.5);
   });
 });
 

@@ -47,6 +47,8 @@ export function renderMemberPicker(opts: {
           alt: "",
           width: 28,
           height: 28,
+          loading: "eager",
+          decoding: "async",
           referrerpolicy: "no-referrer",
         }),
         id,

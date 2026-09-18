@@ -326,10 +326,10 @@ type Rgb = [number, number, number];
 export function relationColor(s: number): string {
   if (s <= 0) {
     const t = clamp(-s, 0, 1);
-    return rgbCss(mixRgb(MUTED_RGB, RED_RGB, Math.pow(t, 0.85)));
+    return rgbCss(mixRgb(MUTED_RGB, RED_RGB, Math.pow(t, 0.7)));
   }
   const t = clamp(s / GREEN_CEILING, 0, 1);
-  return rgbCss(mixRgb(MUTED_RGB, GREEN_RGB, Math.pow(t, 0.7)));
+  return rgbCss(mixRgb(MUTED_RGB, GREEN_RGB, Math.pow(t, 0.55)));
 }
 
 /** Rank weight plus |s| so a strong 1–2 veto is thicker than a faint mid-list cool. */
@@ -338,7 +338,7 @@ export function relationStrokeWidth(s: number, rankWeightValue: number): number 
 }
 
 export function relationOpacity(s: number): number {
-  return clamp(0.32 + Math.abs(s) * 0.68, 0.32, 1);
+  return clamp(0.58 + Math.abs(s) * 0.42, 0.58, 1);
 }
 
 function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
