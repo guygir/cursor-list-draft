@@ -1,160 +1,249 @@
 /**
- * Pull Wikipedia thumbnails for the draft pool (Action API, batched).
- * Identity only — not electability. Skip missing pages and pages with no photo.
+ * Pull Wikipedia thumbnails.
+ * Exact titles first. Fuzzy search only when last name (and first name
+ * for common surnames) appears on the page title. Identity art, not electability.
  */
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
 const UA = "ListDraft/0.1 (local educational prototype; not a forecast)";
+const PORTRAIT_PATH = new URL("../src/data/portraits.ts", import.meta.url);
+const POOL_PATH = new URL("../src/data/pool.ts", import.meta.url);
 
-/** [id, lang, title] — titles must match an existing article, not a disambiguation. */
-const PEOPLE = [
-  ["netanyahu", "he", "בנימין נתניהו"],
-  ["eli-cohen", "he", "אלי כהן (פוליטיקאי, 1972)"],
-  ["ohana", "he", "אמיר אוחנה"],
-  ["levin", "he", "יריב לוין"],
-  ["regev", "he", "מירי רגב"],
-  ["israel-katz", "he", "ישראל כ\"ץ"],
-  ["saar", "he", "גדעון סער"],
-  ["ofir-katz", "he", "אופיר כץ"],
-  ["kisch", "he", "יואב קיש"],
-  ["ben-gvir", "he", "איתמר בן גביר"],
-  ["gotliv", "he", "טלי גוטליב"],
-  ["wasserlauf", "he", "יצחק וסרלאוף"],
-  ["amihai-eliyahu", "he", "עמיחי אליהו"],
-  ["son-har-melech", "he", "לימור סון הר-מלך"],
-  ["kroizer", "he", "יצחק קרויזר"],
-  ["smotrich", "he", "בצלאל סמוטריץ'"],
-  ["feiglin", "he", "משה פייגלין"],
-  ["strook", "he", "אורית סטרוק"],
-  ["rothman", "he", "שמחה רוטמן"],
-  ["sukkot", "he", "צבי סוכות"],
-  ["deri", "he", "אריה דרעי"],
-  ["azoulay", "he", "ינון אזולאי"],
-  ["malkieli", "he", "מיכאל מלכיאלי"],
-  ["ben-tzur", "he", "יואב בן-צור"],
-  ["biton", "he", "חיים ביטון"],
-  ["abutbul", "he", "משה אבוטבול"],
-  ["buso", "he", "אוריאל בוסו"],
-  ["taieb", "he", "יוסף טייב"],
-  ["yaakov-asher", "he", "יעקב אשר"],
-  ["goldknopf", "he", "יצחק גולדקנופף"],
-  ["pindrus", "he", "יצחק פינדרוס"],
-  ["porush", "he", "מאיר פרוש"],
-  ["tessler", "he", "יעקב טסלר"],
-  ["bennett", "he", "נפתלי בנט"],
-  ["lapid", "he", "יאיר לפיד"],
-  ["ben-ari", "he", "מירב בן-ארי"],
-  ["ginzburg", "he", "איתן גינזבורג"],
-  ["meirav-cohen", "he", "מירב כהן"],
-  ["eisenkot", "he", "גדי איזנקוט"],
-  ["farkash", "he", "אורית פרקש-הכהן"],
-  ["kahana", "he", "מתן כהנא"],
-  ["tropper", "he", "חילי טרופר"],
-  ["golan", "he", "יאיר גולן"],
-  ["lazimi", "he", "נעמה לזימי"],
-  ["kariv", "he", "גלעד קריב"],
-  ["rayten", "he", "עפרת רייטן"],
-  ["lasky", "he", "גבי לסקי"],
-  ["rozin", "he", "מיכל רוזין"],
-  ["liberman", "he", "אביגדור ליברמן"],
-  ["forer", "he", "עודד פורר"],
-  ["malinovsky", "he", "יוליה מלינובסקי"],
-  ["amar", "he", "חמד עמאר"],
-  ["sova", "he", "יבגני סובה"],
-  ["illouz", "he", "דן אילוז"],
-  ["abbas", "he", "מנסור עבאס"],
-  ["taha", "he", "וליד טאהא"],
-  ["khatib-yasin", "he", "אימאן חטיב-יאסין"],
-  ["gantz", "he", "בני גנץ"],
-  ["tamano-shata", "he", "פנינה תמנו-שטה"],
-  ["schuster", "he", "אלון שוסטר"],
-  ["jabareen", "he", "יוסף ג'בארין"],
-  ["tibi", "he", "אחמד טיבי"],
-  ["abu-shehadeh", "he", "סמי אבו שחאדה"],
-  ["cassif", "he", "עופר כסיף"],
-  ["atauna", "he", "יוסף עטאונה"],
+/** Exact titles that already worked or should be retried. */
+const EXACT = [
+  ["israel-katz", "ישראל כץ (הליכוד)"],
+  ["mishraki", "יונתן משריקי"],
+  ["yoram-cohen", "יורם כהן"],
+  ["altschuler", "עדי אלטשולר"],
+  ["meridor", "שאול מרידור"],
+  ["rayten", "Efrat Rayten"],
+  ["radman", "משה רדמן"],
+  ["fink", "Yaya Fink"],
+  ["tibon", "נועם תיבון"],
+  ["turner", "קרן טרנר"],
+  ["bloch", "עליזה בלוך"],
+  ["segalovitz", "יואב סגלוביץ"],
+  ["khatib-yasin", "Iman Khatib-Yassin"],
+  ["tzvika-mor", "צביקה מור"],
+  ["hujeirat", "יאסר חוג'יראת"],
+  ["mufid-mari", "מופיד מרעי"],
+  ["avisar", "לירן אבישר בן-חורין"],
+  ["shalev", "יונתן שלו"],
+  ["ifergan", "תאיר איפרגן"],
+  ["ben-shitrit", "רפי בן שטרית"],
+  ["gani-gonen", "אושרת גני גונן"],
+  ["alhwashla", "ואליד אלהואשלה"],
 ];
 
-async function queryLang(lang, titles) {
-  const url = new URL(`https://${lang}.wikipedia.org/w/api.php`);
+const REJECT = {
+  "talik-gvili": [/ישראל\s*טל/, /israel\s*tal/i, /טל ישראל/, /רן גואילי/, /ran\s+gvili/i],
+  "tzachi-eliyahu": [/עמיחי/, /amihai|amichai/i],
+  "david-ohana": [/אמיר אוחנה/, /amir ohana/i, /פרופסור/, /בן-גוריון/, /Ben.Gurion/i],
+  "dror-amos": [/עמוס דרורי/, /Amos Drory/i],
+  "negri": [/נגרין/, /Negrin/i],
+  "rosenthal": [/סאנדנס/, /Sundance/i, /במאי/, /אופיר/],
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function tokens(name) {
+  return name.split(/[\s־׳'ʼ\-]+/).filter((t) => t.length >= 2);
+}
+
+function lastOf(name) {
+  return tokens(name).at(-1) ?? name;
+}
+
+function firstOf(name) {
+  return tokens(name)[0] ?? name;
+}
+
+async function wiki(lang, params, attempt = 0) {
+  const host = lang === "en" ? "https://en.wikipedia.org/w/api.php" : "https://he.wikipedia.org/w/api.php";
+  const url = new URL(host);
   url.searchParams.set("action", "query");
   url.searchParams.set("format", "json");
   url.searchParams.set("origin", "*");
-  url.searchParams.set("prop", "pageimages|info");
-  url.searchParams.set("inprop", "url");
-  url.searchParams.set("pithumbsize", "160");
-  url.searchParams.set("pilicense", "any");
-  url.searchParams.set("redirects", "1");
-  url.searchParams.set("titles", titles.join("|"));
-
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
   const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
+  if (res.status === 429 && attempt < 6) {
+    const wait = Number(res.headers.get("retry-after") ?? 12) * 1000;
+    console.log("429", lang, "wait", wait, "ms");
+    await sleep(wait);
+    return wiki(lang, params, attempt + 1);
+  }
   if (!res.ok) throw new Error(`${lang} ${res.status}`);
   return res.json();
 }
 
-function indexPages(data) {
-  const byTitle = new Map();
-  const normalized = new Map();
-  for (const red of data.query?.redirects ?? []) normalized.set(red.from, red.to);
-  for (const norm of data.query?.normalized ?? []) normalized.set(norm.from, norm.to);
-  for (const page of Object.values(data.query?.pages ?? {})) {
-    if (page.missing || page.invalid) continue;
-    byTitle.set(page.title, page);
+async function pageimage(lang, title) {
+  const data = await wiki(lang, {
+    prop: "pageimages|info",
+    inprop: "url",
+    pithumbsize: 250,
+    pilicense: "any",
+    redirects: 1,
+    titles: title,
+  });
+  const page = Object.values(data.query?.pages ?? {})[0];
+  if (!page || page.missing || page.invalid || !page.thumbnail?.source) return null;
+  return {
+    title: page.title,
+    url: page.thumbnail.source,
+    source: page.fullurl ?? `${lang === "en" ? "https://en.wikipedia.org/wiki/" : "https://he.wikipedia.org/wiki/"}${encodeURIComponent(page.title)}`,
+  };
+}
+
+async function search(lang, query) {
+  const data = await wiki(lang, {
+    list: "search",
+    srsearch: query,
+    srnamespace: 0,
+    srlimit: 8,
+    srprop: "snippet|title",
+  });
+  return data.query?.search ?? [];
+}
+
+function blocked(id, title) {
+  return (REJECT[id] ?? []).some((re) => re.test(title));
+}
+
+function titleTokens(title) {
+  return title.split(/[\s־׳'ʼ()[\]{},.:;!?/"\-]+/).filter((t) => t.length >= 2);
+}
+
+function hasNameToken(title, token) {
+  if (!token) return false;
+  const folded = token.toLowerCase();
+  return titleTokens(title).some((part) => part === token || part.toLowerCase() === folded);
+}
+
+function politicalContext(title, snippet = "") {
+  return /כנסת|ח״כ|חבר הכנסת|MK|Knesset|פריימרי|רשימ|מפלג|ליכוד|ש״ס|עוצמה|ציונות|דמוקרט|רע״ם|כחול לבן|יהדות התורה|ישראל ביתנו|חד״ש|תע״ל|בל״ד/i.test(
+    `${title} ${snippet}`,
+  );
+}
+
+function titleMatches(person, title, snippet = "") {
+  const lastHe = lastOf(person.nameHe);
+  const lastEn = lastOf(person.nameEn);
+  const firstHe = firstOf(person.nameHe);
+  const firstEn = firstOf(person.nameEn);
+  const hasLast = hasNameToken(title, lastHe) || hasNameToken(title, lastEn);
+  const hasFirst = hasNameToken(title, firstHe) || hasNameToken(title, firstEn);
+  // Last-name-only or substring hits attach the wrong cousin (רן גואילי, מיכל נגרין).
+  if (!hasLast || !hasFirst) return false;
+  return politicalContext(title, snippet);
+}
+
+function parseExisting(source) {
+  const match = source.match(/export const PORTRAITS[\s\S]*?=\s*(\{[\s\S]*?\});\n/);
+  if (!match) throw new Error("Could not parse existing PORTRAITS");
+  return JSON.parse(match[1]);
+}
+
+function parseSeeds(source) {
+  const rows = [];
+  const re =
+    /\{\s*id:\s*"([^"]+)",\s*nameEn:\s*"([^"]+)",\s*nameHe:\s*"([^"]+)"/g;
+  for (const match of source.matchAll(re)) {
+    rows.push({ id: match[1], nameEn: match[2], nameHe: match[3] });
   }
-  return { byTitle, normalized };
+  return rows;
 }
 
-function resolvePage(title, index) {
-  let key = title;
-  for (let i = 0; i < 3; i++) {
-    const next = index.normalized.get(key);
-    if (!next) break;
-    key = next;
+const portraitsSource = await readFile(PORTRAIT_PATH, "utf8");
+const poolSource = await readFile(POOL_PATH, "utf8");
+const found = parseExisting(portraitsSource);
+const people = parseSeeds(poolSource);
+const stillMissing = [];
+
+for (const [id, title] of EXACT) {
+  if (found[id]) {
+    console.log("have", id);
+    continue;
   }
-  return index.byTitle.get(key) ?? null;
+  try {
+    const lang = /[A-Za-z]/.test(title[0]) ? "en" : "he";
+    const hit = await pageimage(lang, title);
+    if (!hit) {
+      console.log("skip-exact", id);
+      stillMissing.push(id);
+    } else {
+      found[id] = { url: hit.url, source: hit.source };
+      console.log("ok-exact", id, hit.source);
+    }
+    await sleep(900);
+  } catch (err) {
+    console.log("err-exact", id, err.message);
+    stillMissing.push(id);
+    await sleep(3000);
+  }
 }
 
-const byLang = new Map();
-for (const [id, lang, title] of PEOPLE) {
-  const bucket = byLang.get(lang) ?? [];
-  bucket.push({ id, title });
-  byLang.set(lang, bucket);
-}
+const missingPeople = people.filter((p) => !found[p.id]);
+console.log("fuzzy-candidates", missingPeople.map((p) => p.id).join(", ") || "none");
 
-const rows = {};
-for (const [lang, items] of byLang) {
-  for (let i = 0; i < items.length; i += 40) {
-    const chunk = items.slice(i, i + 40);
-    const data = await queryLang(
-      lang,
-      chunk.map((item) => item.title),
-    );
-    const index = indexPages(data);
-    for (const item of chunk) {
-      const page = resolvePage(item.title, index);
-      const thumb = page?.thumbnail?.source;
-      if (!thumb) {
-        console.log("skip", item.id);
-        continue;
+for (const person of missingPeople) {
+  const queries = [
+    { lang: "he", q: person.nameHe },
+    { lang: "he", q: `${person.nameHe} כנסת` },
+    { lang: "en", q: `${person.nameEn} Israel` },
+  ];
+  let accepted = null;
+  for (const query of queries) {
+    if (accepted) break;
+    try {
+      const hits = await search(query.lang, query.q);
+      await sleep(700);
+      for (const hit of hits) {
+        if (blocked(person.id, hit.title)) {
+          console.log("reject-block", person.id, hit.title);
+          continue;
+        }
+        if (!titleMatches(person, hit.title, hit.snippet ?? "")) {
+          console.log("reject-name", person.id, hit.title);
+          continue;
+        }
+        const page = await pageimage(query.lang, hit.title);
+        await sleep(700);
+        if (!page) {
+          console.log("no-thumb", person.id, hit.title);
+          continue;
+        }
+        if (blocked(person.id, page.title) || !titleMatches(person, page.title)) {
+          console.log("reject-redirect", person.id, page.title);
+          continue;
+        }
+        accepted = page;
+        break;
       }
-      rows[item.id] = {
-        url: thumb,
-        source: page.fullurl ?? `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(item.title)}`,
-      };
-      console.log("ok", item.id);
+    } catch (err) {
+      console.log("err-fuzzy", person.id, query.q, err.message);
+      await sleep(2500);
     }
   }
+  if (accepted) {
+    found[person.id] = { url: accepted.url, source: accepted.source };
+    console.log("ok-fuzzy", person.id, accepted.title, accepted.source);
+  } else {
+    stillMissing.push(person.id);
+    console.log("skip-fuzzy", person.id);
+  }
 }
 
-const body = `import type { PersonId } from "./types";
+const ordered = {};
+for (const key of Object.keys(found).sort()) ordered[key] = found[key];
 
-/** Wikipedia thumbnails. Identity art only — not an endorsement or electability claim. */
-export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }>> = ${JSON.stringify(rows, null, 2)};
+const helpers = portraitsSource.split("export function portraitUrl")[1];
+if (!helpers) throw new Error("Could not keep portrait helpers");
+const head = portraitsSource.split("export const PORTRAITS")[0];
+const body = `${head}export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }>> = ${JSON.stringify(ordered, null, 2)};
 
-export function portraitUrl(id: PersonId): string | null {
-  return PORTRAITS[id]?.url ?? null;
-}
-`;
+export function portraitUrl${helpers}`;
 
-await writeFile(new URL("../src/data/portraits.ts", import.meta.url), body);
-console.log("wrote", Object.keys(rows).length, "portraits");
+await writeFile(PORTRAIT_PATH, body);
+console.log("wrote", Object.keys(ordered).length, "portraits; still missing", stillMissing.join(", ") || "none");

@@ -7,7 +7,14 @@ import {
   pairRelation,
   pairWeight,
   rankWeight,
+  relationColor,
+  relationColorStops,
+  relationOpacity,
+  relationStrokeWidth,
+  RELATION_S_MAX,
+  RELATION_S_MIN,
   scoreCohesion,
+  teamRelation,
 } from "./chemistry";
 
 describe("rank weights", () => {
@@ -99,6 +106,31 @@ describe("pair relation", () => {
     expect(sample.every((s) => s === 0 || Math.abs(s) === 1)).toBe(false);
     expect(sample.some((s) => Math.abs(s) > 0.02 && Math.abs(s) < 1)).toBe(true);
   });
+
+  it("scales edge color with the signed connection, not a 1/0 switch", () => {
+    const veto = relationColor(-1);
+    const far = relationColor(-0.45);
+    const cool = relationColor(-0.15);
+    const none = relationColor(0);
+    const close = relationColor(0.15);
+    expect(new Set([veto, far, cool, none, close]).size).toBe(5);
+    expect(veto).toMatch(/rgb\(196, 90, 78\)/);
+    expect(none).toMatch(/rgb\(90, 86, 76\)/);
+    expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-0.2, 1));
+    expect(relationOpacity(-1)).toBeGreaterThan(relationOpacity(-0.2));
+    expect(relationOpacity(0)).toBeGreaterThan(0.5);
+  });
+});
+
+describe("edge color range", () => {
+  it("spans veto red through muted to a thin green ceiling", () => {
+    const stops = relationColorStops();
+    expect(RELATION_S_MIN).toBe(-1);
+    expect(RELATION_S_MAX).toBe(0.22);
+    expect(stops[0]?.s).toBe(-1);
+    expect(stops.at(-1)?.s).toBe(0.22);
+    expect(new Set(stops.map((stop) => stop.color)).size).toBe(stops.length);
+  });
 });
 
 describe("pair contributions", () => {
@@ -117,6 +149,29 @@ describe("pair contributions", () => {
     const w20 = pairWeight(1, 20, veto);
     expect(w20).toBeCloseTo(2 * 0.25);
     expect(w20).toBeGreaterThan(pairRankWeight(1, 20));
+  });
+});
+
+describe("team-weighted side tone", () => {
+  it("matches the hub pair when the ticket is only the leader", () => {
+    const team = teamRelation(["bennett"], "deri");
+    expect(team.s).toBeCloseTo(pairRelation("bennett", "deri").s);
+    expect(team.worst?.id).toBe("bennett");
+  });
+
+  it("pulls toward the whole ticket, not only the leader", () => {
+    const hubOnly = teamRelation(["bennett"], "eisenkot").s;
+    const mixed = teamRelation(["bennett", "deri"], "eisenkot").s;
+    expect(hubOnly).toBeGreaterThan(0);
+    expect(mixed).toBeLessThan(hubOnly);
+    expect(mixed).toBeGreaterThan(pairRelation("deri", "eisenkot").s);
+  });
+
+  it("keeps a leader veto red even after later green fillers", () => {
+    const team = teamRelation(["liberman", "eisenkot"], "netanyahu");
+    expect(team.s).toBeLessThan(-0.4);
+    expect(team.worst?.id).toBe("liberman");
+    expect(team.worst?.relation.kind).toBe("veto");
   });
 });
 

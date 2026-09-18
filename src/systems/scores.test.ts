@@ -23,4 +23,18 @@ describe("score meters", () => {
     expect(meters.cohesionPct).toBeLessThanOrEqual(100);
     expect(meters.demandPct).toBe(Math.round((14 / 38) * 100));
   });
+
+  it("moves the credibility meter when the ticket goes to war", () => {
+    const clean = listMeters(list("player", ["bennett", "lapid"]), [
+      list("player", ["bennett", "lapid"]),
+    ]);
+    const war = listMeters(list("player", ["bennett", "deri"]), [
+      list("player", ["bennett", "deri"]),
+    ]);
+    const niche = listMeters(list("player", ["ben-gvir", "smotrich"]), [
+      list("player", ["ben-gvir", "smotrich"]),
+    ]);
+    expect(war.cohesionPct).toBeLessThan(clean.cohesionPct);
+    expect(niche.demandPct).toBeLessThan(clean.demandPct);
+  });
 });

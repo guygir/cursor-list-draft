@@ -1,4 +1,4 @@
-import type { PersonId, SlateId } from "../data/types";
+import type { PersonAspects, PersonId, SlateId } from "../data/types";
 import { getPerson } from "../data/pool";
 import {
   applyCpuTurn,
@@ -6,28 +6,50 @@ import {
   clampCpus,
   createDraft,
   currentList,
-  HARD_SLATE_CAP,
+  DIFFICULTIES,
   isDraftOver,
   legalRemaining,
   MAX_CPU,
   MIN_CPU,
   slateCountOnList,
+  type DifficultyId,
   type DraftState,
 } from "../systems/draft";
+import { recordRun, type BoardEntry } from "../systems/board";
+import { hydrateRemoteBoard, pushRemoteRun } from "../systems/board-api";
+import {
+  customSharePath,
+  dailyHubId,
+  dailySeed,
+  dailySharePath,
+  decodeCustomCode,
+  defaultAspects,
+  encodeCustomCode,
+  ensureCustomLeader,
+  israelDateKey,
+  makeCustomLeader,
+  nearestSlate,
+  sanitizeLeaderName,
+} from "../systems/modes";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
 import { copy } from "./copy";
+import { renderBoardPanel } from "./board";
+import { renderCreateLeader } from "./create";
 import { el, prefersReducedMotion } from "./dom";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
+import { resetMeters } from "./meters";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
-type Screen = "setup" | "draft" | "resolve";
+type Screen = "setup" | "create" | "draft" | "resolve" | "board";
+type PlayMode = "draft" | "create" | "daily";
 
 interface AppState {
   screen: Screen;
+  playMode: PlayMode;
   nCpus: number;
-  hardMode: boolean;
+  difficulty: DifficultyId;
   draft: DraftState;
   focusId: PersonId | null;
   hoverId: PersonId | null;
@@ -38,6 +60,10 @@ interface AppState {
   liveText: string;
   cpuThinking: boolean;
   notices: PickNotice[];
+  customName: string;
+  customAspects: PersonAspects;
+  dayKey: string;
+  boardEntry: BoardEntry | null;
 }
 
 let state: AppState = freshState(1);
@@ -45,9 +71,16 @@ let cpuTimer = 0;
 let root: HTMLElement;
 
 export function mount(appRoot: HTMLElement): void {
+  const first = !root;
   root = appRoot;
-  document.addEventListener("keydown", (event) => {
+  state = freshState(1);
+  if (first) document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (state.screen === "create" || state.screen === "board") {
+      state.screen = "setup";
+      render();
+      return;
+    }
     if (state.selectedEdge) {
       state.selectedEdge = null;
       render();
@@ -59,15 +92,18 @@ export function mount(appRoot: HTMLElement): void {
       render();
     }
   });
+  bootFromUrl();
   render();
+  void hydrateBoard();
 }
 
-function freshState(nCpus: number, hardMode = false): AppState {
+function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: PlayMode = "draft"): AppState {
   return {
     screen: "setup",
+    playMode,
     nCpus: clampCpus(nCpus),
-    hardMode,
-    draft: createDraft(nCpus, playSeed(), hardMode),
+    difficulty,
+    draft: createDraft(nCpus, playSeed(), difficulty),
     focusId: null,
     hoverId: null,
     selectedEdge: null,
@@ -77,6 +113,10 @@ function freshState(nCpus: number, hardMode = false): AppState {
     liveText: "",
     cpuThinking: false,
     notices: [],
+    customName: "",
+    customAspects: defaultAspects(),
+    dayKey: israelDateKey(),
+    boardEntry: null,
   };
 }
 
@@ -90,6 +130,20 @@ function render(): void {
   root.replaceChildren();
   if (state.screen === "setup") {
     root.append(renderSetup());
+  } else if (state.screen === "board") {
+    root.append(renderBoardScreen());
+  } else if (state.screen === "create") {
+    root.append(
+      renderCreateLeader({
+        nameHe: state.customName,
+        aspects: state.customAspects,
+        onStart: startCreateDraft,
+        onBack: () => {
+          state.screen = "setup";
+          render();
+        },
+      }),
+    );
   } else if (state.screen === "draft") {
     root.append(
       renderDraft(draftView(), {
@@ -97,7 +151,7 @@ function render(): void {
           if (state.hoverId === id) return;
           state.hoverId = id;
           const player = state.draft.lists.find((list) => list.isPlayer);
-          hoverPerson(root, id, state.focusId, player?.picks[0] ?? null);
+          hoverPerson(root, id, state.focusId, player?.picks ?? []);
         },
         onFocus: (id) => {
           if (state.focusId === id) return;
@@ -117,7 +171,7 @@ function render(): void {
           hoverEdge(
             root,
             key ?? state.selectedEdge,
-            hintFor(state.hoverId ?? state.focusId, player?.picks[0] ?? null),
+            hintFor(state.hoverId ?? state.focusId, player?.picks ?? []),
           );
         },
         onOpenSlate: (id) => {
@@ -134,7 +188,15 @@ function render(): void {
       }),
     );
   } else if (state.result) {
-    root.append(renderResolve(state.result, replay));
+    root.append(
+      renderResolve(state.result, replay, {
+        shareHint: copy.boardLocal,
+        onShare: shareRun,
+        boardMode: state.playMode,
+        ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+        ...(state.boardEntry ? { boardEntry: state.boardEntry } : {}),
+      }),
+    );
   }
 
   const restore = focusPerson ?? state.focusId;
@@ -157,14 +219,14 @@ function draftView(): DraftView {
     remaining: legalRemaining(
       state.draft.lists.find((list) => list.isPlayer)?.picks ?? [],
       state.draft.remaining,
-      state.draft.hardMode,
+      state.draft.slateCap,
     ),
     canPick: Boolean(turn?.isPlayer) && !state.cpuThinking && !isDraftOver(state.draft),
     openSlate: state.openSlate,
     liveText: state.liveText,
     cpuThinking: state.cpuThinking,
     notices: state.notices,
-    hardMode: state.draft.hardMode,
+    difficulty: state.draft.difficulty,
   };
 }
 
@@ -180,6 +242,28 @@ function renderSetup(): HTMLElement {
     el("p", { class: "sponsor" }, copy.sponsor),
     el("p", { class: "disclosure" }, copy.disclosure),
   );
+
+  const modes = el("fieldset", { class: "mode-pick" }, el("legend", {}, copy.modeLabel));
+  const todayName = getPerson(dailyHubId(state.dayKey)).nameHe;
+  const modeRows: Array<{ id: PlayMode; title: string; hint: string }> = [
+    { id: "draft", title: copy.modeDraft, hint: copy.modeDraftHint },
+    { id: "create", title: copy.modeCreate, hint: copy.modeCreateHint },
+    { id: "daily", title: copy.modeDaily, hint: copy.modeDailyHint(todayName) },
+  ];
+  for (const row of modeRows) {
+    const btn = el(
+      "button",
+      { type: "button", class: `mode-btn ${state.playMode === row.id ? "is-on" : ""}` },
+      el("strong", {}, row.title),
+      el("span", {}, row.hint),
+    );
+    btn.addEventListener("click", () => {
+      state.playMode = row.id;
+      render();
+    });
+    modes.append(btn);
+  }
+  screen.append(modes);
 
   const field = el("fieldset", { class: "n-pick" }, el("legend", {}, copy.nLabel));
   for (let n = MIN_CPU; n <= MAX_CPU; n++) {
@@ -202,31 +286,162 @@ function renderSetup(): HTMLElement {
     });
     field.append(label);
   }
-  screen.append(field);
+  if (state.playMode !== "daily") screen.append(field);
 
-  const hard = el(
-    "label",
-    { class: `hard-toggle ${state.hardMode ? "is-on" : ""}` },
-    el("input", {
-      type: "checkbox",
-      ...(state.hardMode ? { checked: true } : {}),
-    }),
-    el("span", { class: "hard-toggle-text" }, copy.hardMode),
-    el("span", { class: "hard-toggle-hint" }, copy.hardModeHint),
-  );
-  hard.querySelector("input")?.addEventListener("change", () => {
-    state.hardMode = !state.hardMode;
+  const levels = el("fieldset", { class: "level-pick" }, el("legend", {}, copy.levelLabel));
+  for (const row of DIFFICULTIES) {
+    const id = `level-${row.id}`;
+    const label = el(
+      "label",
+      { class: state.difficulty === row.id ? "is-on" : "" },
+      el("input", {
+        type: "radio",
+        name: "level",
+        id,
+        value: row.id,
+        ...(state.difficulty === row.id ? { checked: true } : {}),
+      }),
+      el("span", { class: "level-name" }, row.labelHe),
+      el("span", { class: "level-hint" }, row.hintHe),
+    );
+    label.querySelector("input")?.addEventListener("change", () => {
+      state.difficulty = row.id;
+      render();
+    });
+    levels.append(label);
+  }
+  if (state.playMode !== "daily") screen.append(levels);
+
+  const start = el("button", { type: "button", class: "primary" }, startLabel());
+  start.addEventListener("click", beginFromSetup);
+  const boardBtn = el("button", { type: "button", class: "text-btn board-open" }, copy.boardOpen);
+  boardBtn.addEventListener("click", () => {
+    state.screen = "board";
     render();
   });
-  screen.append(hard);
-
-  const start = el("button", { type: "button", class: "primary" }, copy.start);
-  start.addEventListener("click", () => {
-    state = { ...freshState(state.nCpus, state.hardMode), screen: "draft", liveText: copy.yourTurn };
-    render();
-  });
-  screen.append(el("div", { class: "confirm-bar" }, start));
+  screen.append(el("div", { class: "confirm-bar is-split" }, start, boardBtn));
+  screen.append(el("p", { class: "no-board" }, copy.boardLocal));
   return screen;
+}
+
+function renderBoardScreen(): HTMLElement {
+  const screen = el("div", { class: "screen setup-screen" });
+  screen.append(
+    el(
+      "header",
+      { class: "mast tall" },
+      el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
+    ),
+  );
+  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey, title: copy.modeDaily }));
+  screen.append(renderBoardPanel({ mode: "create", title: copy.modeCreate }));
+  screen.append(renderBoardPanel({ mode: "draft", title: copy.modeDraft }));
+  const back = el("button", { type: "button", class: "primary" }, copy.createBack);
+  back.addEventListener("click", () => {
+    state.screen = "setup";
+    render();
+  });
+  screen.append(el("div", { class: "confirm-bar" }, back));
+  return screen;
+}
+
+function startLabel(): string {
+  if (state.playMode === "create") return copy.modeCreate;
+  if (state.playMode === "daily") return copy.playWith(getPerson(dailyHubId(state.dayKey)).nameHe);
+  return copy.start;
+}
+
+function beginFromSetup(): void {
+  if (state.playMode === "create") {
+    state.screen = "create";
+    render();
+    return;
+  }
+  if (state.playMode === "daily") {
+    startLockedDraft(dailyHubId(state.dayKey), dailySeed(state.dayKey), 1, "open");
+    writeUrl(dailySharePath(state.dayKey));
+    return;
+  }
+  startOpenDraft();
+}
+
+function startOpenDraft(): void {
+  resetMeters();
+  state = {
+    ...freshState(state.nCpus, state.difficulty, "draft"),
+    screen: "draft",
+    liveText: copy.yourTurn,
+    customName: state.customName,
+    customAspects: state.customAspects,
+    dayKey: state.dayKey,
+  };
+  writeUrl("");
+  render();
+}
+
+function startCreateDraft(nameHe: string, aspects: PersonAspects): void {
+  const name = sanitizeLeaderName(nameHe);
+  if (!name) return;
+  state.customName = name;
+  state.customAspects = aspects;
+  const spec = { nameHe: name, aspects, slateId: nearestSlate(aspects) };
+  const hub = makeCustomLeader(spec);
+  startLockedDraft(hub.id, playSeed(), state.nCpus, state.difficulty);
+  writeUrl(customSharePath(spec));
+}
+
+function startLockedDraft(hubId: PersonId, seed: number, nCpus: number, difficulty: DifficultyId): void {
+  resetMeters();
+  state.draft = createDraft(nCpus, seed, difficulty, hubId);
+  state.nCpus = nCpus;
+  state.difficulty = difficulty;
+  state.screen = "draft";
+  state.focusId = null;
+  state.hoverId = null;
+  state.selectedEdge = null;
+  state.hoverEdge = null;
+  state.openSlate = null;
+  state.result = null;
+  state.cpuThinking = false;
+  state.notices = [];
+  state.liveText = copy.yourTurn;
+  render();
+  runCpuTurns();
+}
+
+function bootFromUrl(): void {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("c");
+  const day = params.get("day");
+  if (code) {
+    const spec = decodeCustomCode(code) ?? decodeCustomCode(decodeURIComponent(code));
+    if (!spec) return;
+    state.playMode = "create";
+    state.customName = spec.nameHe;
+    state.customAspects = spec.aspects;
+    const hub = ensureCustomLeader(encodeCustomCode(spec));
+    if (hub) startLockedDraft(hub.id, playSeed(), state.nCpus, state.difficulty);
+    return;
+  }
+  if (day) {
+    state.playMode = "daily";
+    state.dayKey = day;
+    startLockedDraft(dailyHubId(day), dailySeed(day), 1, "open");
+  }
+}
+
+function writeUrl(search: string): void {
+  const url = `${location.pathname}${search}`;
+  history.replaceState({}, "", url);
+}
+
+async function shareRun(): Promise<void> {
+  const href = location.href;
+  try {
+    await navigator.clipboard.writeText(href);
+  } catch {
+    window.prompt(copy.share, href);
+  }
 }
 
 function pick(id: PersonId): void {
@@ -238,7 +453,8 @@ function pick(id: PersonId): void {
   state.focusId = null;
   state.hoverId = null;
   const player = state.draft.lists.find((list) => list.isPlayer);
-  const atCap = state.draft.hardMode && player && slateCountOnList(player.picks, slate) >= HARD_SLATE_CAP;
+  const cap = state.draft.slateCap;
+  const atCap = cap != null && player && slateCountOnList(player.picks, slate) >= cap;
   const stillInSlate = state.draft.remaining.some((left) => getPerson(left).slateId === slate);
   state.openSlate = !atCap && stillInSlate ? slate : null;
   state.notices = [];
@@ -300,11 +516,41 @@ function finish(): void {
   state.result = resolveElection(state.draft.lists);
   state.screen = "resolve";
   state.liveText = state.result.why.he;
+  const player = state.result.lists.find((row) => row.list.isPlayer);
+  const hubId = player?.list.picks[0];
+  state.boardEntry = recordRun({
+    mode: state.playMode,
+    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+    hubName: hubId ? getPerson(hubId).nameHe : copy.yourParty,
+    seats: player?.seats ?? 0,
+    cohesion: player?.cohesion ?? 0,
+    demand: player?.massAfterSplit ?? 0,
+    won: state.result.winnerId === "player",
+    nCpus: state.nCpus,
+    difficulty: state.difficulty,
+    share: location.search || "/",
+  });
+  void pushRemoteRun(state.boardEntry);
+  resetMeters();
   render();
+}
+
+async function hydrateBoard(): Promise<void> {
+  const store = globalThis.localStorage ?? null;
+  const ok = await hydrateRemoteBoard(store);
+  if (ok && state.screen === "board") render();
 }
 
 function replay(): void {
   window.clearTimeout(cpuTimer);
-  state = freshState(state.nCpus, state.hardMode);
+  resetMeters();
+  const keep = {
+    playMode: state.playMode,
+    customName: state.customName,
+    customAspects: state.customAspects,
+    dayKey: state.dayKey,
+  };
+  state = { ...freshState(state.nCpus, state.difficulty, keep.playMode), ...keep };
+  writeUrl("");
   render();
 }

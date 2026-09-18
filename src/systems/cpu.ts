@@ -3,9 +3,6 @@ import type { DraftList, PersonId, SlateId } from "../data/types";
 import { scoreCohesion } from "./chemistry";
 import { effectiveVotes, hubDraw, placeList, splitNeighborhoodMass } from "./demand";
 
-export const GREEDY_RATE = 0.92;
-export const NOISE_TOP = 2;
-const NOISE_BAND = 0.1;
 const PARTNER_WEIGHT = 0.35;
 
 export interface CpuCandidate {
@@ -18,8 +15,9 @@ export function rankCpuCandidates(
   cpu: DraftList,
   allLists: DraftList[],
   remaining: PersonId[],
-  hardMode = false,
+  slateCap: number | null = null,
 ): CpuCandidate[] {
+  const lookAhead = slateCap == null || slateCap > 1;
   const ranked: CpuCandidate[] = remaining.map((id) => {
     const hypothetical: DraftList = { ...cpu, picks: [...cpu.picks, id] };
     const others = allLists.map((list) => (list.id === cpu.id ? hypothetical : list));
@@ -28,7 +26,7 @@ export function rankCpuCandidates(
     const split = splitNeighborhoodMass(placements).find((row) => row.listId === cpu.id);
     const mass = split?.massAfterSplit ?? placeList(hypothetical).massRaw;
     let score = effectiveVotes(mass, chemistry.cohesion, hubDraw(hypothetical.picks));
-    if (hardMode) {
+    if (lookAhead) {
       score += PARTNER_WEIGHT * partnerBoost(hypothetical, remaining, id);
     }
     return { id, score, draw: getPerson(id).draw };
@@ -64,27 +62,19 @@ function slateCount(picks: PersonId[], slate: SlateId): number {
   return picks.filter((id) => getPerson(id).slateId === slate).length;
 }
 
-/** Almost always the max. Rare noise only among near-ties. */
-export function chooseCpuCandidate(ranked: CpuCandidate[], rand: number, greedyRate = GREEDY_RATE): PersonId {
+/** Always the greedy max. Ties break on hub draw, then id. */
+export function chooseCpuCandidate(ranked: CpuCandidate[]): PersonId {
   if (ranked.length === 0) throw new Error("Empty pool");
-  const best = ranked[0]!;
-  const close = ranked
-    .filter((row) => row.score >= best.score * (1 - NOISE_BAND))
-    .slice(0, NOISE_TOP);
-  if (rand < greedyRate || close.length === 1) return best.id;
-  const t = Math.min(1, Math.max(0, (rand - greedyRate) / (1 - greedyRate)));
-  const index = Math.min(close.length - 1, Math.floor(t * close.length + 1e-9));
-  return close[index]!.id;
+  return ranked[0]!.id;
 }
 
 export function greedyCpuPick(
   cpu: DraftList,
   allLists: DraftList[],
   remaining: PersonId[],
-  rand = 0,
-  hardMode = false,
+  slateCap: number | null = null,
 ): PersonId {
-  return chooseCpuCandidate(rankCpuCandidates(cpu, allLists, remaining, hardMode), rand);
+  return chooseCpuCandidate(rankCpuCandidates(cpu, allLists, remaining, slateCap));
 }
 
 export function mulberry32(seed: number): () => number {

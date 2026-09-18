@@ -1,0 +1,19 @@
+name = "cursor-list-draft"
+compatibility_date = "2026-09-18"
+main = "worker.js"
+preview_urls = true
+
+# Cloudflare Workers Builds often runs only the deploy command.
+# Build dist here so `npx wrangler deploy` does not look for a missing folder.
+[build]
+command = "npm run build"
+
+# Vite output. SPA fallback so /?c= and /?day= still hit index.html.
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+# Bind D1 in the dashboard after the first deploy (Settings → Bindings → D1, name DB).
+# A placeholder database_id here would fail the Git build.

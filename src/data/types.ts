@@ -40,14 +40,16 @@ export interface CellPoint {
   y: number;
 }
 
-/** toy-aspect axes. Not CHES, not a poll, not electability. */
-export type AspectId = "bibi" | "judicial" | "service" | "security";
+/** toy-aspect axes. Not CHES scores, not a poll, not electability. */
+export type AspectId = "bibi" | "judicial" | "service" | "security" | "economy";
 
 export interface PersonAspects {
   bibi: number;
   judicial: number;
   service: number;
   security: number;
+  /** CHES-like left-econ / redistribution. High = more state. Chemistry only. */
+  economy: number;
 }
 
 export interface Person {

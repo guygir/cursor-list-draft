@@ -73,7 +73,7 @@ export function cellAffinity(a: PersonId, b: PersonId): number {
   return clamp(0.22 - dist * 1.15, -0.75, 0.22);
 }
 
-/** Graded 4D tension. Same-slate pairs can still go cold. */
+/** Graded 5D tension (bibi / courts / service / security / economy). Same-slate pairs can still go cold. */
 export function aspectAffinity(a: PersonId, b: PersonId): number {
   const dist = aspectDistance(getPerson(a).aspects, getPerson(b).aspects);
   return clamp(0.22 - dist * 1.05, -0.75, 0.22);
@@ -137,24 +137,37 @@ export function pairRelation(a: PersonId, b: PersonId): PairRelation {
 
   if (pa.slateId === pb.slateId) {
     s = clamp(s + SAME_SLATE_BONUS, -0.35, 0.22);
+    const invented = pa.identitySource.note === "invented-leader" || pb.identitySource.note === "invented-leader";
     const intra =
-      s >= 0.12
-        ? {
-            kind: "same-line" as const,
-            reasonHe: "אותה מפלגה ב־2026. ירוק קל — שייכות, לא אהבה.",
-            reasonEn: "Same 2026 slate. Thin green — belonging, not warmth.",
-          }
-        : s >= 0
+      invented
+        ? s >= 0
           ? {
               kind: "same-line" as const,
-              reasonHe: `אותה מפלגה, אבל לא אותו קו. הפער: ${gap}.`,
-              reasonEn: `Same slate, not the same line. Gap: ${gap}.`,
+              reasonHe: "משבצת קרובה שציירת. לא חברות סיעה אמיתית.",
+              reasonEn: "Nearest painted cell. Not a real faction seat.",
             }
           : {
               kind: "tension" as const,
-              reasonHe: `אותה מפלגה, וחיכוך על ${gap}. לא וטו — פרופיל צעצוע.`,
-              reasonEn: `Same slate, friction on ${gap}. Not a veto — toy profile.`,
-            };
+              reasonHe: `משבצת קרובה, וחיכוך על ${gap}. מומצא, לא וטו.`,
+              reasonEn: `Nearest cell, friction on ${gap}. Invented, not a veto.`,
+            }
+        : s >= 0.12
+          ? {
+              kind: "same-line" as const,
+              reasonHe: "אותה מפלגה ב־2026. ירוק קל — שייכות, לא אהבה.",
+              reasonEn: "Same 2026 slate. Thin green — belonging, not warmth.",
+            }
+          : s >= 0
+            ? {
+                kind: "same-line" as const,
+                reasonHe: `אותה מפלגה, אבל לא אותו קו. הפער: ${gap}.`,
+                reasonEn: `Same slate, not the same line. Gap: ${gap}.`,
+              }
+            : {
+                kind: "tension" as const,
+                reasonHe: `אותה מפלגה, וחיכוך על ${gap}. לא וטו — פרופיל צעצוע.`,
+                reasonEn: `Same slate, friction on ${gap}. Not a veto — toy profile.`,
+              };
     return {
       a,
       b,
@@ -313,4 +326,109 @@ function clamp01(n: number): number {
 
 export function compatibilityWithHub(hub: PersonId, candidate: PersonId): number {
   return 1 + pairRelation(hub, candidate).s;
+}
+
+export interface TeamPair {
+  id: PersonId;
+  rank: number;
+  weight: number;
+  relation: PairRelation;
+}
+
+/** Rank-weighted mean of pairRelation vs the current ticket. Slot 1 still dominates. */
+export interface TeamRelation {
+  s: number;
+  pairs: TeamPair[];
+  worst: TeamPair | null;
+  reasonHe: string;
+  reasonEn: string;
+}
+
+export function teamRelation(picks: PersonId[], candidate: PersonId): TeamRelation {
+  const pairs: TeamPair[] = [];
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < picks.length; i++) {
+    const id = picks[i];
+    if (!id || id === candidate) continue;
+    const relation = pairRelation(id, candidate);
+    const weight = rankWeight(i + 1);
+    pairs.push({ id, rank: i + 1, weight, relation });
+    num += weight * relation.s;
+    den += weight;
+  }
+  const s = den === 0 ? 0 : num / den;
+  let worst: TeamPair | null = null;
+  for (const row of pairs) {
+    if (!worst || row.relation.s < worst.relation.s) worst = row;
+  }
+  if (!worst) {
+    return { s, pairs, worst: null, reasonHe: "", reasonEn: "" };
+  }
+  const name = getPerson(worst.id).nameHe;
+  return {
+    s,
+    pairs,
+    worst,
+    reasonHe: `מול הרשימה, משוקלל לפי מקום. הכי חד מול ${name}: ${worst.relation.reasonHe}`,
+    reasonEn: `Vs the ticket, rank-weighted. Sharpest vs ${getPerson(worst.id).nameEn}: ${worst.relation.reasonEn}`,
+  };
+}
+
+const MUTED_RGB: Rgb = [90, 86, 76];
+const RED_RGB: Rgb = [196, 90, 78];
+const GREEN_RGB: Rgb = [111, 158, 122];
+export const RELATION_S_MIN = -1;
+export const RELATION_S_MAX = 0.22;
+const GREEN_CEILING = RELATION_S_MAX;
+
+type Rgb = [number, number, number];
+
+/** Continuous stroke for a pair. Not a binary red/green switch. */
+export function relationColor(s: number): string {
+  if (s <= 0) {
+    const t = clamp(-s, 0, 1);
+    return rgbCss(mixRgb(MUTED_RGB, RED_RGB, Math.pow(t, 0.7)));
+  }
+  const t = clamp(s / GREEN_CEILING, 0, 1);
+  return rgbCss(mixRgb(MUTED_RGB, GREEN_RGB, Math.pow(t, 0.55)));
+}
+
+/** Rank weight plus |s| so a strong 1–2 veto is thicker than a faint mid-list cool. */
+export function relationStrokeWidth(s: number, rankWeightValue: number): number {
+  return 0.65 + rankWeightValue * (0.85 + Math.abs(s) * 3.4);
+}
+
+export function relationOpacity(s: number): number {
+  return clamp(0.58 + Math.abs(s) * 0.42, 0.58, 1);
+}
+
+export interface RelationColorStop {
+  s: number;
+  color: string;
+  labelHe: string;
+}
+
+/** Compact legend for the continuous s → color map. */
+export function relationColorStops(): RelationColorStop[] {
+  return [
+    { s: RELATION_S_MIN, color: relationColor(RELATION_S_MIN), labelHe: "וטו" },
+    { s: -0.45, color: relationColor(-0.45), labelHe: "מחנות" },
+    { s: 0, color: relationColor(0), labelHe: "אפור" },
+    { s: 0.15, color: relationColor(0.15), labelHe: "קרובים" },
+    { s: RELATION_S_MAX, color: relationColor(RELATION_S_MAX), labelHe: "שיא ירוק" },
+  ];
+}
+
+function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+  const u = clamp(t, 0, 1);
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * u),
+    Math.round(a[1] + (b[1] - a[1]) * u),
+    Math.round(a[2] + (b[2] - a[2]) * u),
+  ];
+}
+
+function rgbCss([r, g, b]: Rgb): string {
+  return `rgb(${r}, ${g}, ${b})`;
 }
