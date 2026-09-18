@@ -2,13 +2,18 @@
  * @vitest-environment happy-dom
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "./app";
 
 describe("playable draft UI", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")));
+  });
+
   afterEach(() => {
     document.body.innerHTML = "";
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it("discloses, drafts, and resolves a game", async () => {
@@ -94,6 +99,24 @@ describe("playable draft UI", () => {
     expect(root.textContent).not.toContain("מעבד");
     expect(root.textContent).toContain("לוח שיאים");
     expect(root.querySelector(".board-panel")?.textContent).toMatch(/מנדטים|עוד אין/);
+  });
+
+  it("paints setup before a hanging board fetch returns", () => {
+    vi.stubGlobal(
+      "fetch",
+      () =>
+        new Promise(() => {
+          /* never settles — UI must not wait */
+        }),
+    );
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    expect(root.textContent).toContain("הרשימה");
+    expect(root.textContent).toContain("על המכשיר הזה");
+    expect(root.textContent).not.toContain("טוען");
+    expect(root.querySelector(".spinner, .loading")).toBeNull();
+    vi.unstubAllGlobals();
   });
 
   it("opens create-leader and starts a locked hub draft from a share code", async () => {

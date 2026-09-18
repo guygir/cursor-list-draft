@@ -26,7 +26,7 @@ Identity and sourced veto/split edges are labeled `draft`. Mixed lists are playe
 - Every published name has an image: Wikipedia thumbnail when an exact-title page has a free photo, otherwise a slate-colored initials card (first+last). Fuzzy wiki search is allowed only if first and last name are title tokens and the hit is political (Knesset / 2026 slate). Reviewed keeps: Mishraki, Omri Ronen, Somaya Bashir. Rejected same-name strangers (Ran Gvili, Michal Negrin, film-director Rosenthal, professor David Ohana, professor Amos Drory). Talik Gvili still has no matching page. Identity art, not an endorsement.
 - Five pips under a name are the toy axes (Bibi / courts / service / security / economy). The side stripe is `teamRelation` — rank-weighted mean of `pairRelation` vs the whole current ticket (`w(1)=1.25`). Tooltip names the sharpest pair. Tree edges stay every pair: color maps `s` from −1 (veto red) through muted 0 to +0.22 (thin green); thickness is rank-weighted.
 - Credibility and demand meters sit on the draft rail from the first pick and recompute after every pick. Hover (desktop) or tap (phone) opens a one-line explainer: tree vs hill. Bars grow and numbers count up (Fermi.gg motion). The site uses Fermi’s gray-and-yellow: dark page `#191817`, paper `#f5f3ec` (not cardboard), punch `#f4d53b`. Every bar is ink at 34%. Reduced motion snaps.
-- Modes on setup: open draft; **צור מנהיג** (paint five toy axes, lock that invented hub at slot 1, share `?c=slate_digits_name` like Mandat 61’s custom candidate — still our draft, not their campaign); **אתגר היום** (published slot-1 leader of the Israel date, `?day=`). Local leaderboard on this device records every finish. No live hall of fame and no fabricated player counts.
+- Modes on setup: open draft; **צור מנהיג** (paint five toy axes, lock that invented hub at slot 1, share `?c=slate_digits_name` like Mandat 61’s custom candidate — still our draft, not their campaign); **אתגר היום** (published slot-1 leader of the Israel date, `?day=`). Leaderboard is local-first: every finish writes `localStorage` immediately. On Cloudflare Pages, `GET/POST /api/board` (D1) hydrates and posts in the background — no spinner. A missing API is a no-op. Do not invent a global player count from an empty store.
 - Election night leads with yellow like the create screen: the player card is Fermi yellow, CPU cards stay paper, why-line is yellow.
 - Opponent picks this snake pass show as side notices on the draft graph.
 - CPU always takes the greedy max of projected election-night votes (cohesion + split hill + hub). Party-cap levels look one partner ahead when a second name from the same slate is still legal. No near-tie noise.
@@ -46,6 +46,16 @@ Optional later packaging: group those lists as one rival bloc on election night 
 
 Do not invent chemistry from a web pair-scan, person-level polls, or a Mandat-61 campaign week. Aspect overrides need a reason line; unknown stays the slate mean.
 
+## Deploy (shipped path · Sep 2026)
+
+**Cloudflare Pages + D1**, not Vercel + Supabase.
+
+Why: the brief is *fast, no loads, $0*. Pages serves the Vite static build from the edge. A Pages Function talks to D1 in the same isolate — Workers do not have Vercel-style function cold starts. D1 stays on the free tier (5 GB, millions of reads). The client never waits on it.
+
+Why not the usual stack: Supabase free projects pause after about a week of inactivity; the wake can take minutes (a load). Vercel Hobby has no database; pairing it with Supabase or a sleeping Neon branch reintroduces that pause. Vercel Functions cold-start. We only need one JSON board, not auth or Postgres.
+
+Local `npm run dev` has no `/api/board` — 404 is ignored. `npx wrangler d1 create list-draft`, paste the id into `wrangler.toml`, then `npm run deploy`.
+
 ## Next (still parked)
 
-Daily seed, surplus agreements, 20-slot lists, live OData / CHES ingest, public sponsor identity.
+Surplus agreements, 20-slot lists, live OData / CHES ingest, public sponsor identity, accounts.

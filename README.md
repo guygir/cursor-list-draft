@@ -16,4 +16,33 @@ npm run dev
 
 Open the local Vite URL. Hebrew UI, RTL. Toy mandate math — not a forecast.
 
+The setup screen and the board paint from `localStorage` immediately. A live `/api/board` is optional and never blocks the first frame.
+
 See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-memory.md).
+
+## Deploy (free, no loads)
+
+**Use Cloudflare Pages + D1.** That is the $0 path that stays fast.
+
+| Stack | Why not (for this PoC) |
+| --- | --- |
+| Vercel + Supabase | Supabase free pauses after ~7 idle days; wake can take minutes. Vercel Functions cold-start. No built-in SQL on Hobby. |
+| Vercel + Neon | Neon free also suspends. Same cold-start on the function. |
+| This repo | Static assets on the Cloudflare edge. `/api/board` is a Pages Function + D1 in the same isolate. Client merges in the background. |
+
+One-time:
+
+```bash
+npx wrangler login
+npx wrangler d1 create list-draft
+```
+
+Paste the printed `database_id` into `wrangler.toml`. Then:
+
+```bash
+npm run deploy
+```
+
+`npm run pages` is a local Pages + Function preview. Vite-only (`npm run dev`) stays local-only if `/api/board` 404s.
+
+The board is scores people already posted — not a live player count, not a 2026 forecast.

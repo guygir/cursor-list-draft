@@ -16,6 +16,7 @@ import {
   type DraftState,
 } from "../systems/draft";
 import { recordRun, type BoardEntry } from "../systems/board";
+import { hydrateRemoteBoard, pushRemoteRun } from "../systems/board-api";
 import {
   customSharePath,
   dailyHubId,
@@ -93,6 +94,7 @@ export function mount(appRoot: HTMLElement): void {
   });
   bootFromUrl();
   render();
+  void hydrateBoard();
 }
 
 function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: PlayMode = "draft"): AppState {
@@ -528,8 +530,15 @@ function finish(): void {
     difficulty: state.difficulty,
     share: location.search || "/",
   });
+  void pushRemoteRun(state.boardEntry);
   resetMeters();
   render();
+}
+
+async function hydrateBoard(): Promise<void> {
+  const store = globalThis.localStorage ?? null;
+  const ok = await hydrateRemoteBoard(store);
+  if (ok && state.screen === "board") render();
 }
 
 function replay(): void {

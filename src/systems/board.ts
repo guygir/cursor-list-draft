@@ -84,6 +84,10 @@ export function rankOf(rows: BoardEntry[], id: string): number {
   return sortBoard(rows).findIndex((row) => row.id === id) + 1;
 }
 
+export function isBoardMode(value: string): value is BoardMode {
+  return value === "draft" || value === "create" || value === "daily";
+}
+
 function isEntry(row: BoardEntry): boolean {
   return Boolean(row && typeof row.hubName === "string" && typeof row.seats === "number");
 }

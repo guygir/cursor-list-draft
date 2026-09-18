@@ -1,5 +1,6 @@
 import type { BoardMode } from "../systems/board";
-import { boardForMode, rankOf, readBoard } from "../systems/board";
+import { boardForMode, rankOf } from "../systems/board";
+import { readVisibleBoard } from "../systems/board-api";
 import { copy } from "./copy";
 import { el } from "./dom";
 
@@ -10,7 +11,10 @@ export function renderBoardPanel(opts: {
   compact?: boolean;
   title?: string;
 }): HTMLElement {
-  const rows = boardForMode(readBoard(), opts.mode, opts.dayKey).slice(0, opts.compact ? 5 : 12);
+  const rows = boardForMode(readVisibleBoard(globalThis.localStorage ?? null), opts.mode, opts.dayKey).slice(
+    0,
+    opts.compact ? 5 : 12,
+  );
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
   wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
   wrap.append(el("p", { class: "board-note" }, copy.boardLocal));
