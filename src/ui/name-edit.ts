@@ -12,7 +12,12 @@ export function renderNameEdit(opts: {
   return wrap;
 
   function showButton(): void {
-    const btn = el("button", { type: "button", class: "name-edit-btn", "aria-label": opts.ariaLabel }, opts.value);
+    const btn = el(
+      "button",
+      { type: "button", class: "name-edit-btn", "aria-label": opts.ariaLabel },
+      el("span", { class: "name-edit-value" }, opts.value),
+      el("span", { class: "name-edit-mark", "aria-hidden": "true" }, "✎"),
+    );
     btn.addEventListener("click", (event) => {
       event.stopPropagation();
       showInput();

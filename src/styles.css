@@ -187,11 +187,12 @@ input {
   appearance: none;
   width: 100%;
   min-width: 6rem;
-  border: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent);
-  background: transparent;
-  color: var(--ink);
-  padding: 6px 8px;
+  border: 1px dashed color-mix(in srgb, var(--yellow) 45%, transparent);
+  background: color-mix(in srgb, var(--studio) 80%, transparent);
+  color: var(--yellow);
+  padding: 8px 10px;
   font: inherit;
+  font-size: 1.05rem;
   font-weight: 700;
   text-align: inherit;
   cursor: pointer;
@@ -201,6 +202,18 @@ input {
   border-style: solid;
   border-color: var(--ochre);
   cursor: text;
+}
+
+.name-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.name-edit-mark {
+  color: color-mix(in srgb, var(--yellow) 70%, var(--muted));
+  font-size: 0.85em;
 }
 
 .name-edit.is-party .name-edit-btn,

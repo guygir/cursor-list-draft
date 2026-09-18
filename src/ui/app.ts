@@ -422,12 +422,14 @@ function renderBoardScreen(): HTMLElement {
       dayKey: state.dayKey,
       difficulty: "open",
       title: copy.modeDaily,
+      hideNote: true,
     }),
     ...DIFFICULTIES.map((row) =>
       renderBoardPanel({
         mode: "create",
         difficulty: row.id,
         title: `${copy.modeCreate} · ${row.labelHe}`,
+        hideNote: true,
       }),
     ),
     ...DIFFICULTIES.map((row) =>
@@ -435,6 +437,7 @@ function renderBoardScreen(): HTMLElement {
         mode: "draft",
         difficulty: row.id,
         title: `${copy.modeDraft} · ${row.labelHe}`,
+        hideNote: true,
       }),
     ),
   ].filter((node): node is HTMLElement => node !== null);

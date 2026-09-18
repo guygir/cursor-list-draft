@@ -15,6 +15,7 @@ export function renderBoardPanel(opts: {
   currentId?: string;
   compact?: boolean;
   hideEmpty?: boolean;
+  hideNote?: boolean;
   title?: string;
 }): HTMLElement | null {
   const rows = boardForMode(readVisibleBoard(globalThis.localStorage ?? null), {
@@ -25,7 +26,7 @@ export function renderBoardPanel(opts: {
   if (opts.hideEmpty && !rows.length) return null;
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
   wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
-  wrap.append(el("p", { class: "board-note" }, copy.boardLocal));
+  if (!opts.hideNote) wrap.append(el("p", { class: "board-note" }, copy.boardLocal));
   if (!rows.length) {
     wrap.append(el("p", { class: "board-empty" }, copy.boardEmpty));
     return wrap;
