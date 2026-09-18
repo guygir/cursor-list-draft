@@ -1,8 +1,15 @@
 import { ASPECT_LABEL_HE, peakAspect } from "../data/aspects";
 import { getPerson, slateLabelHe, SLATE_ORDER } from "../data/pool";
-import { portraitUrl } from "../data/portraits";
+import { bindPortrait, portraitSrc } from "../data/portraits";
 import type { DraftList, PersonId, SlateId } from "../data/types";
-import { pairRankWeight, pairRelation, shortReasonHe } from "../systems/chemistry";
+import {
+  pairRankWeight,
+  pairRelation,
+  relationColor,
+  relationOpacity,
+  relationStrokeWidth,
+  shortReasonHe,
+} from "../systems/chemistry";
 import { nearestNeighborhood } from "../systems/demand";
 import { copy } from "./copy";
 import { el } from "./dom";
@@ -119,7 +126,10 @@ function fillEdgeReason(box: HTMLElement, key: string): void {
   box.append(
     el(
       "p",
-      { class: rel.s < 0 ? "tone-red" : rel.s > 0 ? "tone-green" : "muted" },
+      {
+        class: rel.s === 0 ? "muted" : "",
+        style: rel.s === 0 ? undefined : `color:${relationColor(rel.s)}`,
+      },
       `${shortReasonHe(rel)} · ${getPerson(parsed.a).nameHe} / ${getPerson(parsed.b).nameHe}`,
     ),
     el("p", {}, authored?.source.contextHe ?? rel.reasonHe),
@@ -195,17 +205,9 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
   const others = player.picks.slice(1);
   const preview = view.focusId && !player.picks.includes(view.focusId) ? view.focusId : null;
   const ring = preview ? [...others, preview] : others;
-  const points = ringPoints(ring.length, 126);
   const nodes: PlacedNode[] = [
     { id: hubId, rank: 1, x: CX, y: CY, ghost: false, hub: true },
-    ...ring.map((id, index) => ({
-      id,
-      rank: id === preview ? player.picks.length + 1 : player.picks.indexOf(id) + 1,
-      x: points[index]!.x,
-      y: points[index]!.y,
-      ghost: id === preview,
-      hub: false,
-    })),
+    ...placeRing(ring, player, preview),
   ];
 
   let markup = `<defs>
@@ -216,7 +218,7 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     </radialGradient>
   </defs>
   <rect width="${SIZE}" height="${SIZE}" fill="url(#stage-glow)" />
-  <circle class="orbit" cx="${CX}" cy="${CY}" r="126" />`;
+  ${nodes.length > 6 ? `<circle class="orbit" cx="${CX}" cy="${CY}" r="96" /><circle class="orbit" cx="${CX}" cy="${CY}" r="168" />` : `<circle class="orbit" cx="${CX}" cy="${CY}" r="126" />`}`;
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
@@ -225,13 +227,14 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
       const rel = pairRelation(a.id, b.id);
       const key = edgeKey(a.id, b.id, rel.type);
       const weight = pairRankWeight(a.rank, b.rank);
-      const tone = rel.s < 0 ? "is-red" : rel.s > 0 ? "is-green" : "is-muted";
-      const width = 0.7 + weight * (rel.s < 0 ? 3.5 : rel.s > 0 ? 1.5 : 0.7);
+      const width = relationStrokeWidth(rel.s, weight);
+      const color = relationColor(rel.s);
+      const opacity = relationOpacity(rel.s);
       const ghost = a.ghost || b.ghost;
       const selected = view.selectedEdge === key || view.hoverEdge === key;
       markup += `<g data-edge="${key}">
         <path d="${spoke(a.x, a.y, b.x, b.y)}" class="chem-edge-hit" />
-        <path d="${spoke(a.x, a.y, b.x, b.y)}" class="chem-edge ${tone} ${selected ? "is-selected" : ""} ${ghost ? "is-ghost" : ""}" style="stroke-width:${width.toFixed(2)}" />
+        <path d="${spoke(a.x, a.y, b.x, b.y)}" class="chem-edge ${rel.s < 0 ? "is-cool" : rel.s > 0 ? "is-warm" : "is-muted"} ${selected ? "is-selected" : ""} ${ghost ? "is-ghost" : ""}" style="stroke:${color};stroke-width:${width.toFixed(2)};opacity:${opacity.toFixed(2)}" />
       </g>`;
     }
   }
@@ -244,23 +247,25 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
   for (const node of nodes) {
     const person = getPerson(node.id);
     const hot = view.focusId === node.id || view.hoverId === node.id;
-    const photo = portraitUrl(node.id);
+    const photo = portraitSrc(node.id);
+    const compact = nodes.length >= 8;
     const face = el(
       "button",
       {
         type: "button",
-        class: `tree-face person-node on-player ${node.hub ? "is-hub" : ""} ${node.ghost ? "is-ghost" : ""} ${hot ? "is-hot" : ""}`,
+        class: `tree-face person-node on-player ${node.hub ? "is-hub" : ""} ${node.ghost ? "is-ghost" : ""} ${hot ? "is-hot" : ""} ${compact ? "is-compact" : ""}`,
         "data-person": node.id,
         style: `--x:${((node.x / SIZE) * 100).toFixed(2)}%;--y:${((node.y / SIZE) * 100).toFixed(2)}%;`,
       },
-      photo
-        ? el("img", {
-            class: "tree-photo",
-            src: photo,
-            alt: person.nameHe,
-            referrerpolicy: "no-referrer",
-          })
-        : el("span", { class: "tree-photo is-fallback", "aria-hidden": "true" }, person.nameHe.slice(0, 1)),
+      bindPortrait(
+        el("img", {
+          class: "tree-photo",
+          src: photo,
+          alt: person.nameHe,
+          referrerpolicy: "no-referrer",
+        }),
+        node.id,
+      ),
       el("span", { class: "face-name" }, person.nameHe),
     );
     face.addEventListener("pointerenter", () => handlers.onHover(node.id));
@@ -290,14 +295,37 @@ function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {
   });
 }
 
+function placeRing(ring: PersonId[], player: DraftList, preview: PersonId | null): PlacedNode[] {
+  const innerCount = ring.length <= 5 ? ring.length : 4;
+  const innerIds = ring.slice(0, innerCount);
+  const outerIds = ring.slice(innerCount);
+  const innerR = outerIds.length ? 96 : 126;
+  const placed: PlacedNode[] = [];
+  const push = (id: PersonId, point: { x: number; y: number }) => {
+    placed.push({
+      id,
+      rank: id === preview ? player.picks.length + 1 : player.picks.indexOf(id) + 1,
+      x: point.x,
+      y: point.y,
+      ghost: id === preview,
+      hub: false,
+    });
+  };
+  ringPoints(innerIds.length, innerR).forEach((point, index) => push(innerIds[index]!, point));
+  ringPoints(outerIds.length, 168, Math.PI / outerIds.length || 0).forEach((point, index) => {
+    push(outerIds[index]!, point);
+  });
+  return placed;
+}
+
 function remainingInSlate(remaining: PersonId[], slate: SlateId): number {
   return remaining.filter((id) => getPerson(id).slateId === slate).length;
 }
 
-function ringPoints(count: number, radius: number): Array<{ x: number; y: number }> {
+function ringPoints(count: number, radius: number, turn = 0): Array<{ x: number; y: number }> {
   if (count <= 0) return [];
   return Array.from({ length: count }, (_, i) => {
-    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / count;
+    const angle = -Math.PI / 2 + turn + (i * 2 * Math.PI) / count;
     return { x: CX + Math.cos(angle) * radius, y: CY + Math.sin(angle) * radius };
   });
 }

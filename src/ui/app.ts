@@ -6,12 +6,13 @@ import {
   clampCpus,
   createDraft,
   currentList,
-  HARD_SLATE_CAP,
+  DIFFICULTIES,
   isDraftOver,
   legalRemaining,
   MAX_CPU,
   MIN_CPU,
   slateCountOnList,
+  type DifficultyId,
   type DraftState,
 } from "../systems/draft";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
@@ -27,7 +28,7 @@ type Screen = "setup" | "draft" | "resolve";
 interface AppState {
   screen: Screen;
   nCpus: number;
-  hardMode: boolean;
+  difficulty: DifficultyId;
   draft: DraftState;
   focusId: PersonId | null;
   hoverId: PersonId | null;
@@ -62,12 +63,12 @@ export function mount(appRoot: HTMLElement): void {
   render();
 }
 
-function freshState(nCpus: number, hardMode = false): AppState {
+function freshState(nCpus: number, difficulty: DifficultyId = "open"): AppState {
   return {
     screen: "setup",
     nCpus: clampCpus(nCpus),
-    hardMode,
-    draft: createDraft(nCpus, playSeed(), hardMode),
+    difficulty,
+    draft: createDraft(nCpus, playSeed(), difficulty),
     focusId: null,
     hoverId: null,
     selectedEdge: null,
@@ -157,14 +158,14 @@ function draftView(): DraftView {
     remaining: legalRemaining(
       state.draft.lists.find((list) => list.isPlayer)?.picks ?? [],
       state.draft.remaining,
-      state.draft.hardMode,
+      state.draft.slateCap,
     ),
     canPick: Boolean(turn?.isPlayer) && !state.cpuThinking && !isDraftOver(state.draft),
     openSlate: state.openSlate,
     liveText: state.liveText,
     cpuThinking: state.cpuThinking,
     notices: state.notices,
-    hardMode: state.draft.hardMode,
+    difficulty: state.draft.difficulty,
   };
 }
 
@@ -204,25 +205,33 @@ function renderSetup(): HTMLElement {
   }
   screen.append(field);
 
-  const hard = el(
-    "label",
-    { class: `hard-toggle ${state.hardMode ? "is-on" : ""}` },
-    el("input", {
-      type: "checkbox",
-      ...(state.hardMode ? { checked: true } : {}),
-    }),
-    el("span", { class: "hard-toggle-text" }, copy.hardMode),
-    el("span", { class: "hard-toggle-hint" }, copy.hardModeHint),
-  );
-  hard.querySelector("input")?.addEventListener("change", () => {
-    state.hardMode = !state.hardMode;
-    render();
-  });
-  screen.append(hard);
+  const levels = el("fieldset", { class: "level-pick" }, el("legend", {}, copy.levelLabel));
+  for (const row of DIFFICULTIES) {
+    const id = `level-${row.id}`;
+    const label = el(
+      "label",
+      { class: state.difficulty === row.id ? "is-on" : "" },
+      el("input", {
+        type: "radio",
+        name: "level",
+        id,
+        value: row.id,
+        ...(state.difficulty === row.id ? { checked: true } : {}),
+      }),
+      el("span", { class: "level-name" }, row.labelHe),
+      el("span", { class: "level-hint" }, row.hintHe),
+    );
+    label.querySelector("input")?.addEventListener("change", () => {
+      state.difficulty = row.id;
+      render();
+    });
+    levels.append(label);
+  }
+  screen.append(levels);
 
   const start = el("button", { type: "button", class: "primary" }, copy.start);
   start.addEventListener("click", () => {
-    state = { ...freshState(state.nCpus, state.hardMode), screen: "draft", liveText: copy.yourTurn };
+    state = { ...freshState(state.nCpus, state.difficulty), screen: "draft", liveText: copy.yourTurn };
     render();
   });
   screen.append(el("div", { class: "confirm-bar" }, start));
@@ -238,7 +247,8 @@ function pick(id: PersonId): void {
   state.focusId = null;
   state.hoverId = null;
   const player = state.draft.lists.find((list) => list.isPlayer);
-  const atCap = state.draft.hardMode && player && slateCountOnList(player.picks, slate) >= HARD_SLATE_CAP;
+  const cap = state.draft.slateCap;
+  const atCap = cap != null && player && slateCountOnList(player.picks, slate) >= cap;
   const stillInSlate = state.draft.remaining.some((left) => getPerson(left).slateId === slate);
   state.openSlate = !atCap && stillInSlate ? slate : null;
   state.notices = [];
@@ -305,6 +315,6 @@ function finish(): void {
 
 function replay(): void {
   window.clearTimeout(cpuTimer);
-  state = freshState(state.nCpus, state.hardMode);
+  state = freshState(state.nCpus, state.difficulty);
   render();
 }

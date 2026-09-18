@@ -1,7 +1,7 @@
 # List Draft — agent brief
 
 Status: shipped · playable PoC  
-Last updated: 10 September 2026  
+Last updated: 18 September 2026  
 Repo: this directory. Independent of Kalpi and of Election Lane Battler.
 
 Read this file before planning, coding, or adding political content.
@@ -91,7 +91,7 @@ Controls: tap/click to pick; keyboard-focusable names; confirm on the focused pe
 
 `choose N → snake-draft with the tree visible → resolve mandates → read the why → replay`
 
-CPU: almost always the greedy max. Score is projected `effective_votes` of the ticket after the pick (split mass × cohesion^α × hub_draw) — the same formula as election night. In hard mode it also looks one partner ahead on a newly opened slate. Rare noise only among near-ties. Seeded per run so a replay can differ; same seed is deterministic. CPU uses the same visible rules as the player. No hidden stats.
+CPU: always the greedy max. Score is projected `effective_votes` of the ticket after the pick (split mass × cohesion^α × hub_draw) — the same formula as election night. When a party cap still allows a second name from a newly opened slate, it also looks one partner ahead. No near-tie noise. Same player picks are deterministic. CPU uses the same visible rules as the player. No hidden stats.
 
 ---
 
@@ -246,13 +246,14 @@ Quality floor: phone + desktop, visible focus, reduced motion, empty/disabled st
 **Must prove**
 
 - 12 real people in a shared pool (starter table below). **Shipped expansion (Sep 2026):** published 2026 top-10s per slate so N=2/3 can fill 6 slots. Short slates stay short — no invented names.
-- Player list of **6 slots** (not 20). Snake draft vs **N ∈ {1,2,3}** CPU lists of 6.
+- Player list of **10 slots** (not 20). Snake draft vs **N ∈ {1,2,3}** CPU lists of 10.
+- Difficulty is a **party cap**: none, 5, 3, 2, or 1 name per slate. Easy = no cap. CPU always takes the greedy max.
 - Tree or hub-and-spokes that recolours on pick, with at least a few sourced red edges.
 - Rank-weighted asymmetric cohesion + centroid demand + split + `α` conversion.
 - Threshold 3.25% + 120-seat allocation (simplified).
 - Why-line on the result.
 - Disclosure copy.
-- Local only. Same player picks + same CPU seed are deterministic. Live runs use a fresh seed. CPU noise is rare and only among near-ties.
+- Local only. Same player picks are deterministic. CPU always takes the greedy max.
 
 **May fake, labeled**
 

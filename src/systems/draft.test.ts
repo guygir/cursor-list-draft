@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { getPerson } from "../data/pool";
-import { applyCpuTurn, applyPick, createDraft, currentList, HARD_SLATE_CAP, isDraftOver, legalRemaining, slateCountOnList } from "./draft";
+import {
+  applyCpuTurn,
+  applyPick,
+  createDraft,
+  currentList,
+  isDraftOver,
+  legalRemaining,
+  LIST_SIZE,
+  slateCountOnList,
+} from "./draft";
 
 describe("snake draft", () => {
   it("is deterministic for the same player picks", () => {
@@ -9,18 +18,18 @@ describe("snake draft", () => {
     expect(a.lists.map((l) => l.picks)).toEqual(b.lists.map((l) => l.picks));
   });
 
-  it("fills two lists of 6 against one CPU and leaves a leftover pool", () => {
+  it("fills two lists of 10 against one CPU and leaves a leftover pool", () => {
     const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 1);
     expect(isDraftOver(end)).toBe(true);
-    expect(end.lists[0]?.picks).toHaveLength(6);
-    expect(end.lists[1]?.picks).toHaveLength(6);
+    expect(end.lists[0]?.picks).toHaveLength(LIST_SIZE);
+    expect(end.lists[1]?.picks).toHaveLength(LIST_SIZE);
     expect(end.remaining.length).toBeGreaterThan(0);
   });
 
-  it("fills three lists of 6 against two CPUs", () => {
+  it("fills three lists of 10 against two CPUs", () => {
     const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 2);
     expect(isDraftOver(end)).toBe(true);
-    expect(end.lists.every((list) => list.picks.length === 6)).toBe(true);
+    expect(end.lists.every((list) => list.picks.length === LIST_SIZE)).toBe(true);
   });
 
   it("removes a name from the pool after the player or a CPU takes it", () => {
@@ -39,40 +48,43 @@ describe("snake draft", () => {
     expect(taken.every((id) => !afterCpu.remaining.includes(id))).toBe(true);
   });
 
-  it("hard mode blocks a third name from the same party", () => {
-    let state = createDraft(1, 1, true);
+  it("one-per-party blocks a second name from the same slate", () => {
+    let state = createDraft(1, 1, "one");
     state = applyPick(state, "netanyahu");
     while (currentList(state) && !currentList(state)!.isPlayer) {
       state = applyCpuTurn(state);
     }
     const second = state.remaining.find((id) => getPerson(id).slateId === "likud");
     expect(second).toBeTruthy();
-    state = applyPick(state, second!);
-    const third = state.remaining.find((id) => getPerson(id).slateId === "likud");
-    expect(third).toBeTruthy();
-    const blocked = applyPick(state, third!);
-    expect(blocked.lists.find((list) => list.isPlayer)?.picks).toEqual(["netanyahu", second]);
-    expect(blocked.remaining).toContain(third);
+    const blocked = applyPick(state, second!);
+    expect(blocked.lists.find((list) => list.isPlayer)?.picks).toEqual(["netanyahu"]);
+    expect(blocked.remaining).toContain(second);
     expect(blocked.turnCursor).toBe(state.turnCursor);
   });
 
-  it("hard mode keeps every list at most two per party", () => {
-    const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 1, true);
+  it.each([
+    ["five", 5],
+    ["three", 3],
+    ["two", 2],
+    ["one", 1],
+  ] as const)("%s keeps every list at most %s per party", (difficulty, cap) => {
+    const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 1, difficulty);
     expect(isDraftOver(end)).toBe(true);
     for (const list of end.lists) {
+      expect(list.picks.length).toBe(LIST_SIZE);
       for (const id of list.picks) {
-        expect(slateCountOnList(list.picks, getPerson(id).slateId)).toBeLessThanOrEqual(HARD_SLATE_CAP);
+        expect(slateCountOnList(list.picks, getPerson(id).slateId)).toBeLessThanOrEqual(cap);
       }
     }
   });
 });
 
-function play(playerPicks: string[], cpus: number, hardMode = false) {
-  let state = createDraft(cpus, 1, hardMode);
+function play(playerPicks: string[], cpus: number, difficulty: "open" | "five" | "three" | "two" | "one" = "open") {
+  let state = createDraft(cpus, 1, difficulty);
   while (!isDraftOver(state)) {
     const list = state.lists[state.turnQueue[state.turnCursor] ?? 0];
     if (list?.isPlayer) {
-      const legal = legalRemaining(list.picks, state.remaining, hardMode);
+      const legal = legalRemaining(list.picks, state.remaining, state.slateCap);
       const next = playerPicks.find((id) => legal.includes(id as never)) ?? legal[0];
       if (!next) break;
       state = applyPick(state, next as never);

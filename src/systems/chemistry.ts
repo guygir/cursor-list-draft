@@ -314,3 +314,42 @@ function clamp01(n: number): number {
 export function compatibilityWithHub(hub: PersonId, candidate: PersonId): number {
   return 1 + pairRelation(hub, candidate).s;
 }
+
+const MUTED_RGB: Rgb = [90, 86, 76];
+const RED_RGB: Rgb = [196, 90, 78];
+const GREEN_RGB: Rgb = [111, 158, 122];
+const GREEN_CEILING = 0.22;
+
+type Rgb = [number, number, number];
+
+/** Continuous stroke for a pair. Not a binary red/green switch. */
+export function relationColor(s: number): string {
+  if (s <= 0) {
+    const t = clamp(-s, 0, 1);
+    return rgbCss(mixRgb(MUTED_RGB, RED_RGB, Math.pow(t, 0.85)));
+  }
+  const t = clamp(s / GREEN_CEILING, 0, 1);
+  return rgbCss(mixRgb(MUTED_RGB, GREEN_RGB, Math.pow(t, 0.7)));
+}
+
+/** Rank weight plus |s| so a strong 1–2 veto is thicker than a faint mid-list cool. */
+export function relationStrokeWidth(s: number, rankWeightValue: number): number {
+  return 0.65 + rankWeightValue * (0.85 + Math.abs(s) * 3.4);
+}
+
+export function relationOpacity(s: number): number {
+  return clamp(0.32 + Math.abs(s) * 0.68, 0.32, 1);
+}
+
+function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {
+  const u = clamp(t, 0, 1);
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * u),
+    Math.round(a[1] + (b[1] - a[1]) * u),
+    Math.round(a[2] + (b[2] - a[2]) * u),
+  ];
+}
+
+function rgbCss([r, g, b]: Rgb): string {
+  return `rgb(${r}, ${g}, ${b})`;
+}

@@ -24,7 +24,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("אמינות");
     expect(root.textContent).toContain("שמועות");
     expect(root.textContent).toContain("3.25%");
-    expect(root.textContent).toContain("מצב קשה");
+    expect(root.textContent).toContain("רמת קושי");
+    expect(root.textContent).toContain("בלי הגבלת מפלגה");
+    expect(root.textContent).toContain("שם אחד מכל מפלגה");
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
@@ -54,7 +56,7 @@ describe("playable draft UI", () => {
     root.querySelector(".chem-edge-hit")?.dispatchEvent(new Event("pointerenter", { bubbles: true }));
     expect(root.querySelector(".edge-tip")?.textContent?.length).toBeGreaterThan(8);
 
-    for (let i = 0; i < 16 && !root.textContent?.includes("ליל בחירות"); i++) {
+    for (let i = 0; i < 40 && !root.textContent?.includes("ליל בחירות"); i++) {
       if (!root.querySelector(".name-btn")) {
         root.querySelector<HTMLButtonElement>(".party-btn")?.click();
       }

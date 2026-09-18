@@ -1,11 +1,32 @@
 import { getPerson, POOL_IDS } from "../data/pool";
 import type { DraftList, PersonId, SlateId } from "../data/types";
-import { greedyCpuPick, mulberry32 } from "./cpu";
+import { greedyCpuPick } from "./cpu";
 
-export const LIST_SIZE = 6;
+export const LIST_SIZE = 10;
 export const MIN_CPU = 1;
 export const MAX_CPU = 3;
-export const HARD_SLATE_CAP = 2;
+
+export type DifficultyId = "open" | "five" | "three" | "two" | "one";
+
+export interface Difficulty {
+  id: DifficultyId;
+  /** null = no party cap */
+  slateCap: number | null;
+  labelHe: string;
+  hintHe: string;
+}
+
+export const DIFFICULTIES: readonly Difficulty[] = [
+  { id: "open", slateCap: null, labelHe: "קל", hintHe: "בלי הגבלת מפלגה" },
+  { id: "five", slateCap: 5, labelHe: "עד 5", hintHe: "עד חמישה שמות מאותה מפלגה" },
+  { id: "three", slateCap: 3, labelHe: "עד 3", hintHe: "עד שלושה שמות מאותה מפלגה" },
+  { id: "two", slateCap: 2, labelHe: "עד 2", hintHe: "עד שניים מאותה מפלגה" },
+  { id: "one", slateCap: 1, labelHe: "אחד", hintHe: "שם אחד מכל מפלגה" },
+];
+
+export function difficultyById(id: DifficultyId): Difficulty {
+  return DIFFICULTIES.find((row) => row.id === id) ?? DIFFICULTIES[0]!;
+}
 
 export interface DraftState {
   lists: DraftList[];
@@ -14,25 +35,39 @@ export interface DraftState {
   turnCursor: number;
   seed: number;
   rand: () => number;
-  hardMode: boolean;
+  difficulty: DifficultyId;
+  slateCap: number | null;
 }
 
 export function slateCountOnList(picks: PersonId[], slate: SlateId): number {
   return picks.filter((id) => getPerson(id).slateId === slate).length;
 }
 
-export function canAddToList(picks: PersonId[], personId: PersonId, hardMode: boolean): boolean {
-  if (!hardMode) return true;
-  return slateCountOnList(picks, getPerson(personId).slateId) < HARD_SLATE_CAP;
+export function canAddToList(
+  picks: PersonId[],
+  personId: PersonId,
+  slateCap: number | null,
+): boolean {
+  if (slateCap == null) return true;
+  return slateCountOnList(picks, getPerson(personId).slateId) < slateCap;
 }
 
-export function legalRemaining(picks: PersonId[], remaining: PersonId[], hardMode: boolean): PersonId[] {
-  if (!hardMode) return remaining;
-  return remaining.filter((id) => canAddToList(picks, id, true));
+export function legalRemaining(
+  picks: PersonId[],
+  remaining: PersonId[],
+  slateCap: number | null,
+): PersonId[] {
+  if (slateCap == null) return remaining;
+  return remaining.filter((id) => canAddToList(picks, id, slateCap));
 }
 
-export function createDraft(cpuCount: number, seed = 1, hardMode = false): DraftState {
+export function createDraft(
+  cpuCount: number,
+  seed = 1,
+  difficulty: DifficultyId = "open",
+): DraftState {
   const n = clampCpus(cpuCount);
+  const { slateCap } = difficultyById(difficulty);
   const lists: DraftList[] = [
     {
       id: "player",
@@ -60,8 +95,9 @@ export function createDraft(cpuCount: number, seed = 1, hardMode = false): Draft
     turnQueue: buildSnakeQueue(lists.length, LIST_SIZE),
     turnCursor: 0,
     seed,
-    rand: mulberry32(seed),
-    hardMode,
+    rand: () => 0,
+    difficulty,
+    slateCap,
   };
 }
 
@@ -88,30 +124,44 @@ export function applyPick(state: DraftState, personId: PersonId): DraftState {
   if (idx === null) return state;
   if (!state.remaining.includes(personId)) return state;
   const current = state.lists[idx];
-  if (!current || !canAddToList(current.picks, personId, state.hardMode)) return state;
+  if (!current || !canAddToList(current.picks, personId, state.slateCap)) return state;
 
   const lists = state.lists.map((list, i) =>
     i === idx ? { ...list, picks: [...list.picks, personId] } : list,
   );
 
-  return {
+  return skipIfBlocked({
     lists,
     remaining: state.remaining.filter((id) => id !== personId),
     turnQueue: state.turnQueue,
     turnCursor: state.turnCursor + 1,
     seed: state.seed,
     rand: state.rand,
-    hardMode: state.hardMode,
-  };
+    difficulty: state.difficulty,
+    slateCap: state.slateCap,
+  });
 }
 
 export function applyCpuTurn(state: DraftState): DraftState {
   const list = currentList(state);
   if (!list || list.isPlayer || isDraftOver(state)) return state;
-  const pool = legalRemaining(list.picks, state.remaining, state.hardMode);
-  if (pool.length === 0) return state;
-  const pick = greedyCpuPick(list, state.lists, pool, state.rand(), state.hardMode);
+  const pool = legalRemaining(list.picks, state.remaining, state.slateCap);
+  if (pool.length === 0) return skipIfBlocked({ ...state, turnCursor: state.turnCursor + 1 });
+  const pick = greedyCpuPick(list, state.lists, pool, state.slateCap);
   return applyPick(state, pick);
+}
+
+/** Skip anyone who cannot legally take a remaining name. */
+export function skipIfBlocked(state: DraftState): DraftState {
+  let next = state;
+  while (!isDraftOver(next)) {
+    const list = currentList(next);
+    if (!list) break;
+    const pool = legalRemaining(list.picks, next.remaining, next.slateCap);
+    if (pool.length > 0) break;
+    next = { ...next, turnCursor: next.turnCursor + 1 };
+  }
+  return next;
 }
 
 /** Snake order, skipping a list once it already has LIST_SIZE names. */

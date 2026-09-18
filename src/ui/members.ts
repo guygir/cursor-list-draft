@@ -1,8 +1,8 @@
 import { ASPECT_IDS, ASPECT_LABEL_HE, peakAspect } from "../data/aspects";
 import { getPerson, slateLabelHe } from "../data/pool";
-import { portraitUrl } from "../data/portraits";
+import { bindPortrait, portraitSrc } from "../data/portraits";
 import type { Person, PersonId, SlateId } from "../data/types";
-import { pairRelation } from "../systems/chemistry";
+import { pairRelation, relationColor } from "../systems/chemistry";
 import { copy } from "./copy";
 import { el } from "./dom";
 
@@ -28,26 +28,29 @@ export function renderMemberPicker(opts: {
   for (const id of ids) {
     const person = getPerson(id);
     const rel = hub ? pairRelation(hub, id) : null;
-    const tone = rel ? (rel.s < 0 ? "is-red" : rel.s > 0 ? "is-green" : "") : "";
-    const photo = portraitUrl(id);
+    const photo = portraitSrc(id);
     const btn = el(
       "button",
       {
         type: "button",
-        class: `name-btn ${tone} ${focusId === id ? "is-focused" : ""}`,
+        class: `name-btn ${rel ? "has-tone" : ""} ${focusId === id ? "is-focused" : ""}`,
         "data-person": id,
         tabindex: focusId === id || (!focusId && id === ids[0]) ? 0 : -1,
+        ...(rel
+          ? { style: `--tone:${relationColor(rel.s)};--tone-w:${(2 + Math.abs(rel.s) * 3).toFixed(2)}px` }
+          : {}),
       },
-      photo
-        ? el("img", {
-            class: "name-photo",
-            src: photo,
-            alt: "",
-            width: 28,
-            height: 28,
-            referrerpolicy: "no-referrer",
-          })
-        : el("span", { class: "name-photo is-fallback", "aria-hidden": "true" }, person.nameHe.slice(0, 1)),
+      bindPortrait(
+        el("img", {
+          class: "name-photo",
+          src: photo,
+          alt: "",
+          width: 28,
+          height: 28,
+          referrerpolicy: "no-referrer",
+        }),
+        id,
+      ),
       el(
         "span",
         { class: "name-stack" },

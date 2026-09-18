@@ -1,160 +1,114 @@
 /**
- * Pull Wikipedia thumbnails for the draft pool (Action API, batched).
- * Identity only — not electability. Skip missing pages and pages with no photo.
+ * Pull Wikipedia thumbnails for known exact titles only.
+ * No search — a fuzzy hit can attach the wrong face.
+ * Identity art, not electability.
  */
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
 const UA = "ListDraft/0.1 (local educational prototype; not a forecast)";
+const PORTRAIT_PATH = new URL("../src/data/portraits.ts", import.meta.url);
 
-/** [id, lang, title] — titles must match an existing article, not a disambiguation. */
-const PEOPLE = [
-  ["netanyahu", "he", "בנימין נתניהו"],
-  ["eli-cohen", "he", "אלי כהן (פוליטיקאי, 1972)"],
-  ["ohana", "he", "אמיר אוחנה"],
-  ["levin", "he", "יריב לוין"],
-  ["regev", "he", "מירי רגב"],
-  ["israel-katz", "he", "ישראל כ\"ץ"],
-  ["saar", "he", "גדעון סער"],
-  ["ofir-katz", "he", "אופיר כץ"],
-  ["kisch", "he", "יואב קיש"],
-  ["ben-gvir", "he", "איתמר בן גביר"],
-  ["gotliv", "he", "טלי גוטליב"],
-  ["wasserlauf", "he", "יצחק וסרלאוף"],
-  ["amihai-eliyahu", "he", "עמיחי אליהו"],
-  ["son-har-melech", "he", "לימור סון הר-מלך"],
-  ["kroizer", "he", "יצחק קרויזר"],
-  ["smotrich", "he", "בצלאל סמוטריץ'"],
-  ["feiglin", "he", "משה פייגלין"],
-  ["strook", "he", "אורית סטרוק"],
-  ["rothman", "he", "שמחה רוטמן"],
-  ["sukkot", "he", "צבי סוכות"],
-  ["deri", "he", "אריה דרעי"],
-  ["azoulay", "he", "ינון אזולאי"],
-  ["malkieli", "he", "מיכאל מלכיאלי"],
-  ["ben-tzur", "he", "יואב בן-צור"],
-  ["biton", "he", "חיים ביטון"],
-  ["abutbul", "he", "משה אבוטבול"],
-  ["buso", "he", "אוריאל בוסו"],
-  ["taieb", "he", "יוסף טייב"],
-  ["yaakov-asher", "he", "יעקב אשר"],
-  ["goldknopf", "he", "יצחק גולדקנופף"],
-  ["pindrus", "he", "יצחק פינדרוס"],
-  ["porush", "he", "מאיר פרוש"],
-  ["tessler", "he", "יעקב טסלר"],
-  ["bennett", "he", "נפתלי בנט"],
-  ["lapid", "he", "יאיר לפיד"],
-  ["ben-ari", "he", "מירב בן-ארי"],
-  ["ginzburg", "he", "איתן גינזבורג"],
-  ["meirav-cohen", "he", "מירב כהן"],
-  ["eisenkot", "he", "גדי איזנקוט"],
-  ["farkash", "he", "אורית פרקש-הכהן"],
-  ["kahana", "he", "מתן כהנא"],
-  ["tropper", "he", "חילי טרופר"],
-  ["golan", "he", "יאיר גולן"],
-  ["lazimi", "he", "נעמה לזימי"],
-  ["kariv", "he", "גלעד קריב"],
-  ["rayten", "he", "עפרת רייטן"],
-  ["lasky", "he", "גבי לסקי"],
-  ["rozin", "he", "מיכל רוזין"],
-  ["liberman", "he", "אביגדור ליברמן"],
-  ["forer", "he", "עודד פורר"],
-  ["malinovsky", "he", "יוליה מלינובסקי"],
-  ["amar", "he", "חמד עמאר"],
-  ["sova", "he", "יבגני סובה"],
-  ["illouz", "he", "דן אילוז"],
-  ["abbas", "he", "מנסור עבאס"],
-  ["taha", "he", "וליד טאהא"],
-  ["khatib-yasin", "he", "אימאן חטיב-יאסין"],
-  ["gantz", "he", "בני גנץ"],
-  ["tamano-shata", "he", "פנינה תמנו-שטה"],
-  ["schuster", "he", "אלון שוסטר"],
-  ["jabareen", "he", "יוסף ג'בארין"],
-  ["tibi", "he", "אחמד טיבי"],
-  ["abu-shehadeh", "he", "סמי אבו שחאדה"],
-  ["cassif", "he", "עופר כסיף"],
-  ["atauna", "he", "יוסף עטאונה"],
+/** Exact Hebrew Wikipedia titles only. */
+const EXACT = [
+  ["israel-katz", "ישראל כץ (הליכוד)"],
+  ["mishraki", "יונתן משריקי"],
+  ["yoram-cohen", "יורם כהן"],
+  ["altschuler", "עדי אלטשולר"],
+  ["meridor", "שאול מרידור"],
+  ["rayten", "עפרת רייטן"],
+  ["radman", "משה רדמן"],
+  ["fink", "יאיה פינק"],
+  ["tibon", "נועם תיבון"],
+  ["turner", "קרן טרנר"],
+  ["bloch", "עליזה בלוך"],
+  ["segalovitz", "יואב סגלוביץ"],
+  ["khatib-yasin", "אימאן חטיב-יאסין"],
+  ["tzvika-mor", "צביקה מור"],
+  ["hujeirat", "יאסר חוג'יראת"],
 ];
 
-async function queryLang(lang, titles) {
-  const url = new URL(`https://${lang}.wikipedia.org/w/api.php`);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function wiki(params, attempt = 0) {
+  const url = new URL("https://he.wikipedia.org/w/api.php");
   url.searchParams.set("action", "query");
   url.searchParams.set("format", "json");
   url.searchParams.set("origin", "*");
-  url.searchParams.set("prop", "pageimages|info");
-  url.searchParams.set("inprop", "url");
-  url.searchParams.set("pithumbsize", "160");
-  url.searchParams.set("pilicense", "any");
-  url.searchParams.set("redirects", "1");
-  url.searchParams.set("titles", titles.join("|"));
-
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
   const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
-  if (!res.ok) throw new Error(`${lang} ${res.status}`);
+  if (res.status === 429 && attempt < 6) {
+    const wait = Number(res.headers.get("retry-after") ?? 12) * 1000;
+    console.log("429, wait", wait, "ms");
+    await sleep(wait);
+    return wiki(params, attempt + 1);
+  }
+  if (!res.ok) throw new Error(`he ${res.status}`);
   return res.json();
 }
 
-function indexPages(data) {
-  const byTitle = new Map();
-  const normalized = new Map();
-  for (const red of data.query?.redirects ?? []) normalized.set(red.from, red.to);
-  for (const norm of data.query?.normalized ?? []) normalized.set(norm.from, norm.to);
-  for (const page of Object.values(data.query?.pages ?? {})) {
-    if (page.missing || page.invalid) continue;
-    byTitle.set(page.title, page);
+async function pageimage(title) {
+  const data = await wiki({
+    prop: "pageimages|info",
+    inprop: "url",
+    pithumbsize: 250,
+    pilicense: "any",
+    redirects: 1,
+    titles: title,
+  });
+  const page = Object.values(data.query?.pages ?? {})[0];
+  if (!page || page.missing || page.invalid || !page.thumbnail?.source) return null;
+  if (page.title && page.title !== title) {
+    console.log("redirect", title, "->", page.title);
   }
-  return { byTitle, normalized };
+  return {
+    url: page.thumbnail.source,
+    source: page.fullurl ?? `https://he.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+  };
 }
 
-function resolvePage(title, index) {
-  let key = title;
-  for (let i = 0; i < 3; i++) {
-    const next = index.normalized.get(key);
-    if (!next) break;
-    key = next;
+function parseExisting(source) {
+  const match = source.match(/export const PORTRAITS[\s\S]*?=\s*(\{[\s\S]*?\});\n/);
+  if (!match) throw new Error("Could not parse existing PORTRAITS");
+  return JSON.parse(match[1]);
+}
+
+const source = await readFile(PORTRAIT_PATH, "utf8");
+const found = parseExisting(source);
+const stillMissing = [];
+
+for (const [id, title] of EXACT) {
+  if (found[id]) {
+    console.log("have", id);
+    continue;
   }
-  return index.byTitle.get(key) ?? null;
-}
-
-const byLang = new Map();
-for (const [id, lang, title] of PEOPLE) {
-  const bucket = byLang.get(lang) ?? [];
-  bucket.push({ id, title });
-  byLang.set(lang, bucket);
-}
-
-const rows = {};
-for (const [lang, items] of byLang) {
-  for (let i = 0; i < items.length; i += 40) {
-    const chunk = items.slice(i, i + 40);
-    const data = await queryLang(
-      lang,
-      chunk.map((item) => item.title),
-    );
-    const index = indexPages(data);
-    for (const item of chunk) {
-      const page = resolvePage(item.title, index);
-      const thumb = page?.thumbnail?.source;
-      if (!thumb) {
-        console.log("skip", item.id);
-        continue;
-      }
-      rows[item.id] = {
-        url: thumb,
-        source: page.fullurl ?? `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(item.title)}`,
-      };
-      console.log("ok", item.id);
+  try {
+    const hit = await pageimage(title);
+    if (!hit) {
+      console.log("skip", id);
+      stillMissing.push(id);
+    } else {
+      found[id] = hit;
+      console.log("ok", id, hit.source);
     }
+    await sleep(1200);
+  } catch (err) {
+    console.log("err", id, err.message);
+    stillMissing.push(id);
+    await sleep(4000);
   }
 }
 
-const body = `import type { PersonId } from "./types";
+const ordered = {};
+for (const key of Object.keys(found).sort()) ordered[key] = found[key];
 
-/** Wikipedia thumbnails. Identity art only — not an endorsement or electability claim. */
-export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }>> = ${JSON.stringify(rows, null, 2)};
+const helpers = source.split("export function portraitUrl")[1];
+if (!helpers) throw new Error("Could not keep portrait helpers");
+const head = source.split("export const PORTRAITS")[0];
+const body = `${head}export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }>> = ${JSON.stringify(ordered, null, 2)};
 
-export function portraitUrl(id: PersonId): string | null {
-  return PORTRAITS[id]?.url ?? null;
-}
-`;
+export function portraitUrl${helpers}`;
 
-await writeFile(new URL("../src/data/portraits.ts", import.meta.url), body);
-console.log("wrote", Object.keys(rows).length, "portraits");
+await writeFile(PORTRAIT_PATH, body);
+console.log("wrote", Object.keys(ordered).length, "portraits; still missing exact", stillMissing.join(", ") || "none");

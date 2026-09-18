@@ -7,6 +7,9 @@ import {
   pairRelation,
   pairWeight,
   rankWeight,
+  relationColor,
+  relationOpacity,
+  relationStrokeWidth,
   scoreCohesion,
 } from "./chemistry";
 
@@ -98,6 +101,19 @@ describe("pair relation", () => {
     expect(bands.size).toBeGreaterThan(2);
     expect(sample.every((s) => s === 0 || Math.abs(s) === 1)).toBe(false);
     expect(sample.some((s) => Math.abs(s) > 0.02 && Math.abs(s) < 1)).toBe(true);
+  });
+
+  it("scales edge color with the signed connection, not a 1/0 switch", () => {
+    const veto = relationColor(-1);
+    const far = relationColor(-0.45);
+    const cool = relationColor(-0.15);
+    const none = relationColor(0);
+    const close = relationColor(0.15);
+    expect(new Set([veto, far, cool, none, close]).size).toBe(5);
+    expect(veto).toMatch(/rgb\(196, 90, 78\)/);
+    expect(none).toMatch(/rgb\(90, 86, 76\)/);
+    expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-0.2, 1));
+    expect(relationOpacity(-1)).toBeGreaterThan(relationOpacity(-0.2));
   });
 });
 

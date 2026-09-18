@@ -3,8 +3,8 @@ import { SLATE_ASPECTS } from "./aspects";
 import { getPerson, PEOPLE, SLATE_ORDER } from "./pool";
 
 describe("2026 slate pool", () => {
-  it("has enough people for a 3-list snake of 6", () => {
-    expect(PEOPLE.length).toBeGreaterThanOrEqual(18);
+  it("has enough people for a 3-list snake of 10", () => {
+    expect(PEOPLE.length).toBeGreaterThanOrEqual(30);
   });
 
   it("keeps unique ids", () => {

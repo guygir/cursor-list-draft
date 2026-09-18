@@ -1,7 +1,7 @@
 import { getPerson, slateLabelHe } from "../data/pool";
-import { portraitUrl } from "../data/portraits";
+import { bindPortrait, portraitSrc } from "../data/portraits";
 import type { DraftList, PersonId } from "../data/types";
-import { LIST_SIZE } from "../systems/draft";
+import { difficultyById, LIST_SIZE, type DifficultyId } from "../systems/draft";
 import { listMeters } from "../systems/scores";
 import { copy } from "./copy";
 import { el } from "./dom";
@@ -33,7 +33,7 @@ export interface DraftView extends TreeView {
   liveText: string;
   cpuThinking: boolean;
   notices: PickNotice[];
-  hardMode: boolean;
+  difficulty: DifficultyId;
 }
 
 export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLElement {
@@ -88,7 +88,9 @@ function renderHeader(view: DraftView, player: DraftList | undefined): HTMLEleme
     el(
       "div",
       { class: "mast-tools" },
-      view.hardMode ? el("p", { class: "hard-badge" }, copy.hardMode) : null,
+      view.difficulty !== "open"
+        ? el("p", { class: "hard-badge" }, difficultyById(view.difficulty).labelHe)
+        : null,
       el("p", { class: "pick-count" }, copy.pickN(Math.min(filled + (view.canPick ? 1 : 0), LIST_SIZE), LIST_SIZE)),
       renderHowCalc(),
     ),
@@ -105,11 +107,25 @@ function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLEle
   for (let i = 0; i < LIST_SIZE; i++) {
     const id = player?.picks[i];
     const person = id ? getPerson(id) : null;
+    const photo = id ? portraitSrc(id) : null;
     ol.append(
       el(
         "li",
         { class: person ? "slot filled" : "slot empty" },
         el("span", { class: "slot-n" }, String(i + 1)),
+        photo
+          ? bindPortrait(
+              el("img", {
+                class: "slot-photo",
+                src: photo,
+                alt: "",
+                width: 18,
+                height: 18,
+                referrerpolicy: "no-referrer",
+              }),
+              id!,
+            )
+          : null,
         el("span", { class: "slot-name" }, person ? person.nameHe : copy.emptySlot),
       ),
     );
@@ -166,19 +182,20 @@ function renderNotices(notices: PickNotice[]): HTMLElement {
   const rail = el("aside", { class: "notice-rail", "aria-label": copy.roundNotices, "aria-live": "polite" });
   for (const notice of notices) {
     const person = getPerson(notice.personId);
-    const photo = portraitUrl(notice.personId);
+    const photo = portraitSrc(notice.personId);
     rail.append(
       el(
         "p",
         { class: "notice" },
-        photo
-          ? el("img", {
-              class: "notice-photo",
-              src: photo,
-              alt: "",
-              referrerpolicy: "no-referrer",
-            })
-          : el("span", { class: "notice-photo is-fallback", "aria-hidden": "true" }, person.nameHe.slice(0, 1)),
+        bindPortrait(
+          el("img", {
+            class: "notice-photo",
+            src: photo,
+            alt: "",
+            referrerpolicy: "no-referrer",
+          }),
+          notice.personId,
+        ),
         el("span", {}, copy.cpuNotice(notice.listHe, person.nameHe)),
       ),
     );
