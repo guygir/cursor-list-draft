@@ -48,6 +48,11 @@ describe("playable draft UI", () => {
     expect(root.querySelector(".notice-rail")?.textContent).toMatch(/מפלגה 1/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
     expect(root.textContent).toContain("מתעדכנים בכל בחירה");
+    const credMeter = root.querySelector<HTMLButtonElement>(".score-meter.is-cred");
+    credMeter?.click();
+    expect(credMeter?.classList.contains("is-open")).toBe(true);
+    expect(credMeter?.textContent).toContain("העץ");
+    expect(root.querySelector(".score-meter.is-demand")?.textContent).toContain("הגבעה");
     expect(root.textContent).toContain("צבע הקו = חוזק החיבור");
     expect(root.querySelector(".color-scale")).toBeTruthy();
 

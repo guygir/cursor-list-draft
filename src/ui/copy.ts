@@ -52,6 +52,8 @@ export const copy = {
   seats: "מנדטים",
   credibility: "אמינות",
   demand: "ביקוש",
+  credibilityTip: "העץ: כמה הכרזה מחזיקה. ריב למעלה הורס.",
+  demandTip: "הגבעה: כמה מצביעים שם, אחרי פיצול.",
   afterSplit: "אחרי פיצול",
   threshold: "אחוז חסימה 3.25%",
   dropped: "לא עבר",

@@ -5,7 +5,15 @@ import { KNESSET_SEATS } from "../systems/seats";
 import { copy } from "./copy";
 import { el } from "./dom";
 import { renderHowCalc } from "./info";
-import { countUp, scoreMeters } from "./meters";
+import {
+  NIGHT_BAR_DELAY_MS,
+  NIGHT_BAR_MS,
+  NIGHT_COUNT_MS,
+  NIGHT_METER_DELAY_MS,
+  NIGHT_ROW_STAGGER_MS,
+  countUp,
+  scoreMeters,
+} from "./meters";
 import { renderEdgeCard, renderTreeMap, type TreeHandlers } from "./tree";
 
 export function renderResolve(result: ElectionResult, onReplay: () => void): HTMLElement {
@@ -29,9 +37,9 @@ export function renderResolve(result: ElectionResult, onReplay: () => void): HTM
   );
 
   const board = el("div", { class: "night-board" });
-  for (const row of [...result.lists].sort((a, b) => b.seats - a.seats)) {
-    board.append(renderListBar(row, result.winnerId));
-  }
+  [...result.lists]
+    .sort((a, b) => b.seats - a.seats)
+    .forEach((row, index) => board.append(renderListBar(row, result.winnerId, index)));
   root.append(board);
 
   root.append(
@@ -72,20 +80,25 @@ export function renderResolve(result: ElectionResult, onReplay: () => void): HTM
   return root;
 }
 
-function renderListBar(row: ListScore, winnerId: string): HTMLElement {
+function renderListBar(row: ListScore, winnerId: string, index: number): HTMLElement {
   const names = row.list.picks.map((id) => getPerson(id).nameHe).join(" · ");
   const pct = (row.seats / KNESSET_SEATS) * 100;
   const cohesionPct = Math.round(row.cohesion * 100);
   const demandPct = Math.round(Math.min(100, (row.massAfterSplit / DEMAND_SCALE) * 100));
+  const rowDelay = index * NIGHT_ROW_STAGGER_MS;
   const seatNum = el("strong", { class: "seat-num" }, "0");
-  countUp(seatNum, 0, row.seats, row.list.isPlayer ? 0 : 80);
+  countUp(seatNum, 0, row.seats, rowDelay, NIGHT_COUNT_MS);
   const item = el(
     "article",
-    { class: `mandate-row ${row.list.id === winnerId ? "is-winner" : ""} ${row.list.isPlayer ? "is-player" : ""}` },
+    {
+      class: `mandate-row ${row.list.id === winnerId ? "is-winner" : ""} ${row.list.isPlayer ? "is-player" : ""}`,
+      style: `--row-delay:${rowDelay}ms`,
+    },
     el(
       "header",
       {},
       el("h3", {}, row.list.labelHe),
+      row.list.isPlayer ? el("span", { class: "you-pill" }, copy.yourParty) : null,
       seatNum,
       el("span", { class: "seat-unit" }, copy.seats),
     ),
@@ -94,9 +107,12 @@ function renderListBar(row: ListScore, winnerId: string): HTMLElement {
       "div",
       { class: "bar-track", "aria-hidden": "true" },
       el("span", { class: "meter-ticks", "aria-hidden": "true" }),
-      el("div", { class: "bar-fill is-seats", style: `--from:0%;--target:${pct}%` }),
+      el("div", {
+        class: "bar-fill is-seats",
+        style: `--from:0%;--target:${pct}%;--grow-delay:${rowDelay + NIGHT_BAR_DELAY_MS}ms;--grow-ms:${NIGHT_BAR_MS}ms`,
+      }),
     ),
-    scoreMeters(cohesionPct, demandPct, "fresh"),
+    scoreMeters(cohesionPct, demandPct, "fresh", { delay: rowDelay + NIGHT_METER_DELAY_MS }),
     el("p", { class: "hill-note" }, row.neighborhood.labelHe),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );
