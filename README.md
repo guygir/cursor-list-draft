@@ -30,11 +30,12 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 | Vercel + Neon | Neon free also suspends. Same cold-start on the function. |
 | This repo | Static assets on the Cloudflare edge. `/api/board` is a Pages Function + D1 in the same isolate. Client merges in the background. |
 
-No local CLI. Same idea as connecting a repo on Vercel:
+No local CLI. Same idea as connecting a repo on Vercel — but pick **Pages**, not Worker.
 
-1. [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → Create → Connect to Git → this repo.
-2. Build command `npm run build`, output `dist`.
-3. Storage → D1 → Create `list-draft` → bind it to the Pages project as `DB`.
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → **Create application → Pages → Connect to Git** → this repo.
+2. If the form has a **Deploy command** (`npx wrangler deploy`), you are on the Worker wizard. Back out.
+3. Pages fields: framework Vite (or none), build `npm run build`, output directory `dist`. Production branch can stay `main`; this PR gets a preview URL if non-production builds are on.
+4. After the first deploy: Settings → Bindings → D1 → create `list-draft` → bind as `DB`. Redeploy once so `/api/board` has a database.
 
 The first production push then has a database. Until D1 is bound, the board stays on the device and `/api/board` is a no-op.
 
