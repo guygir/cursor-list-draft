@@ -334,32 +334,33 @@ function renderBoardScreen(): HTMLElement {
       el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
     ),
   );
-  screen.append(
+  const panels = [
     renderBoardPanel({
       mode: "daily",
       dayKey: state.dayKey,
       difficulty: "open",
       title: copy.modeDaily,
+      hideEmpty: true,
     }),
-  );
-  for (const row of DIFFICULTIES) {
-    screen.append(
+    ...DIFFICULTIES.map((row) =>
       renderBoardPanel({
         mode: "create",
         difficulty: row.id,
         title: `${copy.modeCreate} · ${row.labelHe}`,
+        hideEmpty: true,
       }),
-    );
-  }
-  for (const row of DIFFICULTIES) {
-    screen.append(
+    ),
+    ...DIFFICULTIES.map((row) =>
       renderBoardPanel({
         mode: "draft",
         difficulty: row.id,
         title: `${copy.modeDraft} · ${row.labelHe}`,
+        hideEmpty: true,
       }),
-    );
-  }
+    ),
+  ].filter((node): node is HTMLElement => node !== null);
+  if (!panels.length) screen.append(el("p", { class: "board-empty" }, copy.boardEmpty));
+  else screen.append(...panels);
   const back = el("button", { type: "button", class: "primary" }, copy.createBack);
   back.addEventListener("click", () => {
     state.screen = "setup";

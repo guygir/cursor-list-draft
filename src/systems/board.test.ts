@@ -44,4 +44,13 @@ describe("local leaderboard", () => {
     expect(boardForMode(rows, { mode: "draft", difficulty: "one" })[0]?.hubName).toBe("קשה");
     expect(boardForMode(rows, { mode: "draft", difficulty: "three" })).toEqual([]);
   });
+
+  it("folds old five/two rows into the until-3 board", () => {
+    const store = memoryStore();
+    recordRun(
+      { mode: "draft", hubName: "ישן", seats: 8, cohesion: 0.2, demand: 1, won: false, nCpus: 1, difficulty: "five", share: "/" },
+      store,
+    );
+    expect(boardForMode(readBoard(store), { mode: "draft", difficulty: "three" })[0]?.hubName).toBe("ישן");
+  });
 });

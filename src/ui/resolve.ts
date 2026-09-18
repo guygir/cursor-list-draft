@@ -1,6 +1,6 @@
 import { getPerson } from "../data/pool";
 import type { BoardEntry, BoardMode } from "../systems/board";
-import { difficultyById, type DifficultyId } from "../systems/draft";
+import { difficultyById } from "../systems/draft";
 import type { ElectionResult, ListScore } from "../systems/resolve";
 import { DEMAND_SCALE } from "../systems/scores";
 import { KNESSET_SEATS } from "../systems/seats";
@@ -60,16 +60,15 @@ export function renderResolve(
     el("section", { class: "why-block" }, el("h2", {}, copy.why), el("p", { class: "why-line" }, result.why.he)),
   );
   if (opts.boardMode) {
-    root.append(
-      renderBoardPanel({
-        mode: opts.boardMode,
-        title: nightBoardTitle(opts.boardMode, opts.difficulty),
-        compact: true,
-        ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
-        ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
-        ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
-      }),
-    );
+    const panel = renderBoardPanel({
+      mode: opts.boardMode,
+      title: nightBoardTitle(opts.boardMode, opts.difficulty),
+      compact: true,
+      ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
+      ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
+      ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
+    });
+    if (panel) root.append(panel);
   }
 
   const treeWrap = el("section", { class: "result-tree" });
@@ -157,7 +156,7 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
 
 function nightBoardTitle(mode: BoardMode, difficulty?: string): string {
   if (mode === "daily") return copy.modeDaily;
-  const level = difficultyById((difficulty ?? "open") as DifficultyId).labelHe;
+  const level = difficultyById(difficulty).labelHe;
   const modeHe = mode === "create" ? copy.modeCreate : copy.modeDraft;
   return `${modeHe} · ${level}`;
 }

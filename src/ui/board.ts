@@ -10,13 +10,15 @@ export function renderBoardPanel(opts: {
   difficulty?: string;
   currentId?: string;
   compact?: boolean;
+  hideEmpty?: boolean;
   title?: string;
-}): HTMLElement {
+}): HTMLElement | null {
   const rows = boardForMode(readVisibleBoard(globalThis.localStorage ?? null), {
     mode: opts.mode,
     ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
     ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
   }).slice(0, opts.compact ? 5 : 12);
+  if (opts.hideEmpty && !rows.length) return null;
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
   wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
   wrap.append(el("p", { class: "board-note" }, copy.boardLocal));

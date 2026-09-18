@@ -1,3 +1,5 @@
+import { normalizeDifficulty } from "./draft";
+
 export type BoardMode = "draft" | "create" | "daily";
 
 export interface BoardEntry {
@@ -78,7 +80,9 @@ export function boardForMode(
     rows.filter((row) => {
       if (row.mode !== query.mode) return false;
       if (query.mode === "daily" && query.dayKey && row.dayKey !== query.dayKey) return false;
-      if (query.difficulty && (row.difficulty || "open") !== query.difficulty) return false;
+      if (query.difficulty && normalizeDifficulty(row.difficulty) !== normalizeDifficulty(query.difficulty)) {
+        return false;
+      }
       return true;
     }),
   );

@@ -73,9 +73,7 @@ describe("snake draft", () => {
   });
 
   it.each([
-    ["five", 5],
     ["three", 3],
-    ["two", 2],
     ["one", 1],
   ] as const)("%s keeps every list at most %s per party", (difficulty, cap) => {
     const end = play(["bennett", "lapid", "golan", "gantz", "liberman", "abbas"], 1, difficulty);
@@ -89,7 +87,7 @@ describe("snake draft", () => {
   });
 });
 
-function play(playerPicks: string[], cpus: number, difficulty: "open" | "five" | "three" | "two" | "one" = "open") {
+function play(playerPicks: string[], cpus: number, difficulty: "open" | "three" | "one" = "open") {
   let state = createDraft(cpus, 1, difficulty);
   while (!isDraftOver(state)) {
     const list = state.lists[state.turnQueue[state.turnCursor] ?? 0];

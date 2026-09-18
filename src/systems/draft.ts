@@ -6,7 +6,7 @@ export const LIST_SIZE = 10;
 export const MIN_CPU = 1;
 export const MAX_CPU = 3;
 
-export type DifficultyId = "open" | "five" | "three" | "two" | "one";
+export type DifficultyId = "open" | "three" | "one";
 
 export interface Difficulty {
   id: DifficultyId;
@@ -18,14 +18,20 @@ export interface Difficulty {
 
 export const DIFFICULTIES: readonly Difficulty[] = [
   { id: "open", slateCap: null, labelHe: "קל", hintHe: "בלי הגבלת מפלגה" },
-  { id: "five", slateCap: 5, labelHe: "עד 5", hintHe: "עד חמישה שמות מאותה מפלגה" },
   { id: "three", slateCap: 3, labelHe: "עד 3", hintHe: "עד שלושה שמות מאותה מפלגה" },
-  { id: "two", slateCap: 2, labelHe: "עד 2", hintHe: "עד שניים מאותה מפלגה" },
   { id: "one", slateCap: 1, labelHe: "אחד", hintHe: "שם אחד מכל מפלגה" },
 ];
 
-export function difficultyById(id: DifficultyId): Difficulty {
-  return DIFFICULTIES.find((row) => row.id === id) ?? DIFFICULTIES[0]!;
+/** Old five/two rows fold into the nearest remaining cap. */
+export function normalizeDifficulty(id: string | undefined): DifficultyId {
+  if (id === "one") return "one";
+  if (id === "three" || id === "five" || id === "two") return "three";
+  return "open";
+}
+
+export function difficultyById(id: string | undefined): Difficulty {
+  const key = normalizeDifficulty(id);
+  return DIFFICULTIES.find((row) => row.id === key) ?? DIFFICULTIES[0]!;
 }
 
 export interface DraftState {

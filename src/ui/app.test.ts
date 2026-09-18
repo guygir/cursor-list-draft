@@ -32,14 +32,15 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("רמת קושי");
     expect(root.textContent).toContain("בלי הגבלת מפלגה");
     expect(root.textContent).toContain("שם אחד מכל מפלגה");
+    expect(root.textContent).not.toContain("עד חמישה שמות");
+    expect(root.textContent).not.toContain("עד שניים מאותה מפלגה");
     expect(root.textContent).toContain("צור מנהיג");
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
     expect(root.textContent).toContain("על המכשיר הזה");
     [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.textContent?.includes("לוח שיאים"))?.click();
-    expect(root.textContent).toContain("דראפט · קל");
-    expect(root.textContent).toContain("דראפט · אחד");
-    expect(root.textContent).toContain("צור מנהיג · עד 3");
+    expect(root.textContent).toContain("עוד אין ריצה");
+    expect(root.textContent).not.toContain("דראפט · עד 5");
     root.querySelector<HTMLButtonElement>(".primary")?.click();
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
