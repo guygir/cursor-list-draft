@@ -5,6 +5,7 @@
   --muted: #9a9284;
   --ochre: #c9a227;
   --punch: #8a8274;
+  --bar: rgba(228, 221, 208, 0.4);
   --alert: #c45a4e;
   --ok: #6f9e7a;
   --line: rgba(228, 221, 208, 0.1);
@@ -1254,12 +1255,8 @@ input {
   }
 }
 
-.score-meter.is-cred .score-meter-fill {
-  background: var(--ochre);
-}
-
-.score-meter.is-demand .score-meter-fill {
-  background: var(--punch);
+.score-meter-fill {
+  background: var(--bar);
 }
 
 .list-col .score-meters-wrap,
@@ -1289,12 +1286,13 @@ input {
 }
 
 .bar-fill {
-  background: var(--ochre);
+  background: var(--bar);
 }
 
 .resolve-screen {
   --cream: #e4dfd4;
   --ink-deep: #1a1f2b;
+  --bar: rgba(26, 31, 43, 0.2);
 }
 
 .resolve-screen .banner.win {
@@ -1336,20 +1334,9 @@ input {
   background: rgba(26, 31, 43, 0.08);
 }
 
-.resolve-screen .mandate-row .bar-fill {
-  background: rgba(26, 31, 43, 0.28);
-}
-
-.resolve-screen .mandate-row.is-player .bar-fill {
-  background: rgba(26, 31, 43, 0.58);
-}
-
-.resolve-screen .mandate-row .score-meter.is-cred .score-meter-fill {
-  background: #a88b3a;
-}
-
-.resolve-screen .mandate-row .score-meter.is-demand .score-meter-fill {
-  background: #6e675c;
+.resolve-screen .mandate-row .bar-fill,
+.resolve-screen .mandate-row .score-meter-fill {
+  background: var(--bar);
 }
 
 .resolve-screen .mandate-row .meter-ticks {
