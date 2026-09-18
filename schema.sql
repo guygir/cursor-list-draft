@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS runs (
   mode TEXT NOT NULL,
   day_key TEXT,
   hub_name TEXT NOT NULL,
+  player_name TEXT,
   seats INTEGER NOT NULL,
   cohesion REAL NOT NULL,
   demand REAL NOT NULL,

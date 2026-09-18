@@ -11,11 +11,14 @@ import {
   legalRemaining,
   MAX_CPU,
   MIN_CPU,
+  renameList,
   slateCountOnList,
   type DifficultyId,
   type DraftState,
 } from "../systems/draft";
 import { recordRun, type BoardEntry } from "../systems/board";
+import { loadOrCreatePartyName, loadOrCreatePlayerName, savePartyName, savePlayerName } from "../systems/names";
+import { prefetchPortraits } from "../data/portraits";
 import { hydrateRemoteBoard, pushRemoteRun } from "../systems/board-api";
 import {
   customSharePath,
@@ -33,9 +36,10 @@ import {
 } from "../systems/modes";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
 import { copy } from "./copy";
-import { renderBoardPanel } from "./board";
+import { firstPlaceOf, renderBoardPanel } from "./board";
 import { renderCreateLeader } from "./create";
 import { el, prefersReducedMotion } from "./dom";
+import { renderNameEdit } from "./name-edit";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
 import { resetMeters } from "./meters";
@@ -64,6 +68,8 @@ interface AppState {
   customAspects: PersonAspects;
   dayKey: string;
   boardEntry: BoardEntry | null;
+  playerName: string;
+  partyName: string;
 }
 
 let state: AppState = freshState(1);
@@ -73,6 +79,7 @@ let root: HTMLElement;
 export function mount(appRoot: HTMLElement): void {
   const first = !root;
   root = appRoot;
+  prefetchPortraits();
   state = freshState(1);
   if (first) document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
@@ -98,12 +105,13 @@ export function mount(appRoot: HTMLElement): void {
 }
 
 function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: PlayMode = "draft"): AppState {
+  const partyName = loadOrCreatePartyName();
   return {
     screen: "setup",
     playMode,
     nCpus: clampCpus(nCpus),
     difficulty,
-    draft: createDraft(nCpus, playSeed(), difficulty),
+    draft: createDraft(nCpus, playSeed(), difficulty, undefined, { player: partyName }),
     focusId: null,
     hoverId: null,
     selectedEdge: null,
@@ -117,6 +125,8 @@ function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: 
     customAspects: defaultAspects(),
     dayKey: israelDateKey(),
     boardEntry: null,
+    playerName: loadOrCreatePlayerName(),
+    partyName,
   };
 }
 
@@ -127,6 +137,11 @@ function playSeed(): number {
 function render(): void {
   const focused = document.activeElement;
   const focusPerson = focused instanceof HTMLElement ? focused.dataset.person : undefined;
+  const prev = root.firstElementChild;
+  const setupScroll =
+    state.screen === "setup" && prev instanceof HTMLElement && prev.classList.contains("setup-screen")
+      ? prev.scrollTop
+      : null;
   root.replaceChildren();
   if (state.screen === "setup") {
     root.append(renderSetup());
@@ -185,6 +200,11 @@ function render(): void {
           state.focusId = null;
           render();
         },
+        onRenameParty: (name) => {
+          state.partyName = savePartyName(name);
+          state.draft = renameList(state.draft, "player", state.partyName);
+          render();
+        },
       }),
     );
   } else if (state.result) {
@@ -193,6 +213,7 @@ function render(): void {
         shareHint: copy.boardLocal,
         onShare: shareRun,
         boardMode: state.playMode,
+        difficulty: state.difficulty,
         ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
         ...(state.boardEntry ? { boardEntry: state.boardEntry } : {}),
       }),
@@ -205,6 +226,12 @@ function render(): void {
     if (node && document.activeElement !== node && focused instanceof HTMLElement && focused.dataset.person) {
       node.focus();
     }
+  }
+  if (setupScroll != null) {
+    const next = root.querySelector<HTMLElement>(".setup-screen");
+    if (next) next.scrollTop = setupScroll;
+  } else if (state.screen === "resolve" || state.screen === "board") {
+    root.querySelector<HTMLElement>(".resolve-screen, .setup-screen")?.scrollTo(0, 0);
   }
 }
 
@@ -241,6 +268,7 @@ function renderSetup(): HTMLElement {
     ),
     el("p", { class: "sponsor" }, copy.sponsor),
     el("p", { class: "disclosure" }, copy.disclosure),
+    renderIdentity(),
   );
 
   const modes = el("fieldset", { class: "mode-pick" }, el("legend", {}, copy.modeLabel));
@@ -314,14 +342,69 @@ function renderSetup(): HTMLElement {
 
   const start = el("button", { type: "button", class: "primary" }, startLabel());
   start.addEventListener("click", beginFromSetup);
-  const boardBtn = el("button", { type: "button", class: "text-btn board-open" }, copy.boardOpen);
-  boardBtn.addEventListener("click", () => {
-    state.screen = "board";
-    render();
-  });
-  screen.append(el("div", { class: "confirm-bar is-split" }, start, boardBtn));
+  screen.append(el("div", { class: "confirm-bar" }, start));
+  screen.append(renderRecordTeaser());
   screen.append(el("p", { class: "no-board" }, copy.boardLocal));
   return screen;
+}
+
+function renderIdentity(): HTMLElement {
+  const row = el("div", { class: "identity-row" });
+  row.append(
+    el(
+      "label",
+      { class: "identity-field" },
+      el("span", {}, copy.playerName),
+      renderNameEdit({
+        value: state.playerName,
+        ariaLabel: copy.playerName,
+        className: "is-player",
+        onCommit: (name) => {
+          state.playerName = savePlayerName(name);
+          render();
+        },
+      }),
+    ),
+    el(
+      "label",
+      { class: "identity-field" },
+      el("span", {}, copy.partyName),
+      renderNameEdit({
+        value: state.partyName,
+        ariaLabel: copy.partyName,
+        className: "is-party",
+        onCommit: (name) => {
+          state.partyName = savePartyName(name);
+          state.draft = renameList(state.draft, "player", state.partyName);
+          render();
+        },
+      }),
+    ),
+  );
+  return row;
+}
+
+function renderRecordTeaser(): HTMLElement {
+  const first = firstPlaceOf({
+    mode: state.playMode,
+    difficulty: state.playMode === "daily" ? "open" : state.difficulty,
+    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+  });
+  const open = () => {
+    state.screen = "board";
+    render();
+  };
+  const box = el("div", { class: "record-teaser" });
+  const line = el(
+    "button",
+    { type: "button", class: "record-teaser-btn" },
+    first ? copy.firstPlace(first.playerName || first.hubName, first.seats) : copy.noFirstPlace,
+  );
+  line.addEventListener("click", open);
+  const more = el("button", { type: "button", class: "text-btn board-open" }, copy.boardOpen);
+  more.addEventListener("click", open);
+  box.append(line, more);
+  return box;
 }
 
 function renderBoardScreen(): HTMLElement {
@@ -333,9 +416,32 @@ function renderBoardScreen(): HTMLElement {
       el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
     ),
   );
-  screen.append(renderBoardPanel({ mode: "daily", dayKey: state.dayKey, title: copy.modeDaily }));
-  screen.append(renderBoardPanel({ mode: "create", title: copy.modeCreate }));
-  screen.append(renderBoardPanel({ mode: "draft", title: copy.modeDraft }));
+  const panels = [
+    renderBoardPanel({
+      mode: "daily",
+      dayKey: state.dayKey,
+      difficulty: "open",
+      title: copy.modeDaily,
+      hideNote: true,
+    }),
+    ...DIFFICULTIES.map((row) =>
+      renderBoardPanel({
+        mode: "create",
+        difficulty: row.id,
+        title: `${copy.modeCreate} · ${row.labelHe}`,
+        hideNote: true,
+      }),
+    ),
+    ...DIFFICULTIES.map((row) =>
+      renderBoardPanel({
+        mode: "draft",
+        difficulty: row.id,
+        title: `${copy.modeDraft} · ${row.labelHe}`,
+        hideNote: true,
+      }),
+    ),
+  ].filter((node): node is HTMLElement => node !== null);
+  screen.append(...panels);
   const back = el("button", { type: "button", class: "primary" }, copy.createBack);
   back.addEventListener("click", () => {
     state.screen = "setup";
@@ -367,13 +473,19 @@ function beginFromSetup(): void {
 
 function startOpenDraft(): void {
   resetMeters();
-  state = {
-    ...freshState(state.nCpus, state.difficulty, "draft"),
-    screen: "draft",
-    liveText: copy.yourTurn,
+  const keep = {
     customName: state.customName,
     customAspects: state.customAspects,
     dayKey: state.dayKey,
+    playerName: state.playerName,
+    partyName: state.partyName,
+  };
+  state = {
+    ...freshState(state.nCpus, state.difficulty, "draft"),
+    ...keep,
+    screen: "draft",
+    liveText: copy.yourTurn,
+    draft: createDraft(state.nCpus, playSeed(), state.difficulty, undefined, { player: keep.partyName }),
   };
   writeUrl("");
   render();
@@ -392,7 +504,7 @@ function startCreateDraft(nameHe: string, aspects: PersonAspects): void {
 
 function startLockedDraft(hubId: PersonId, seed: number, nCpus: number, difficulty: DifficultyId): void {
   resetMeters();
-  state.draft = createDraft(nCpus, seed, difficulty, hubId);
+  state.draft = createDraft(nCpus, seed, difficulty, hubId, { player: state.partyName });
   state.nCpus = nCpus;
   state.difficulty = difficulty;
   state.screen = "draft";
@@ -521,6 +633,7 @@ function finish(): void {
   state.boardEntry = recordRun({
     mode: state.playMode,
     ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+    playerName: state.playerName,
     hubName: hubId ? getPerson(hubId).nameHe : copy.yourParty,
     seats: player?.seats ?? 0,
     cohesion: player?.cohesion ?? 0,
@@ -549,6 +662,8 @@ function replay(): void {
     customName: state.customName,
     customAspects: state.customAspects,
     dayKey: state.dayKey,
+    playerName: state.playerName,
+    partyName: state.partyName,
   };
   state = { ...freshState(state.nCpus, state.difficulty, keep.playMode), ...keep };
   writeUrl("");

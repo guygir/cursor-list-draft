@@ -1,5 +1,6 @@
 import { getPerson } from "../data/pool";
 import type { BoardEntry, BoardMode } from "../systems/board";
+import { difficultyById } from "../systems/draft";
 import type { ElectionResult, ListScore } from "../systems/resolve";
 import { DEMAND_SCALE } from "../systems/scores";
 import { KNESSET_SEATS } from "../systems/seats";
@@ -26,6 +27,7 @@ export function renderResolve(
     onShare?: () => Promise<void> | void;
     boardMode?: BoardMode;
     dayKey?: string;
+    difficulty?: string;
     boardEntry?: BoardEntry;
   } = {},
 ): HTMLElement {
@@ -45,6 +47,7 @@ export function renderResolve(
         el("p", { class: won ? "banner win" : "banner loss" }, won ? copy.win : copy.loss),
       ),
     ),
+    el("p", { class: "win-rule" }, copy.winBySeats),
     el("div", { class: "ticker" }, copy.disclosure),
   );
 
@@ -58,15 +61,15 @@ export function renderResolve(
     el("section", { class: "why-block" }, el("h2", {}, copy.why), el("p", { class: "why-line" }, result.why.he)),
   );
   if (opts.boardMode) {
-    root.append(
-      renderBoardPanel({
-        mode: opts.boardMode,
-        title: copy.boardTitle,
-        compact: true,
-        ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
-        ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
-      }),
-    );
+    const panel = renderBoardPanel({
+      mode: opts.boardMode,
+      title: nightBoardTitle(opts.boardMode, opts.difficulty),
+      compact: true,
+      ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
+      ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
+      ...(opts.boardEntry ? { currentId: opts.boardEntry.id } : {}),
+    });
+    if (panel) root.append(panel);
   }
 
   const treeWrap = el("section", { class: "result-tree" });
@@ -146,8 +149,15 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
       }),
     ),
     scoreMeters(cohesionPct, demandPct, "fresh", { delay: rowDelay + NIGHT_METER_DELAY_MS }),
-    el("p", { class: "hill-note" }, row.neighborhood.labelHe),
+    el("p", { class: "hill-note" }, `${row.neighborhood.labelHe} · ${copy.afterSplit}`),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );
   return item;
+}
+
+function nightBoardTitle(mode: BoardMode, difficulty?: string): string {
+  if (mode === "daily") return copy.modeDaily;
+  const level = difficultyById(difficulty).labelHe;
+  const modeHe = mode === "create" ? copy.modeCreate : copy.modeDraft;
+  return `${modeHe} · ${level}`;
 }

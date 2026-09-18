@@ -43,22 +43,22 @@ export function whyLine(scores: WhyList[], winnerId: string): WhyLine {
 
   if (player.massRaw <= 16 && player.cohesion > 0.75) {
     return {
-      he: "רשימה נקייה על גבעה קטנה — המרה טובה, מעט מנדטים.",
-      en: "Clean list on a tiny hill — converts well, few seats.",
+      he: "רשימה נקייה על גוש קטן — מחזיקה טוב, מעט מנדטים.",
+      en: "Clean list on a small bloc — holds together, few seats.",
     };
   }
 
   if (player.list.id === winnerId) {
     return {
-      he: `ניצחון בצעצוע: ${player.seats} מנדטים על גבעת ${player.neighborhood.labelHe}.`,
-      en: `Toy win: ${player.seats} seats on the ${player.neighborhood.labelEn} hill.`,
+      he: `ניצחון בצעצוע: ${player.seats} מנדטים — הכי הרבה בין הרשימות. גוש: ${player.neighborhood.labelHe}.`,
+      en: `Toy win: ${player.seats} seats — most among the drafted lists. Bloc: ${player.neighborhood.labelEn}.`,
     };
   }
 
   const winner = scores.find((s) => s.list.id === winnerId);
   return {
-    he: `${winner?.list.labelHe ?? "יריב"} לקח יותר מנדטים. אמינות ${fmt(player.cohesion)} · ביקוש אחרי פיצול ${fmt(player.massAfterSplit)}.`,
-    en: `${winner?.list.labelEn ?? "A rival"} took more seats. Credibility ${fmt(player.cohesion)} · demand after split ${fmt(player.massAfterSplit)}.`,
+    he: `${winner?.list.labelHe ?? "יריב"} לקח יותר מנדטים, ולכן ניצח. לרשימה שלך נשארו פחות קולות אחרי שמפלגות דומות חלקו את אותו גוש.`,
+    en: `${winner?.list.labelEn ?? "A rival"} took more seats, so they won. Your list kept fewer votes after similar lists split the same bloc.`,
   };
 }
 
@@ -100,8 +100,8 @@ function clonedHill(player: WhyList, scores: WhyList[]): WhyLine | null {
   if (rivals.length === 0) return null;
   const rival = rivals[0]!;
   return {
-    he: `${rival.list.labelHe} שיכפל את השכונה (${player.neighborhood.labelHe}). הגבעה התפצלה.`,
-    en: `${rival.list.labelEn} cloned the neighborhood (${player.neighborhood.labelEn}). The hill split.`,
+    he: `${rival.list.labelHe} ישבה על אותו גוש (${player.neighborhood.labelHe}). הקולות התחלקו.`,
+    en: `${rival.list.labelEn} sat on the same bloc (${player.neighborhood.labelEn}). The votes split.`,
   };
 }
 
@@ -111,8 +111,4 @@ function name(id: PersonId): string {
 
 function en(id: PersonId): string {
   return getPerson(id).nameEn;
-}
-
-function fmt(n: number): string {
-  return n.toFixed(2);
 }

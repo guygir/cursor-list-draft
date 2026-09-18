@@ -1,12 +1,13 @@
 import { getPerson, POOL_IDS } from "../data/pool";
 import type { DraftList, PersonId, SlateId } from "../data/types";
 import { greedyCpuPick } from "./cpu";
+import { mulberry32, uniquePartyNames } from "./names";
 
 export const LIST_SIZE = 10;
 export const MIN_CPU = 1;
 export const MAX_CPU = 3;
 
-export type DifficultyId = "open" | "five" | "three" | "two" | "one";
+export type DifficultyId = "open" | "three" | "one";
 
 export interface Difficulty {
   id: DifficultyId;
@@ -18,14 +19,20 @@ export interface Difficulty {
 
 export const DIFFICULTIES: readonly Difficulty[] = [
   { id: "open", slateCap: null, labelHe: "קל", hintHe: "בלי הגבלת מפלגה" },
-  { id: "five", slateCap: 5, labelHe: "עד 5", hintHe: "עד חמישה שמות מאותה מפלגה" },
   { id: "three", slateCap: 3, labelHe: "עד 3", hintHe: "עד שלושה שמות מאותה מפלגה" },
-  { id: "two", slateCap: 2, labelHe: "עד 2", hintHe: "עד שניים מאותה מפלגה" },
   { id: "one", slateCap: 1, labelHe: "אחד", hintHe: "שם אחד מכל מפלגה" },
 ];
 
-export function difficultyById(id: DifficultyId): Difficulty {
-  return DIFFICULTIES.find((row) => row.id === id) ?? DIFFICULTIES[0]!;
+/** Old five/two rows fold into the nearest remaining cap. */
+export function normalizeDifficulty(id: string | undefined): DifficultyId {
+  if (id === "one") return "one";
+  if (id === "three" || id === "five" || id === "two") return "three";
+  return "open";
+}
+
+export function difficultyById(id: string | undefined): Difficulty {
+  const key = normalizeDifficulty(id);
+  return DIFFICULTIES.find((row) => row.id === key) ?? DIFFICULTIES[0]!;
 }
 
 export interface DraftState {
@@ -65,26 +72,31 @@ export function createDraft(
   cpuCount: number,
   seed = 1,
   difficulty: DifficultyId = "open",
-  playerHub?: PersonId,
+  playerHub: PersonId | undefined = undefined,
+  labels: { player?: string } = {},
 ): DraftState {
   const n = clampCpus(cpuCount);
   const { slateCap } = difficultyById(difficulty);
   const hub = playerHub ? getPerson(playerHub) : null;
+  const nameRand = mulberry32(seed ^ 0x51a7);
+  const invented = uniquePartyNames(n + 1, nameRand);
+  const playerLabel = labels.player ?? invented[0]!;
   const lists: DraftList[] = [
     {
       id: "player",
-      labelHe: hub ? `הרשימה של ${hub.nameHe}` : "המפלגה שלך",
-      labelEn: hub ? `${hub.nameEn}'s list` : "Your party",
+      labelHe: playerLabel,
+      labelEn: playerLabel,
       picks: hub ? [hub.id] : [],
       isPlayer: true,
       draftOrder: 0,
     },
   ];
   for (let i = 1; i <= n; i++) {
+    const label = invented[i]!;
     lists.push({
       id: `cpu-${i}`,
-      labelHe: `מפלגה ${i}`,
-      labelEn: `Party ${i}`,
+      labelHe: label,
+      labelEn: label,
       picks: [],
       isPlayer: false,
       draftOrder: i,
@@ -104,6 +116,13 @@ export function createDraft(
     rand: () => 0,
     difficulty,
     slateCap,
+  };
+}
+
+export function renameList(state: DraftState, listId: string, labelHe: string): DraftState {
+  return {
+    ...state,
+    lists: state.lists.map((list) => (list.id === listId ? { ...list, labelHe, labelEn: labelHe } : list)),
   };
 }
 
