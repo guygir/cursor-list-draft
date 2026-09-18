@@ -32,7 +32,7 @@ See [`AGENTS.md`](./AGENTS.md) and [`docs/product-memory.md`](./docs/product-mem
 | Cloudflare Worker only | Yes — already live, uglier host. |
 | Vercel + Supabase / Neon / Vercel Postgres | No — idle pause. |
 
-**Vercel (the Mandat 61-style link):** [vercel.com](https://vercel.com) → Add New → this GitHub repo → Vite → Deploy. Name it `list-draft` (or `harishima`) to get `list-draft.vercel.app`. No env vars. No Vercel database.
+**Vercel (the Mandat 61-style link):** [vercel.com](https://vercel.com) → Add New → this GitHub repo → Vite → Deploy. Name it `elections-2026` to get `elections-2026.vercel.app`. No env vars. No Vercel database.
 
 **Cloudflare Worker (already live):** https://cursor-list-draft.guygir-728.workers.dev/ — keep this; it is the D1 API.
 
