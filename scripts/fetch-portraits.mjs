@@ -54,9 +54,12 @@ const COMMON_LAST = new Set([
 ]);
 
 const REJECT = {
-  "talik-gvili": [/ישראל\s*טל/, /israel\s*tal/i, /טל ישראל/],
+  "talik-gvili": [/ישראל\s*טל/, /israel\s*tal/i, /טל ישראל/, /רן גואילי/, /ran\s+gvili/i],
   "tzachi-eliyahu": [/עמיחי/, /amihai|amichai/i],
-  "david-ohana": [/אמיר אוחנה/, /amir ohana/i],
+  "david-ohana": [/אמיר אוחנה/, /amir ohana/i, /פרופסור/, /בן-גוריון/, /Ben.Gurion/i],
+  "dror-amos": [/עמוס דרורי/, /Amos Drory/i],
+  "negri": [/נגרין/, /Negrin/i],
+  "rosenthal": [/סאנדנס/, /Sundance/i, /במאי/, /אופיר/],
 };
 
 function sleep(ms) {
@@ -126,18 +129,32 @@ function blocked(id, title) {
   return (REJECT[id] ?? []).some((re) => re.test(title));
 }
 
-function titleMatches(person, title) {
+function titleTokens(title) {
+  return title.split(/[\s־׳'ʼ()[\]{},.:;!?/"\-]+/).filter((t) => t.length >= 2);
+}
+
+function hasNameToken(title, token) {
+  if (!token) return false;
+  const folded = token.toLowerCase();
+  return titleTokens(title).some((part) => part === token || part.toLowerCase() === folded);
+}
+
+function politicalContext(title, snippet = "") {
+  return /כנסת|ח״כ|חבר הכנסת|MK|Knesset|פריימרי|רשימ|מפלג|ליכוד|ש״ס|עוצמה|ציונות|דמוקרט|רע״ם|כחול לבן|יהדות התורה|ישראל ביתנו|חד״ש|תע״ל|בל״ד/i.test(
+    `${title} ${snippet}`,
+  );
+}
+
+function titleMatches(person, title, snippet = "") {
   const lastHe = lastOf(person.nameHe);
   const lastEn = lastOf(person.nameEn);
   const firstHe = firstOf(person.nameHe);
   const firstEn = firstOf(person.nameEn);
-  const hay = title;
-  const hasLast = hay.includes(lastHe) || new RegExp(lastEn, "i").test(hay);
-  if (!hasLast) return false;
-  if (COMMON_LAST.has(lastHe) || COMMON_LAST.has(lastEn.toLowerCase())) {
-    return hay.includes(firstHe) || new RegExp(firstEn, "i").test(hay);
-  }
-  return true;
+  const hasLast = hasNameToken(title, lastHe) || hasNameToken(title, lastEn);
+  const hasFirst = hasNameToken(title, firstHe) || hasNameToken(title, firstEn);
+  // Last-name-only or substring hits attach the wrong cousin (רן גואילי, מיכל נגרין).
+  if (!hasLast || !hasFirst) return false;
+  return politicalContext(title, snippet);
 }
 
 function parseExisting(source) {
@@ -205,7 +222,7 @@ for (const person of missingPeople) {
           console.log("reject-block", person.id, hit.title);
           continue;
         }
-        if (!titleMatches(person, hit.title)) {
+        if (!titleMatches(person, hit.title, hit.snippet ?? "")) {
           console.log("reject-name", person.id, hit.title);
           continue;
         }

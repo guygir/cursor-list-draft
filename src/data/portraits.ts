@@ -58,6 +58,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Yinon_Azulai_%28SHL_9064%29.jpg/250px-Yinon_Azulai_%28SHL_9064%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%99%D7%A0%D7%95%D7%9F_%D7%90%D7%96%D7%95%D7%9C%D7%90%D7%99"
   },
+  "bashir": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/145993_alternative_lighting_ceremonyalternative_independ_PikiWiki_Israel_%28cropped%29.jpg/250px-145993_alternative_lighting_ceremonyalternative_independ_PikiWiki_Israel_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "source": "https://en.wikipedia.org/wiki/Somaya_Bashir"
+  },
   "ben-ari": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/%D7%9E%D7%99%D7%A8%D7%91_%D7%91%D7%9F_%D7%90%D7%A8%D7%99.jpg/250px-%D7%9E%D7%99%D7%A8%D7%91_%D7%91%D7%9F_%D7%90%D7%A8%D7%99.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%99%D7%A8%D7%91_%D7%91%D7%9F_%D7%90%D7%A8%D7%99"
@@ -222,6 +226,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Shaul_Meridor.jpeg/250px-Shaul_Meridor.jpeg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%A9%D7%90%D7%95%D7%9C_%D7%9E%D7%A8%D7%99%D7%93%D7%95%D7%A8"
   },
+  "mishraki": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Yonatan_Mashriki_2026_portrait.jpg/250px-Yonatan_Mashriki_2026_portrait.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "source": "https://en.wikipedia.org/wiki/Yonatan_Mishraki"
+  },
   "mufid-mari": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Mofid_mare.jpg/250px-Mofid_mare.jpg",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%95%D7%A4%D7%99%D7%93_%D7%9E%D7%A8%D7%A2%D7%99"
@@ -257,6 +265,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
   "regev": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Miri_Regev_02_%28cropped%29.jpg/250px-Miri_Regev_02_%28cropped%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%99%D7%A8%D7%99_%D7%A8%D7%92%D7%91"
+  },
+  "ronen": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Omri_Ronen_2024_%28cropped%29.jpg/250px-Omri_Ronen_2024_%28cropped%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "source": "https://he.wikipedia.org/wiki/%D7%A2%D7%9E%D7%A8%D7%99_%D7%A8%D7%95%D7%A0%D7%9F_(%D7%A4%D7%A2%D7%99%D7%9C_%D7%97%D7%91%D7%A8%D7%AA%D7%99)"
   },
   "rothman": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Simcha_Rothman_%28SHL_8150%29.jpg/250px-Simcha_Rothman_%28SHL_8150%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",

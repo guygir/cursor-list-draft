@@ -23,6 +23,17 @@ describe("portraits", () => {
   it("keeps Wikipedia photos for published faces that have a page", () => {
     expect(hasWikiPortrait("mufid-mari")).toBe(true);
     expect(hasWikiPortrait("avisar")).toBe(true);
+    expect(hasWikiPortrait("mishraki")).toBe(true);
+    expect(hasWikiPortrait("ronen")).toBe(true);
+    expect(hasWikiPortrait("bashir")).toBe(true);
     expect(portraitSrc("mufid-mari")).toContain("wikimedia");
+  });
+
+  it("does not attach a same-name stranger after a fuzzy search", () => {
+    expect(hasWikiPortrait("talik-gvili")).toBe(false);
+    expect(hasWikiPortrait("negri")).toBe(false);
+    expect(hasWikiPortrait("rosenthal")).toBe(false);
+    expect(hasWikiPortrait("david-ohana")).toBe(false);
+    expect(hasWikiPortrait("dror-amos")).toBe(false);
   });
 });
