@@ -3,6 +3,11 @@ compatibility_date = "2026-09-18"
 main = "worker.js"
 preview_urls = true
 
+# Cloudflare Workers Builds often runs only the deploy command.
+# Build dist here so `npx wrangler deploy` does not look for a missing folder.
+[build]
+command = "npm run build"
+
 # Vite output. SPA fallback so /?c= and /?day= still hit index.html.
 [assets]
 directory = "./dist"
