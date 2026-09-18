@@ -35,6 +35,7 @@ describe("playable draft UI", () => {
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
+    expect(root.textContent).toContain("נתניהו · משפט · שירות · ביטחון");
     expect(root.textContent).not.toContain("איתמר בן גביר");
     expect(root.querySelectorAll(".party-btn").length).toBe(0);
 
@@ -46,10 +47,14 @@ describe("playable draft UI", () => {
     expect(shown.join(" ")).not.toContain("בנימין נתניהו");
     expect(root.querySelector(".notice-rail")?.textContent).toMatch(/מפלגה 1/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
+    expect(root.textContent).toContain("מתעדכנים בכל בחירה");
+    expect(root.textContent).toContain("צבע הקו = חוזק החיבור");
+    expect(root.querySelector(".color-scale")).toBeTruthy();
 
     if (!root.querySelector(".name-btn")) {
       root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     }
+    expect(root.textContent).toContain("הפס בצד = מול ראש הרשימה בלבד");
     root.querySelector<HTMLButtonElement>(".name-btn")?.click();
     root.querySelector<HTMLButtonElement>(".confirm-btn:not([disabled])")?.click();
     await vi.runOnlyPendingTimersAsync();

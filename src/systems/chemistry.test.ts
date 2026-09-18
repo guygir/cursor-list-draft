@@ -8,8 +8,11 @@ import {
   pairWeight,
   rankWeight,
   relationColor,
+  relationColorStops,
   relationOpacity,
   relationStrokeWidth,
+  RELATION_S_MAX,
+  RELATION_S_MIN,
   scoreCohesion,
 } from "./chemistry";
 
@@ -115,6 +118,17 @@ describe("pair relation", () => {
     expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-0.2, 1));
     expect(relationOpacity(-1)).toBeGreaterThan(relationOpacity(-0.2));
     expect(relationOpacity(0)).toBeGreaterThan(0.5);
+  });
+});
+
+describe("edge color range", () => {
+  it("spans veto red through muted to a thin green ceiling", () => {
+    const stops = relationColorStops();
+    expect(RELATION_S_MIN).toBe(-1);
+    expect(RELATION_S_MAX).toBe(0.22);
+    expect(stops[0]?.s).toBe(-1);
+    expect(stops.at(-1)?.s).toBe(0.22);
+    expect(new Set(stops.map((stop) => stop.color)).size).toBe(stops.length);
   });
 });
 

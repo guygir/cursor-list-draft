@@ -318,7 +318,9 @@ export function compatibilityWithHub(hub: PersonId, candidate: PersonId): number
 const MUTED_RGB: Rgb = [90, 86, 76];
 const RED_RGB: Rgb = [196, 90, 78];
 const GREEN_RGB: Rgb = [111, 158, 122];
-const GREEN_CEILING = 0.22;
+export const RELATION_S_MIN = -1;
+export const RELATION_S_MAX = 0.22;
+const GREEN_CEILING = RELATION_S_MAX;
 
 type Rgb = [number, number, number];
 
@@ -339,6 +341,23 @@ export function relationStrokeWidth(s: number, rankWeightValue: number): number 
 
 export function relationOpacity(s: number): number {
   return clamp(0.58 + Math.abs(s) * 0.42, 0.58, 1);
+}
+
+export interface RelationColorStop {
+  s: number;
+  color: string;
+  labelHe: string;
+}
+
+/** Compact legend for the continuous s → color map. */
+export function relationColorStops(): RelationColorStop[] {
+  return [
+    { s: RELATION_S_MIN, color: relationColor(RELATION_S_MIN), labelHe: "וטו" },
+    { s: -0.45, color: relationColor(-0.45), labelHe: "מחנות" },
+    { s: 0, color: relationColor(0), labelHe: "אפור" },
+    { s: 0.15, color: relationColor(0.15), labelHe: "קרובים" },
+    { s: RELATION_S_MAX, color: relationColor(RELATION_S_MAX), labelHe: "שיא ירוק" },
+  ];
 }
 
 function mixRgb(a: Rgb, b: Rgb, t: number): Rgb {

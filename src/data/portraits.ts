@@ -30,6 +30,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Moshe_Abutbul_%28ISH_9834%29.jpg/250px-Moshe_Abutbul_%28ISH_9834%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%A9%D7%94_%D7%90%D7%91%D7%95%D7%98%D7%91%D7%95%D7%9C"
   },
+  "alhwashla": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Walid_Alhawashla_2025.jpg/250px-Walid_Alhawashla_2025.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%95%D7%90%D7%9C%D7%99%D7%93_%D7%90%D7%9C%D7%94%D7%95%D7%90%D7%A9%D7%9C%D7%94"
+  },
   "altschuler": {
     "url": "https://upload.wikimedia.org/wikipedia/commons/0/05/%D7%A2%D7%93%D7%99_%D7%90%D7%9C%D7%98%D7%A9%D7%95%D7%9C%D7%A8.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
     "source": "https://he.wikipedia.org/wiki/%D7%A2%D7%93%D7%99_%D7%90%D7%9C%D7%98%D7%A9%D7%95%D7%9C%D7%A8"
@@ -46,6 +50,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Youssef_Atauna_%28ISH_9163%29.jpg/250px-Youssef_Atauna_%28ISH_9163%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%99%D7%95%D7%A1%D7%A3_%D7%A2%D7%98%D7%90%D7%95%D7%A0%D7%94"
   },
+  "avisar": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/%D7%9C%D7%99%D7%A8%D7%9F_%D7%90%D7%91%D7%99%D7%A9%D7%A8_%D7%91%D7%9F%D6%BE%D7%97%D7%95%D7%A8%D7%99%D7%9F_%28cropped%29.jpg/250px-%D7%9C%D7%99%D7%A8%D7%9F_%D7%90%D7%91%D7%99%D7%A9%D7%A8_%D7%91%D7%9F%D6%BE%D7%97%D7%95%D7%A8%D7%99%D7%9F_%28cropped%29.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%9C%D7%99%D7%A8%D7%9F_%D7%90%D7%91%D7%99%D7%A9%D7%A8_%D7%91%D7%9F-%D7%97%D7%95%D7%A8%D7%99%D7%9F"
+  },
   "azoulay": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Yinon_Azulai_%28SHL_9064%29.jpg/250px-Yinon_Azulai_%28SHL_9064%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%99%D7%A0%D7%95%D7%9F_%D7%90%D7%96%D7%95%D7%9C%D7%90%D7%99"
@@ -57,6 +65,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
   "ben-gvir": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Itamar_Ben_Gvir_3_%28cropped%29.jpg/250px-Itamar_Ben_Gvir_3_%28cropped%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%90%D7%99%D7%AA%D7%9E%D7%A8_%D7%91%D7%9F_%D7%92%D7%91%D7%99%D7%A8"
+  },
+  "ben-shitrit": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/%D7%A8%D7%A4%D7%99_%D7%91%D7%9F_%D7%A9%D7%98%D7%A8%D7%99%D7%AA.jpg/250px-%D7%A8%D7%A4%D7%99_%D7%91%D7%9F_%D7%A9%D7%98%D7%A8%D7%99%D7%AA.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%A8%D7%A4%D7%99_%D7%91%D7%9F_%D7%A9%D7%98%D7%A8%D7%99%D7%AA"
   },
   "ben-tzur": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Yoav_Ben-Tzur_1.jpg/250px-Yoav_Ben-Tzur_1.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
@@ -102,9 +114,17 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/%D7%A4%D7%99%D7%99%D7%92%D7%9C%D7%99%D7%9F.jpg/250px-%D7%A4%D7%99%D7%99%D7%92%D7%9C%D7%99%D7%9F.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%A9%D7%94_%D7%A4%D7%99%D7%99%D7%92%D7%9C%D7%99%D7%9F"
   },
+  "fink": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Yaya_Fink_%28cropped%29.jpg/250px-Yaya_Fink_%28cropped%29.jpg",
+    "source": "https://en.wikipedia.org/wiki/Yaya_Fink"
+  },
   "forer": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Oded_Forer_%28ISH_0467%29.jpg/250px-Oded_Forer_%28ISH_0467%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%A2%D7%95%D7%93%D7%93_%D7%A4%D7%95%D7%A8%D7%A8"
+  },
+  "gani-gonen": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/%D7%A6%D7%99%D7%9C%D7%95%D7%9E%D7%99_%D7%AA%D7%93%D7%9E%D7%99%D7%AA_%D7%90%D7%95%D7%A9%D7%A8%D7%AA_%D7%92%D7%A0%D7%99_%D7%92%D7%95%D7%A0%D7%9F.jpg/250px-%D7%A6%D7%99%D7%9C%D7%95%D7%9E%D7%99_%D7%AA%D7%93%D7%9E%D7%99%D7%AA_%D7%90%D7%95%D7%A9%D7%A8%D7%AA_%D7%92%D7%A0%D7%99_%D7%92%D7%95%D7%A0%D7%9F.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%90%D7%95%D7%A9%D7%A8%D7%AA_%D7%92%D7%A0%D7%99_%D7%92%D7%95%D7%A0%D7%9F"
   },
   "gantz": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Israeli_Minister_Benny_Gantz_at_the_Department_of_State_in_Washington%2C_D.C._on_March_5%2C_2024_%28cropped%29.jpg/250px-Israeli_Minister_Benny_Gantz_at_the_Department_of_State_in_Washington%2C_D.C._on_March_5%2C_2024_%28cropped%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
@@ -130,13 +150,17 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Yasir_Hujeirat_%28R_H_3858%29.jpg/250px-Yasir_Hujeirat_%28R_H_3858%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%99%D7%90%D7%A1%D7%A8_%D7%97%D7%95%D7%92%27%D7%99%D7%A8%D7%90%D7%AA"
   },
-  "israel-katz": {
-    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Israel_Katz_on_July_3%2C_2024_%28cropped%29.jpg/250px-Israel_Katz_on_July_3%2C_2024_%28cropped%29.jpg",
-    "source": "https://he.wikipedia.org/wiki/%D7%99%D7%A9%D7%A8%D7%90%D7%9C_%D7%9B%22%D7%A5_(%D7%94%D7%9C%D7%99%D7%9B%D7%95%D7%93)"
+  "ifergan": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/%D7%AA%D7%9E%D7%95%D7%A0%D7%AA_%D7%A4%D7%A8%D7%95%D7%A4%D7%99%D7%9C_%D7%AA%D7%90%D7%99%D7%A8_%D7%90%D7%99%D7%A4%D7%A8%D7%92%D7%9F.jpeg/250px-%D7%AA%D7%9E%D7%95%D7%A0%D7%AA_%D7%A4%D7%A8%D7%95%D7%A4%D7%99%D7%9C_%D7%AA%D7%90%D7%99%D7%A8_%D7%90%D7%99%D7%A4%D7%A8%D7%92%D7%9F.jpeg",
+    "source": "https://he.wikipedia.org/wiki/%D7%AA%D7%90%D7%99%D7%A8_%D7%90%D7%99%D7%A4%D7%A8%D7%92%D7%9F"
   },
   "illouz": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Dan_Illouz_%28crop%29.jpg/250px-Dan_Illouz_%28crop%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%93%D7%9F_%D7%90%D7%99%D7%9C%D7%95%D7%96"
+  },
+  "israel-katz": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Israel_Katz_on_July_3%2C_2024_%28cropped%29.jpg/250px-Israel_Katz_on_July_3%2C_2024_%28cropped%29.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%99%D7%A9%D7%A8%D7%90%D7%9C_%D7%9B%22%D7%A5_(%D7%94%D7%9C%D7%99%D7%9B%D7%95%D7%93)"
   },
   "jabareen": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Yousef_Jabareen_2021.png/250px-Yousef_Jabareen_2021.png?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
@@ -149,6 +173,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
   "kariv": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Gilad_Kariv.png/250px-Gilad_Kariv.png?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%92%D7%9C%D7%A2%D7%93_%D7%A7%D7%A8%D7%99%D7%91"
+  },
+  "khatib-yasin": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Iman_Khatib_Yassin_1.jpg/250px-Iman_Khatib_Yassin_1.jpg",
+    "source": "https://en.wikipedia.org/wiki/Iman_Khatib-Yassin"
   },
   "kisch": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Yoav_Kish_%28SHL_9437%29.jpg/250px-Yoav_Kish_%28SHL_9437%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
@@ -194,6 +222,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Shaul_Meridor.jpeg/250px-Shaul_Meridor.jpeg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%A9%D7%90%D7%95%D7%9C_%D7%9E%D7%A8%D7%99%D7%93%D7%95%D7%A8"
   },
+  "mufid-mari": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Mofid_mare.jpg/250px-Mofid_mare.jpg",
+    "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%95%D7%A4%D7%99%D7%93_%D7%9E%D7%A8%D7%A2%D7%99"
+  },
   "netanyahu": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Benjamin_Netanyahu%2C_February_2023.jpg/250px-Benjamin_Netanyahu%2C_February_2023.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%91%D7%A0%D7%99%D7%9E%D7%99%D7%9F_%D7%A0%D7%AA%D7%A0%D7%99%D7%94%D7%95"
@@ -218,6 +250,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Moshe_Radman.png/250px-Moshe_Radman.png?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%A9%D7%94_%D7%A8%D7%93%D7%9E%D7%9F_%D7%90%D7%91%D7%95%D7%98%D7%91%D7%95%D7%9C"
   },
+  "rayten": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Efrat_Rayten.jpg/250px-Efrat_Rayten.jpg",
+    "source": "https://en.wikipedia.org/wiki/Efrat_Rayten"
+  },
   "regev": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Miri_Regev_02_%28cropped%29.jpg/250px-Miri_Regev_02_%28cropped%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%9E%D7%99%D7%A8%D7%99_%D7%A8%D7%92%D7%91"
@@ -241,6 +277,10 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
   "segalovitz": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Yoav_Segalovich_%28R_H_4069%29.jpg/250px-Yoav_Segalovich_%28R_H_4069%29.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
     "source": "https://he.wikipedia.org/wiki/%D7%99%D7%95%D7%90%D7%91_%D7%A1%D7%92%D7%9C%D7%95%D7%91%D7%99%D7%A5"
+  },
+  "shalev": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/%D7%99%D7%95%D7%A0%D7%AA%D7%9F_%D7%A9%D7%9C%D7%95_%28cropped%29.JPEG/250px-%D7%99%D7%95%D7%A0%D7%AA%D7%9F_%D7%A9%D7%9C%D7%95_%28cropped%29.JPEG",
+    "source": "https://he.wikipedia.org/wiki/%D7%99%D7%95%D7%A0%D7%AA%D7%9F_%D7%A9%D7%9C%D7%95"
   },
   "smotrich": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Bezalel_Smotrich.jpg/250px-Bezalel_Smotrich.jpg?utm_source=he.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
@@ -323,6 +363,10 @@ export function portraitSrc(id: PersonId): string {
   return portraitUrl(id) ?? generatedPortrait(id);
 }
 
+export function hasWikiPortrait(id: PersonId): boolean {
+  return portraitUrl(id) !== null;
+}
+
 export function bindPortrait(img: HTMLImageElement, id: PersonId): HTMLImageElement {
   img.addEventListener("error", () => {
     if (img.dataset.fallback === "1") return;
@@ -332,14 +376,25 @@ export function bindPortrait(img: HTMLImageElement, id: PersonId): HTMLImageElem
   return img;
 }
 
+/** First + last Hebrew initials. Used when Wikipedia has no free photo. */
+export function initialsHe(nameHe: string): string {
+  const parts = nameHe.split(/[\s־\-]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]!.slice(0, 1)}${parts[parts.length - 1]!.slice(0, 1)}`;
+  }
+  return nameHe.slice(0, 2);
+}
+
 export function generatedPortrait(id: PersonId): string {
   const person = getPerson(id);
   const ink = SLATE_INK[person.slateId];
-  const letter = person.nameHe.slice(0, 1);
+  const letters = initialsHe(person.nameHe);
+  const last = person.nameHe.split(/[\s־\-]+/).filter(Boolean).at(-1) ?? person.nameHe;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="${escapeXml(person.nameHe)}">
   <rect width="80" height="80" fill="#1c1f27"/>
-  <circle cx="40" cy="40" r="28" fill="${ink}"/>
-  <text x="40" y="47" text-anchor="middle" font-size="28" font-family="Rubik, Arial Hebrew, sans-serif" fill="#e4ddd0">${escapeXml(letter)}</text>
+  <circle cx="40" cy="36" r="24" fill="${ink}"/>
+  <text x="40" y="43" text-anchor="middle" font-size="20" font-family="Rubik, Arial Hebrew, sans-serif" fill="#e4ddd0">${escapeXml(letters)}</text>
+  <text x="40" y="70" text-anchor="middle" font-size="9" font-family="Rubik, Arial Hebrew, sans-serif" fill="#c9a227">${escapeXml(last)}</text>
 </svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }

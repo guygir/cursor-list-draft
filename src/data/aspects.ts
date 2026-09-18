@@ -244,6 +244,11 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     noteHe: "יש עתיד חברתית. פרופיל משחק.",
     noteEn: "Yesh Atid social line. Toy profile.",
   },
+  shalev: {
+    aspects: { bibi: 0.22, judicial: 0.28, service: 0.12, security: 0.7 },
+    noteHe: "כתף אל כתף — שירות לכולם. פרופיל משחק.",
+    noteEn: "Shoulder-to-shoulder — service for all. Toy profile.",
+  },
   eisenkot: {
     aspects: { bibi: 0.2, judicial: 0.32, service: 0.28, security: 0.78 },
     noteHe: "רכז ביטחוני על גבעת השינוי.",
@@ -328,6 +333,11 @@ const OVERRIDES: Partial<Record<PersonId, AspectOverride>> = {
     aspects: { bibi: 0.34, judicial: 0.36, service: 0.28, security: 0.58 },
     noteHe: "חקלאות בכחול לבן. פרופיל משחק.",
     noteEn: "Agriculture in Blue and White. Toy profile.",
+  },
+  "mufid-mari": {
+    aspects: { bibi: 0.32, judicial: 0.34, service: 0.18, security: 0.74 },
+    noteHe: "דרוזי משרת, כחול לבן. פרופיל משחק.",
+    noteEn: "Druze who serve, Blue and White. Toy profile.",
   },
   abbas: {
     aspects: { bibi: 0.05, judicial: 0.34, service: 0.5, security: 0.32 },

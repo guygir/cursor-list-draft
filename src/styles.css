@@ -346,8 +346,12 @@ input {
   flex-shrink: 0;
 }
 
+.slot-rail-wrap .score-meters-wrap {
+  margin: 2px 0 6px;
+}
+
 .slot-rail-wrap .score-meters {
-  margin: 4px 0 8px;
+  margin: 0;
   gap: 10px;
 }
 
@@ -710,7 +714,54 @@ input {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+}
+
+.member-legend,
+.meter-hint,
+.color-scale {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.color-scale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 2px;
+  z-index: 2;
+  max-width: 100%;
+  padding: 0 4px;
+  pointer-events: none;
+}
+
+.color-scale-row {
+  display: flex;
+  gap: 6px;
+}
+
+.color-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-stop::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px rgba(16, 18, 24, 0.6);
+}
+
+.meter-hint {
+  margin: 2px 0 0;
 }
 
 .member-head strong {
@@ -1079,11 +1130,15 @@ input {
   margin: 6px 0;
 }
 
+.score-meters-wrap {
+  margin: 4px 0 2px;
+}
+
 .score-meters {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin: 12px 0 4px;
+  margin: 0;
 }
 
 .score-meter-head {
@@ -1120,6 +1175,7 @@ input {
   opacity: 0.55;
 }
 
+.list-col .score-meters-wrap,
 .list-col .score-meters {
   margin-top: 14px;
 }

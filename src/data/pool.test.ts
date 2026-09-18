@@ -12,16 +12,15 @@ describe("2026 slate pool", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("gives each published slate its top slots without invented names", () => {
-    const short = new Set(["raam", "blue-white", "joint-list"]);
+  it("gives each published slate its top 10 without invented names", () => {
     for (const slate of SLATE_ORDER) {
       const rows = PEOPLE.filter((p) => p.slateId === slate);
-      if (short.has(slate)) {
-        expect(rows.length).toBeGreaterThanOrEqual(6);
-      } else {
-        expect(rows.length).toBeGreaterThanOrEqual(10);
-      }
+      expect(rows.length).toBeGreaterThanOrEqual(10);
+      expect(rows.map((p) => p.listSlot).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     }
+    expect(getPerson("talik-gvili").nameHe).toBe("טליק גואילי");
+    expect(getPerson("mufid-mari").nameHe).toBe("מופיד מרעי");
+    expect(getPerson("ahmed-darawshe").listSlot).toBe(9);
   });
 
   it("sits every published name on the four toy axes", () => {

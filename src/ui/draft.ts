@@ -99,10 +99,10 @@ function renderHeader(view: DraftView, player: DraftList | undefined): HTMLEleme
 
 function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLElement {
   const wrap = el("section", { class: "slot-rail-wrap", "aria-label": copy.yourParty });
-  if (player && player.picks.length > 0) {
-    const meters = listMeters(player, lists);
-    wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct));
-  }
+  const meters = player
+    ? listMeters(player, lists)
+    : { cohesionPct: 0, demandPct: 0 };
+  wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct));
   const ol = el("ol", { class: "slot-rail" });
   for (let i = 0; i < LIST_SIZE; i++) {
     const id = player?.picks[i];

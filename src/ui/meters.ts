@@ -4,9 +4,14 @@ import { el } from "./dom";
 export function scoreMeters(cohesionPct: number, demandPct: number): HTMLElement {
   return el(
     "div",
-    { class: "score-meters" },
-    meter(copy.credibility, cohesionPct, "cred"),
-    meter(copy.demand, demandPct, "demand"),
+    { class: "score-meters-wrap" },
+    el(
+      "div",
+      { class: "score-meters" },
+      meter(copy.credibility, cohesionPct, "cred"),
+      meter(copy.demand, demandPct, "demand"),
+    ),
+    el("p", { class: "meter-hint" }, copy.metersLive),
   );
 }
 

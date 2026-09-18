@@ -42,7 +42,7 @@ const SEEDS: Seed[] = [
   { id: "israel-katz", nameEn: "Israel Katz", nameHe: "ישראל כ״ץ", slateId: "likud", slot: 6, role: "minister", draw: 0.7 },
   { id: "saar", nameEn: "Gideon Sa'ar", nameHe: "גדעון סער", slateId: "likud", slot: 7, role: "minister", draw: 0.7 },
   { id: "ofir-katz", nameEn: "Ofir Katz", nameHe: "אופיר כץ", slateId: "likud", slot: 8, role: "mk" },
-  { id: "talik-gvili", nameEn: "Talik Gvili", nameHe: "טליק גוילי", slateId: "likud", slot: 9, role: "newcomer" },
+  { id: "talik-gvili", nameEn: "Talik Gvili", nameHe: "טליק גואילי", slateId: "likud", slot: 9, role: "newcomer" },
   { id: "kisch", nameEn: "Yoav Kisch", nameHe: "יואב קיש", slateId: "likud", slot: 10, role: "minister", draw: 0.7 },
 
   // Otzma 2026 top 10
@@ -141,23 +141,31 @@ const SEEDS: Seed[] = [
   { id: "kolihman", nameEn: "Elvira Kolihman", nameHe: "אלבירה קוליכמן", slateId: "yisrael-beiteinu", slot: 9, role: "newcomer" },
   { id: "illouz", nameEn: "Dan Illouz", nameHe: "דן אילוז", slateId: "yisrael-beiteinu", slot: 10, role: "mk" },
 
-  // Ra'am 2026 — only published names (6)
+  // Ra'am 2026 top 10 — CEC / Wikipedia published names
   { id: "abbas", nameEn: "Mansour Abbas", nameHe: "מנסור עבאס", slateId: "raam", slot: 1, role: "leader", draw: 0.55, wiki: "https://he.wikipedia.org/wiki/%D7%9E%D7%A0%D7%A1%D7%95%D7%A8_%D7%A2%D7%91%D7%90%D7%A1" },
-  { id: "segalovitz", nameEn: "Yoav Segalovitz", nameHe: "יואב סגלוביץ", slateId: "raam", slot: 2, role: "mk" },
+  { id: "segalovitz", nameEn: "Yoav Segalovitz", nameHe: "יואב סגלוביץ", slateId: "raam", slot: 2, role: "mk", wiki: "https://he.wikipedia.org/wiki/%D7%99%D7%95%D7%90%D7%91_%D7%A1%D7%92%D7%9C%D7%95%D7%91%D7%99%D7%A5" },
   { id: "taha", nameEn: "Waleed Taha", nameHe: "וליד טאהא", slateId: "raam", slot: 3, role: "mk" },
-  { id: "alhwashla", nameEn: "Waleed Alhwashla", nameHe: "וליד אלחוואשלה", slateId: "raam", slot: 4, role: "mk" },
-  { id: "khatib-yasin", nameEn: "Iman Khatib-Yasin", nameHe: "אימאן ח׳טיב-יאסין", slateId: "raam", slot: 5, role: "mk" },
+  { id: "alhwashla", nameEn: "Waleed Alhwashla", nameHe: "ואליד אלהואשלה", slateId: "raam", slot: 4, role: "mk", wiki: "https://he.wikipedia.org/wiki/%D7%95%D7%90%D7%9C%D7%99%D7%93_%D7%90%D7%9C%D7%94%D7%95%D7%90%D7%A9%D7%9C%D7%94" },
+  { id: "khatib-yasin", nameEn: "Iman Khatib-Yasin", nameHe: "אימאן ח׳טיב-יאסין", slateId: "raam", slot: 5, role: "mk", wiki: "https://en.wikipedia.org/wiki/Iman_Khatib-Yassin" },
   { id: "hujeirat", nameEn: "Yasir Hujeirat", nameHe: "יאסר חוג׳יראת", slateId: "raam", slot: 6, role: "mk" },
+  { id: "ibrahim-al-turi", nameEn: "Ibrahim Al-Turi", nameHe: "איברהים אל-טורי", slateId: "raam", slot: 7, role: "newcomer" },
+  { id: "abd-el-karim-masri", nameEn: "Abd El-Karim Masri", nameHe: "עבד אל-כרים מסרי", slateId: "raam", slot: 8, role: "newcomer" },
+  { id: "abd-el-karim-azzam", nameEn: "Abed Al-Karim Azzam", nameHe: "עבד אל-כרים עזאם", slateId: "raam", slot: 9, role: "newcomer" },
+  { id: "ibrahim-abu-laban", nameEn: "Ibrahim Abu Laban", nameHe: "אבראהים אבו לבן", slateId: "raam", slot: 10, role: "newcomer" },
 
-  // Blue and White 2026 — only published names (6)
+  // Blue and White 2026 top 10
   { id: "gantz", nameEn: "Benny Gantz", nameHe: "בני גנץ", slateId: "blue-white", slot: 1, role: "leader", draw: 0.7, wiki: "https://he.wikipedia.org/wiki/%D7%91%D7%A0%D7%99_%D7%92%D7%A0%D7%A5" },
   { id: "tamano-shata", nameEn: "Pnina Tamano-Shata", nameHe: "פנינה תמנו-שטה", slateId: "blue-white", slot: 2, role: "minister", draw: 0.7 },
   { id: "bloch", nameEn: "Aliza Bloch", nameHe: "עליזה בלוך", slateId: "blue-white", slot: 3, role: "newcomer" },
   { id: "konkol", nameEn: "Roee Konkol", nameHe: "רועי קונקול", slateId: "blue-white", slot: 4, role: "newcomer" },
   { id: "avidar", nameEn: "Rotem Avidar Tzalik", nameHe: "רותם אבידר צליק", slateId: "blue-white", slot: 5, role: "newcomer" },
   { id: "schuster", nameEn: "Alon Schuster", nameHe: "אלון שוסטר", slateId: "blue-white", slot: 6, role: "mk" },
+  { id: "mufid-mari", nameEn: "Mufid Mari", nameHe: "מופיד מרעי", slateId: "blue-white", slot: 7, role: "mk", wiki: "https://he.wikipedia.org/wiki/%D7%9E%D7%95%D7%A4%D7%99%D7%93_%D7%9E%D7%A8%D7%A2%D7%99" },
+  { id: "yerhudit-uliel", nameEn: "Yerhudit Uliel Malka", nameHe: "יהודית אוליאל מלכה", slateId: "blue-white", slot: 8, role: "newcomer" },
+  { id: "ariel-baziz", nameEn: "Ariel Baziz", nameHe: "אריאל בזיז", slateId: "blue-white", slot: 9, role: "newcomer" },
+  { id: "moria-silfan", nameEn: "Moria Silfan", nameHe: "מוריה סילפן", slateId: "blue-white", slot: 10, role: "newcomer" },
 
-  // Joint List 2026 — named slots only
+  // Joint List 2026 top 10
   { id: "jabareen", nameEn: "Yousef Jabareen", nameHe: "יוסף ג׳בארין", slateId: "joint-list", slot: 1, role: "leader", draw: 0.55 },
   { id: "tibi", nameEn: "Ahmad Tibi", nameHe: "אחמד טיבי", slateId: "joint-list", slot: 2, role: "leader", draw: 0.55 },
   { id: "abu-shehadeh", nameEn: "Sami Abu Shehadeh", nameHe: "סמי אבו שחאדה", slateId: "joint-list", slot: 3, role: "leader", draw: 0.55 },
@@ -166,6 +174,7 @@ const SEEDS: Seed[] = [
   { id: "cassif", nameEn: "Ofer Cassif", nameHe: "עופר כסיף", slateId: "joint-list", slot: 6, role: "mk" },
   { id: "atauna", nameEn: "Youssef Atauna", nameHe: "יוסף עטאונה", slateId: "joint-list", slot: 7, role: "mk" },
   { id: "karkabi", nameEn: "Maha Karkabi", nameHe: "מהא כרכבי", slateId: "joint-list", slot: 8, role: "newcomer" },
+  { id: "ahmed-darawshe", nameEn: "Ahmed Darawshe", nameHe: "אחמד דראושה", slateId: "joint-list", slot: 9, role: "newcomer" },
   { id: "washahi", nameEn: "Nihaya Washahi", nameHe: "נהאיה ושחי", slateId: "joint-list", slot: 10, role: "newcomer" },
 ];
 

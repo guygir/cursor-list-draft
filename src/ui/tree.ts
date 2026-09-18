@@ -6,6 +6,7 @@ import {
   pairRankWeight,
   pairRelation,
   relationColor,
+  relationColorStops,
   relationOpacity,
   relationStrokeWidth,
   shortReasonHe,
@@ -278,8 +279,25 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     });
     faces.append(face);
   }
-  wrap.append(faces);
+  wrap.append(faces, renderColorScale());
   return wrap;
+}
+
+function renderColorScale(): HTMLElement {
+  const scale = el("div", { class: "color-scale", "aria-label": copy.colorScale });
+  scale.append(el("span", { class: "color-scale-label" }, copy.colorScale));
+  const row = el("span", { class: "color-scale-row" });
+  for (const stop of relationColorStops()) {
+    row.append(
+      el(
+        "span",
+        { class: "color-stop", style: `--swatch:${stop.color}`, title: `s=${stop.s}` },
+        stop.labelHe,
+      ),
+    );
+  }
+  scale.append(row);
+  return scale;
 }
 
 function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {

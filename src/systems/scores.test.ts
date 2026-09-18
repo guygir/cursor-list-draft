@@ -23,4 +23,15 @@ describe("score meters", () => {
     expect(meters.cohesionPct).toBeLessThanOrEqual(100);
     expect(meters.demandPct).toBe(Math.round((14 / 38) * 100));
   });
+
+  it("moves both meters when the ticket changes", () => {
+    const clean = listMeters(list("player", ["bennett", "lapid"]), [
+      list("player", ["bennett", "lapid"]),
+    ]);
+    const war = listMeters(list("player", ["bennett", "deri"]), [
+      list("player", ["bennett", "deri"]),
+    ]);
+    expect(war.cohesionPct).toBeLessThan(clean.cohesionPct);
+    expect(war.demandPct).not.toBe(clean.demandPct);
+  });
 });
