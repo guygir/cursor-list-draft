@@ -35,24 +35,6 @@ const EXACT = [
   ["alhwashla", "ואליד אלהואשלה"],
 ];
 
-const COMMON_LAST = new Set([
-  "כהן",
-  "לוי",
-  "אליהו",
-  "מור",
-  "אוחנה",
-  "כץ",
-  "כ״ץ",
-  "כ'ץ",
-  "בן",
-  "טל",
-  "אבו",
-  "מסרי",
-  "עזאם",
-  "גולדברג",
-  "רוזנטל",
-]);
-
 const REJECT = {
   "talik-gvili": [/ישראל\s*טל/, /israel\s*tal/i, /טל ישראל/, /רן גואילי/, /ran\s+gvili/i],
   "tzachi-eliyahu": [/עמיחי/, /amihai|amichai/i],
