@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   await ensure(db);
   const result = await db
     .prepare(
-      `SELECT id, at_ms AS at, mode, day_key AS dayKey, hub_name AS hubName, seats, cohesion, demand, won, n_cpus AS nCpus, difficulty, share
+      `SELECT id, at_ms AS at, mode, day_key AS dayKey, hub_name AS hubName, player_name AS playerName, seats, cohesion, demand, won, n_cpus AS nCpus, difficulty, share
        FROM runs ORDER BY seats DESC, cohesion DESC, at_ms DESC LIMIT ?`,
     )
     .bind(MAX_ROWS)
@@ -31,8 +31,8 @@ export async function onRequestPost(context) {
   if (!row) return json({ ok: false }, 400);
   await db
     .prepare(
-      `INSERT OR REPLACE INTO runs (id, at_ms, mode, day_key, hub_name, seats, cohesion, demand, won, n_cpus, difficulty, share)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO runs (id, at_ms, mode, day_key, hub_name, player_name, seats, cohesion, demand, won, n_cpus, difficulty, share)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       row.id,
@@ -40,6 +40,7 @@ export async function onRequestPost(context) {
       row.mode,
       row.dayKey ?? null,
       row.hubName,
+      row.playerName ?? "",
       row.seats,
       row.cohesion,
       row.demand,
@@ -60,6 +61,7 @@ async function ensure(db) {
       mode TEXT NOT NULL,
       day_key TEXT,
       hub_name TEXT NOT NULL,
+      player_name TEXT,
       seats INTEGER NOT NULL,
       cohesion REAL NOT NULL,
       demand REAL NOT NULL,
@@ -75,6 +77,11 @@ async function ensure(db) {
     )`),
     db.prepare(`CREATE INDEX IF NOT EXISTS runs_rank ON runs (mode, seats DESC, cohesion DESC, at_ms DESC)`),
   ]);
+  try {
+    await db.prepare("ALTER TABLE runs ADD COLUMN player_name TEXT").run();
+  } catch {
+    /* already added */
+  }
 }
 
 async function allowPost(db, ip) {
@@ -104,6 +111,7 @@ function sanitize(body) {
     mode,
     dayKey: body.dayKey ? String(body.dayKey).slice(0, 16) : null,
     hubName,
+    playerName: String(body.playerName ?? "").replace(/[<>]/g, "").trim().slice(0, 18),
     seats: Math.max(0, Math.min(120, Math.round(Number(body.seats)))),
     cohesion: clamp01(Number(body.cohesion)),
     demand: Math.max(0, Number(body.demand) || 0),
@@ -119,6 +127,7 @@ function fromRow(row) {
     ...row,
     won: Boolean(row.won),
     dayKey: row.dayKey ?? undefined,
+    playerName: row.playerName || undefined,
   };
 }
 

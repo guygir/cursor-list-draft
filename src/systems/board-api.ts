@@ -44,6 +44,7 @@ export function sanitizePostedEntry(body: unknown): BoardEntry | null {
   const row = body as BoardEntry;
   if (!isBoardMode(row.mode)) return null;
   const hubName = String(row.hubName ?? "").replace(/[<>]/g, "").trim().slice(0, 24);
+  const playerName = String(row.playerName ?? "").replace(/[<>]/g, "").trim().slice(0, 18);
   if (!hubName) return null;
   const seats = Math.max(0, Math.min(120, Math.round(Number(row.seats))));
   const cohesion = clamp01(Number(row.cohesion));
@@ -56,6 +57,7 @@ export function sanitizePostedEntry(body: unknown): BoardEntry | null {
     at,
     mode: row.mode,
     hubName,
+    ...(playerName ? { playerName } : {}),
     seats,
     cohesion,
     demand,

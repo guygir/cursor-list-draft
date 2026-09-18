@@ -4,6 +4,10 @@ import { readVisibleBoard } from "../systems/board-api";
 import { copy } from "./copy";
 import { el } from "./dom";
 
+export function firstPlaceOf(query: { mode: BoardMode; dayKey?: string; difficulty?: string }) {
+  return boardForMode(readVisibleBoard(globalThis.localStorage ?? null), query)[0] ?? null;
+}
+
 export function renderBoardPanel(opts: {
   mode: BoardMode;
   dayKey?: string;
@@ -17,7 +21,7 @@ export function renderBoardPanel(opts: {
     mode: opts.mode,
     ...(opts.dayKey ? { dayKey: opts.dayKey } : {}),
     ...(opts.difficulty ? { difficulty: opts.difficulty } : {}),
-  }).slice(0, opts.compact ? 5 : 12);
+  }).slice(0, opts.compact ? 5 : 10);
   if (opts.hideEmpty && !rows.length) return null;
   const wrap = el("section", { class: `board-panel ${opts.compact ? "is-compact" : ""}` });
   wrap.append(el("h2", {}, opts.title ?? copy.boardTitle));
@@ -34,8 +38,10 @@ export function renderBoardPanel(opts: {
         "li",
         { class: `board-row ${row.id === opts.currentId ? "is-you" : ""}` },
         el("span", { class: "board-rank" }, String(place)),
-        el("strong", { class: "board-hub" }, row.hubName),
-        el("span", { class: "board-mode" }, modeLabel(row.mode)),
+        el("span", { class: "board-who" },
+          el("strong", { class: "board-player" }, row.playerName || copy.anonPlayer),
+          el("span", { class: "board-hub" }, row.hubName),
+        ),
         el("span", { class: "board-seats" }, `${row.seats}`),
         el("span", { class: "board-unit" }, copy.seats),
       ),
@@ -43,10 +49,4 @@ export function renderBoardPanel(opts: {
   }
   wrap.append(list);
   return wrap;
-}
-
-function modeLabel(mode: BoardMode): string {
-  if (mode === "create") return copy.modeCreate;
-  if (mode === "daily") return copy.modeDaily;
-  return copy.modeDraft;
 }

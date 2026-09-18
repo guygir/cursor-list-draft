@@ -7,6 +7,7 @@ export interface BoardEntry {
   at: number;
   mode: BoardMode;
   dayKey?: string;
+  playerName?: string;
   hubName: string;
   seats: number;
   cohesion: number;

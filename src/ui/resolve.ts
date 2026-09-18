@@ -47,6 +47,7 @@ export function renderResolve(
         el("p", { class: won ? "banner win" : "banner loss" }, won ? copy.win : copy.loss),
       ),
     ),
+    el("p", { class: "win-rule" }, copy.winBySeats),
     el("div", { class: "ticker" }, copy.disclosure),
   );
 
@@ -148,7 +149,7 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
       }),
     ),
     scoreMeters(cohesionPct, demandPct, "fresh", { delay: rowDelay + NIGHT_METER_DELAY_MS }),
-    el("p", { class: "hill-note" }, row.neighborhood.labelHe),
+    el("p", { class: "hill-note" }, `${row.neighborhood.labelHe} · ${copy.afterSplit}`),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );
   return item;

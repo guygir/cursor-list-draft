@@ -8,6 +8,7 @@ import {
   isDraftOver,
   legalRemaining,
   LIST_SIZE,
+  renameList,
   slateCountOnList,
 } from "./draft";
 
@@ -16,6 +17,14 @@ describe("snake draft", () => {
     const a = play(["bennett", "lapid", "golan"], 1);
     const b = play(["bennett", "lapid", "golan"], 1);
     expect(a.lists.map((l) => l.picks)).toEqual(b.lists.map((l) => l.picks));
+    expect(a.lists.map((l) => l.labelHe)).toEqual(b.lists.map((l) => l.labelHe));
+    expect(a.lists.some((l) => l.labelHe.includes("ליכוד"))).toBe(false);
+  });
+
+  it("keeps an invented party title the player can rename", () => {
+    const state = createDraft(1, 1, "open", undefined, { player: "נחל שחר" });
+    expect(state.lists[0]?.labelHe).toBe("נחל שחר");
+    expect(renameList(state, "player", "ברק אלון").lists[0]?.labelHe).toBe("ברק אלון");
   });
 
   it("locks a hub as player slot 1 and lets the CPU pick next", () => {

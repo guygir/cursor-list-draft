@@ -364,6 +364,19 @@ export const PORTRAITS: Partial<Record<PersonId, { url: string; source: string }
   }
 };
 
+export function prefetchPortraits(): void {
+  if (typeof document === "undefined") return;
+  if (document.documentElement.dataset.portraits === "1") return;
+  document.documentElement.dataset.portraits = "1";
+  for (const row of Object.values(PORTRAITS)) {
+    if (!row?.url) continue;
+    const img = new Image();
+    img.decoding = "async";
+    img.referrerPolicy = "no-referrer";
+    img.src = row.url.split("?")[0]!;
+  }
+}
+
 export function portraitUrl(id: PersonId): string | null {
   const raw = PORTRAITS[id]?.url;
   if (!raw) return null;

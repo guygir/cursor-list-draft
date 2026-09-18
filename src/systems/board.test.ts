@@ -9,7 +9,7 @@ describe("local leaderboard", () => {
       store,
     );
     const best = recordRun(
-      { mode: "daily", dayKey: "2026-09-18", hubName: "גולן", seats: 28, cohesion: 0.9, demand: 50, won: true, nCpus: 1, difficulty: "open", share: "?day=2026-09-18" },
+      { mode: "daily", dayKey: "2026-09-18", playerName: "נועה", hubName: "גולן", seats: 28, cohesion: 0.9, demand: 50, won: true, nCpus: 1, difficulty: "open", share: "?day=2026-09-18" },
       store,
     );
     recordRun(
@@ -20,6 +20,7 @@ describe("local leaderboard", () => {
     expect(daily).toHaveLength(2);
     expect(daily[0]?.seats).toBe(28);
     expect(rankOf(daily, best.id)).toBe(1);
+    expect(daily[0]?.playerName).toBe("נועה");
     expect(sortBoard(readBoard(store))[0]?.hubName).toBe("איתי");
   });
 

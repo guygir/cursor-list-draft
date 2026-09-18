@@ -8,6 +8,7 @@ import { el } from "./dom";
 import { renderHowCalc } from "./info";
 import { scoreMeters } from "./meters";
 import { renderMemberPicker } from "./members";
+import { renderNameEdit } from "./name-edit";
 import {
   edgeLine,
   hintFor,
@@ -21,6 +22,7 @@ import {
 
 export interface DraftHandlers extends TreeHandlers {
   onCloseSlate: () => void;
+  onRenameParty: (name: string) => void;
 }
 
 export interface PickNotice {
@@ -42,7 +44,7 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   const inspectId = view.hoverId ?? view.focusId;
   const root = el("div", { class: "screen draft-screen" });
 
-  root.append(renderHeader(view, player));
+  root.append(renderHeader(view, player, handlers));
   root.append(renderSlots(player, view.lists));
 
   const stage = el("div", { class: "graph-pane" });
@@ -78,12 +80,24 @@ function canConfirm(view: DraftView): boolean {
   );
 }
 
-function renderHeader(view: DraftView, player: DraftList | undefined): HTMLElement {
+function renderHeader(view: DraftView, player: DraftList | undefined, handlers: DraftHandlers): HTMLElement {
   const filled = player?.picks.length ?? 0;
   return el(
     "header",
     { class: "mast compact" },
-    el("h1", {}, copy.title),
+    el(
+      "div",
+      { class: "brand" },
+      el("h1", {}, copy.title),
+      player
+        ? renderNameEdit({
+            value: player.labelHe,
+            ariaLabel: copy.partyName,
+            className: "is-party",
+            onCommit: handlers.onRenameParty,
+          })
+        : null,
+    ),
     el(
       "div",
       { class: "mast-tools" },
@@ -195,7 +209,7 @@ function renderNotices(notices: PickNotice[]): HTMLElement {
           }),
           notice.personId,
         ),
-        el("span", {}, copy.cpuNotice(notice.listHe, person.nameHe)),
+        el("span", {}, copy.cpuNotice(notice.listHe, person.nameHe, notice.slot)),
       ),
     );
   }

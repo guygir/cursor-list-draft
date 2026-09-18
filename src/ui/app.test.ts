@@ -8,6 +8,7 @@ import { mount } from "./app";
 describe("playable draft UI", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")));
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -37,6 +38,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("צור מנהיג");
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
+    expect(root.textContent).toContain("שם השחקן");
+    expect(root.textContent).toContain("שם המפלגה");
+    expect(root.textContent).toContain("עוד אין שיא במצב הזה");
     expect(root.textContent).toContain("על המכשיר הזה");
     [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.textContent?.includes("לוח שיאים"))?.click();
     expect(root.textContent).toContain("עוד אין ריצה");
@@ -50,7 +54,9 @@ describe("playable draft UI", () => {
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
-    expect(root.textContent).toContain("נתניהו · משפט · שירות · ביטחון · כלכלה");
+    expect(root.textContent).toContain("חמשת הפסים");
+    expect(root.textContent).toContain("נתניהו");
+    expect(root.textContent).toContain("כלכלה");
     expect(root.textContent).not.toContain("איתמר בן גביר");
     expect(root.querySelectorAll(".party-btn").length).toBe(0);
 
@@ -60,14 +66,14 @@ describe("playable draft UI", () => {
     await vi.runOnlyPendingTimersAsync();
     const shown = [...root.querySelectorAll<HTMLButtonElement>(".name-btn")].map((btn) => btn.textContent);
     expect(shown.join(" ")).not.toContain("בנימין נתניהו");
-    expect(root.querySelector(".notice-rail")?.textContent).toMatch(/מפלגה 1/);
+    expect(root.querySelector(".notice-rail")?.textContent).toMatch(/שבצה את .+ בבחירה/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
     expect(root.textContent).toContain("מתעדכנים בכל בחירה");
     const credMeter = root.querySelector<HTMLButtonElement>(".score-meter.is-cred");
     credMeter?.click();
     expect(credMeter?.classList.contains("is-open")).toBe(true);
-    expect(credMeter?.textContent).toContain("העץ");
-    expect(root.querySelector(".score-meter.is-demand")?.textContent).toContain("הגבעה");
+    expect(credMeter?.textContent).toContain("מפלגה אחת");
+    expect(root.querySelector(".score-meter.is-demand")?.textContent).toContain("חולקות");
     expect(root.textContent).toContain("צבע הקו = חוזק החיבור");
     expect(root.querySelector(".color-scale")).toBeTruthy();
 
@@ -104,6 +110,7 @@ describe("playable draft UI", () => {
     expect(root.textContent).not.toContain("מה שהעץ");
     expect(root.textContent).not.toContain("מעבד");
     expect(root.textContent).toContain("דראפט · קל");
+    expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
     expect(root.querySelector(".board-panel")?.textContent).toMatch(/מנדטים|עוד אין/);
   });
 

@@ -49,7 +49,7 @@ const BLOCS: Array<{ labelHe: string; slates: SlateId[] }> = [
 
 const SIZE = 420;
 const CX = 210;
-const CY = 208;
+const CY = 200;
 
 export function edgeKey(a: PersonId, b: PersonId, type: string): string {
   const [left, right] = a < b ? [a, b] : [b, a];
@@ -198,6 +198,7 @@ interface PlacedNode {
 
 function renderConstellation(view: TreeView, handlers: TreeHandlers, player: DraftList): HTMLElement {
   const wrap = el("div", { class: "constellation" });
+  const board = el("div", { class: "constellation-board" });
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "tree-map");
   svg.setAttribute("viewBox", `0 0 ${SIZE} ${SIZE}`);
@@ -208,9 +209,10 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
   const others = player.picks.slice(1);
   const preview = view.focusId && !player.picks.includes(view.focusId) ? view.focusId : null;
   const ring = preview ? [...others, preview] : others;
+  const layout = satelliteLayout(ring.length);
   const nodes: PlacedNode[] = [
     { id: hubId, rank: 1, x: CX, y: CY, ghost: false, hub: true },
-    ...placeRing(ring, player, preview),
+    ...placeRing(ring, player, preview, layout),
   ];
 
   let markup = `<defs>
@@ -221,7 +223,7 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     </radialGradient>
   </defs>
   <rect width="${SIZE}" height="${SIZE}" fill="url(#stage-glow)" />
-  ${nodes.length > 6 ? `<circle class="orbit" cx="${CX}" cy="${CY}" r="96" /><circle class="orbit" cx="${CX}" cy="${CY}" r="168" />` : `<circle class="orbit" cx="${CX}" cy="${CY}" r="126" />`}`;
+  ${layout.outer > 0 ? `<circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.innerR}" /><circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.outerR}" />` : `<circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.innerR}" />`}`;
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
@@ -244,14 +246,14 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
 
   svg.insertAdjacentHTML("beforeend", markup);
   bindEdges(svg, handlers);
-  wrap.append(svg);
+  board.append(svg);
 
   const faces = el("div", { class: "tree-faces" });
   for (const node of nodes) {
     const person = getPerson(node.id);
     const hot = view.focusId === node.id || view.hoverId === node.id;
     const photo = portraitSrc(node.id);
-    const compact = nodes.length >= 8;
+    const compact = nodes.length >= 7;
     const face = el(
       "button",
       {
@@ -281,7 +283,8 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     });
     faces.append(face);
   }
-  wrap.append(faces, renderColorScale());
+  board.append(faces);
+  wrap.append(board, renderColorScale());
   return wrap;
 }
 
@@ -315,11 +318,29 @@ function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {
   });
 }
 
-function placeRing(ring: PersonId[], player: DraftList, preview: PersonId | null): PlacedNode[] {
-  const innerCount = ring.length <= 5 ? ring.length : 4;
-  const innerIds = ring.slice(0, innerCount);
-  const outerIds = ring.slice(innerCount);
-  const innerR = outerIds.length ? 96 : 126;
+export interface SatelliteLayout {
+  inner: number;
+  outer: number;
+  innerR: number;
+  outerR: number;
+}
+
+/** Hub sits in the center. Six around it stay on one ring; nine split 6+3. */
+export function satelliteLayout(count: number): SatelliteLayout {
+  if (count <= 6) return { inner: count, outer: 0, innerR: count >= 6 ? 108 : 118, outerR: 0 };
+  if (count === 7) return { inner: 4, outer: 3, innerR: 82, outerR: 148 };
+  if (count === 8) return { inner: 5, outer: 3, innerR: 82, outerR: 148 };
+  return { inner: 6, outer: count - 6, innerR: 86, outerR: 150 };
+}
+
+function placeRing(
+  ring: PersonId[],
+  player: DraftList,
+  preview: PersonId | null,
+  layout: SatelliteLayout,
+): PlacedNode[] {
+  const innerIds = ring.slice(0, layout.inner);
+  const outerIds = ring.slice(layout.inner);
   const placed: PlacedNode[] = [];
   const push = (id: PersonId, point: { x: number; y: number }) => {
     placed.push({
@@ -331,8 +352,8 @@ function placeRing(ring: PersonId[], player: DraftList, preview: PersonId | null
       hub: false,
     });
   };
-  ringPoints(innerIds.length, innerR).forEach((point, index) => push(innerIds[index]!, point));
-  ringPoints(outerIds.length, 168, Math.PI / outerIds.length || 0).forEach((point, index) => {
+  ringPoints(innerIds.length, layout.innerR).forEach((point, index) => push(innerIds[index]!, point));
+  ringPoints(outerIds.length, layout.outerR, Math.PI / Math.max(outerIds.length, 1)).forEach((point, index) => {
     push(outerIds[index]!, point);
   });
   return placed;

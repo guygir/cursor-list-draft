@@ -21,7 +21,7 @@ export function renderMemberPicker(opts: {
   const { ids, slate, picks, focusId, canPick, variant } = opts;
   const hasTeam = picks.length > 0;
   const wrap = el("div", { class: `member-picker is-${variant}`, "aria-label": copy.chooseMember });
-  const back = el("button", { type: "button", class: "back-btn" }, copy.backToParties);
+  const back = el("button", { type: "button", class: "back-btn is-loud" }, copy.backToParties);
   back.addEventListener("click", () => opts.onCloseSlate());
   wrap.append(
     el(
@@ -30,11 +30,7 @@ export function renderMemberPicker(opts: {
       back,
       el("strong", {}, slateLabelHe(slate)),
     ),
-    el(
-      "p",
-      { class: "member-legend" },
-      hasTeam ? `${copy.aspectLegend} · ${copy.sideTone}` : copy.aspectLegend,
-    ),
+    pipKey(hasTeam),
   );
 
   const grid = el("div", { class: "member-grid" });
@@ -98,6 +94,25 @@ export function renderMemberPicker(opts: {
   }
   wrap.append(grid);
   return wrap;
+}
+
+function pipKey(hasTeam: boolean): HTMLElement {
+  const box = el("div", { class: "pip-key" });
+  box.append(el("p", { class: "member-legend" }, copy.pipExplain));
+  const items = el("ul", { class: "pip-key-list" });
+  for (const id of ASPECT_IDS) {
+    items.append(
+      el(
+        "li",
+        {},
+        el("i", { class: "aspect-pip is-demo", style: "--v:0.9", "aria-hidden": "true" }),
+        ASPECT_LABEL_HE[id],
+      ),
+    );
+  }
+  box.append(items);
+  if (hasTeam) box.append(el("p", { class: "member-legend" }, `${copy.sideTone}. ${copy.sideToneHint}`));
+  return box;
 }
 
 function aspectPips(person: Person): HTMLElement {
