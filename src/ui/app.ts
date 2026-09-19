@@ -659,7 +659,7 @@ function pick(id: PersonId): void {
   const stillInSlate = state.draft.remaining.some((left) => getPerson(left).slateId === slate);
   state.openSlate = !atCap && stillInSlate ? slate : null;
   state.notices = [];
-  state.liveText = `שובץ ${getPerson(id).nameHe}`;
+  state.liveText = `נבחר ${getPerson(id).nameHe}`;
   if (isDraftOver(state.draft)) {
     finish();
     return;
@@ -696,7 +696,7 @@ function runCpuTurns(): void {
         ...state.notices,
         { listHe: turn.labelHe, personId: picked, slot: list?.picks.length ?? 0 },
       ];
-      state.liveText = `${turn.labelHe} לקח את ${getPerson(picked).nameHe}`;
+      state.liveText = `${turn.labelHe} בחרה את ${getPerson(picked).nameHe}`;
     }
     if (isDraftOver(state.draft)) {
       finish();

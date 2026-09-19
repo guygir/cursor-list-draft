@@ -36,7 +36,7 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("שם אחד מכל מפלגה");
     expect(root.textContent).not.toContain("עד חמישה שמות");
     expect(root.textContent).not.toContain("עד שניים מאותה מפלגה");
-    expect(root.textContent).toContain("צור מנהיג");
+    expect(root.textContent).toContain("יצירת מנהיג");
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
     expect(root.querySelector(".mast")?.textContent).toContain("לוח שיאים");
@@ -56,14 +56,14 @@ describe("playable draft UI", () => {
     [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) => btn.textContent?.includes("דראפט"))?.click();
     expect(root.querySelector(".n-pick")?.classList.contains("is-locked")).toBe(false);
     [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.classList.contains("mast-board"))?.click();
-    expect(root.textContent).toContain("עוד אין ריצה");
+    expect(root.textContent).toContain("עוד אין תוצאה");
     expect(root.textContent).not.toContain("דראפט · עד 5");
     root.querySelector<HTMLButtonElement>(".primary")?.click();
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
-    expect(root.textContent).toContain("בחר מפלגה");
-    expect(root.textContent).toContain("שבץ אוטומטי");
+    expect(root.textContent).toContain("בחרו מפלגה");
+    expect(root.textContent).toContain("בחירה אוטומטית");
     expect(root.querySelector(".auto-pick-btn")).toBeTruthy();
     expect(root.textContent).not.toContain("בנימין נתניהו");
 
@@ -81,7 +81,7 @@ describe("playable draft UI", () => {
     await vi.runOnlyPendingTimersAsync();
     const shown = [...root.querySelectorAll<HTMLButtonElement>(".name-btn")].map((btn) => btn.textContent);
     expect(shown.join(" ")).not.toContain("בנימין נתניהו");
-    expect(root.querySelector(".notice-rail")?.textContent).toMatch(/שבצה את .+ בבחירה/);
+    expect(root.querySelector(".notice-rail")?.textContent).toMatch(/בחרה את .+ בבחירה/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
     expect(root.textContent).toContain("מתעדכנים בכל בחירה");
     const credMeter = root.querySelector<HTMLButtonElement>(".score-meter.is-cred");
@@ -89,13 +89,13 @@ describe("playable draft UI", () => {
     expect(credMeter?.classList.contains("is-open")).toBe(true);
     expect(credMeter?.textContent).toContain("מפלגה אחת");
     expect(root.querySelector(".score-meter.is-demand")?.textContent).toContain("חולקות");
-    expect(root.textContent).toContain("צבע הקו = חוזק החיבור");
+    expect(root.textContent).toContain("צבע הקו מראה כמה חזק החיבור");
     expect(root.querySelector(".color-scale")).toBeTruthy();
 
     if (!root.querySelector(".name-btn")) {
       root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     }
-    expect(root.textContent).toContain("הפס בצד = מול כל הרשימה, משוקלל");
+    expect(root.textContent).toContain("הפס בצד: מול כל הרשימה, לפי המקום");
     root.querySelector<HTMLButtonElement>(".name-btn")?.click();
     root.querySelector<HTMLButtonElement>(".confirm-btn:not([disabled])")?.click();
     await vi.runOnlyPendingTimersAsync();
@@ -161,11 +161,11 @@ describe("playable draft UI", () => {
     document.body.append(root);
     mount(root);
     const create = [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) =>
-      btn.textContent?.includes("צור מנהיג"),
+      btn.textContent?.includes("יצירת מנהיג"),
     );
     create?.click();
     root.querySelector<HTMLButtonElement>(".primary")?.click();
-    expect(root.textContent).toContain("הראש שלך");
+    expect(root.textContent).toContain("ראש הרשימה שלך");
     expect(root.textContent).toContain("אישה");
     expect(root.textContent).toContain("גבר");
     expect(root.querySelectorAll(".look-btn").length).toBe(2);
@@ -184,7 +184,8 @@ describe("playable draft UI", () => {
     root.querySelector<HTMLButtonElement>(".primary")?.click();
     await vi.runOnlyPendingTimersAsync();
     expect(root.textContent).toContain("איתי");
-    expect(root.textContent).toMatch(/הרשימה של איתי|שבץ/);
+    expect(root.querySelector(".slot.filled")?.textContent).toContain("איתי");
+    expect(root.textContent).toContain("בחרו מפלגה");
     expect(root.textContent).toContain("בחירה 2 מתוך 10");
   });
 

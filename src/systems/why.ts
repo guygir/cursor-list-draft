@@ -79,7 +79,7 @@ function topTicketWar(player: WhyList): WhyLine | null {
   if (!pair || pair.s >= 0) return null;
   if (pair.relation.kind === "veto" || pair.relation.kind === "split") {
     return {
-      he: `מלחמת אזרחים ב־1–2: ${name(a)} מול ${name(b)} — הביקוש כמעט לא מומר`,
+      he: `קרע במקומות 1–2: ${name(a)} מול ${name(b)} — הביקוש כמעט לא הופך למנדטים`,
       en: `Civil war at 1–2: ${en(a)} vs ${en(b)} — demand barely converts`,
     };
   }

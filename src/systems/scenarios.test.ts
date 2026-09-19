@@ -76,6 +76,6 @@ describe("toy scenarios", () => {
     expect(player.effectiveVotes).toBeLessThan(
       result.lists.find((r) => r.list.id === "cpu-1")!.effectiveVotes,
     );
-    expect(result.why.he).toMatch(/וטו|מלחמת אזרחים/);
+    expect(result.why.he).toMatch(/וטו|קרע במקומות 1–2/);
   });
 });
