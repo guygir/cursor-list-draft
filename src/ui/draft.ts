@@ -8,7 +8,6 @@ import { el } from "./dom";
 import { renderHowCalc } from "./info";
 import { scoreMeters } from "./meters";
 import { renderMemberPicker } from "./members";
-import { renderNameEdit } from "./name-edit";
 import {
   edgeLine,
   hintFor,
@@ -22,7 +21,7 @@ import {
 
 export interface DraftHandlers extends TreeHandlers {
   onCloseSlate: () => void;
-  onRenameParty: (name: string) => void;
+  onQuit: () => void;
   onAutoPick: () => void;
 }
 
@@ -96,6 +95,8 @@ function canConfirm(view: DraftView): boolean {
 
 function renderHeader(view: DraftView, player: DraftList | undefined, handlers: DraftHandlers): HTMLElement {
   const filled = player?.picks.length ?? 0;
+  const quit = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  quit.addEventListener("click", handlers.onQuit);
   return el(
     "header",
     { class: "mast compact" },
@@ -103,14 +104,7 @@ function renderHeader(view: DraftView, player: DraftList | undefined, handlers: 
       "div",
       { class: "brand" },
       el("h1", {}, copy.title),
-      player
-        ? renderNameEdit({
-            value: player.labelHe,
-            ariaLabel: copy.partyName,
-            className: "is-party",
-            onCommit: handlers.onRenameParty,
-          })
-        : null,
+      player ? el("p", { class: "party-label" }, player.labelHe) : null,
     ),
     el(
       "div",
@@ -120,6 +114,7 @@ function renderHeader(view: DraftView, player: DraftList | undefined, handlers: 
         : null,
       el("p", { class: "pick-count" }, copy.pickN(Math.min(filled + 1, LIST_SIZE), LIST_SIZE)),
       renderHowCalc(),
+      quit,
     ),
   );
 }

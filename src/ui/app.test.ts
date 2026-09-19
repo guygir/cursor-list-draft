@@ -211,4 +211,25 @@ describe("playable draft UI", () => {
     expect(root.querySelector(".seat-line .bar-fill")).toBeTruthy();
     expect(root.querySelector(".share-icon-button[data-share='whatsapp']")).toBeTruthy();
   });
+
+  it("locks the party name after kickoff and returns to setup from the draft", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    expect(root.querySelector(".identity-field .name-edit.is-party")).toBeTruthy();
+    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    expect(root.querySelector(".draft-screen")).toBeTruthy();
+    expect(root.querySelector(".draft-screen .name-edit")).toBeNull();
+    expect(root.querySelector(".party-label")?.textContent?.length).toBeGreaterThan(0);
+    expect(root.textContent).toContain("חזרה לתפריט");
+    root.querySelector<HTMLButtonElement>(".auto-pick-btn")?.click();
+    await vi.runOnlyPendingTimersAsync();
+    expect(root.querySelector(".slot.filled")).toBeTruthy();
+    root.querySelector<HTMLButtonElement>(".quit-btn")?.click();
+    expect(root.querySelector(".setup-screen")).toBeTruthy();
+    expect(root.textContent).toContain("זה צעצוע");
+    expect(root.querySelector(".identity-field .name-edit.is-party")).toBeTruthy();
+    expect(root.querySelector(".draft-screen")).toBeNull();
+  });
 });

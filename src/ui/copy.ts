@@ -23,6 +23,7 @@ export const copy = {
   createClash: "השם הזה כבר בבריכה. בחרו שם אחר — בלי להעתיק פנים אמיתיות.",
   createNearest: "הגוש הקרוב",
   createBack: "חזרה",
+  quitToMenu: "חזרה לתפריט",
   createLook: "פרצוף",
   lookWoman: "אישה",
   lookMan: "גבר",

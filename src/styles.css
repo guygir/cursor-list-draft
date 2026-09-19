@@ -162,6 +162,24 @@ input {
   flex-shrink: 0;
 }
 
+.mast.compact .mast-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.party-label {
+  margin: 4px 0 0;
+  color: var(--yellow);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.quit-btn {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
 .identity-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
