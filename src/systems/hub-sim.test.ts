@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { KNESSET_SEATS } from "./seats";
 import { createDraft } from "./draft";
 import { resolveElection } from "./resolve";
-import { playAllNoisy, runHubCell } from "./hub-sim";
+import { playAllNoisy, playDraft, runHubCell } from "./hub-sim";
 
 describe("noisy hub grid", () => {
   it("fills lists and keeps 120 seats for a locked hub", () => {
@@ -21,5 +21,17 @@ describe("noisy hub grid", () => {
     expect(a.playerSeats).toBe(again.playerSeats);
     const seats = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((seed) => runHubCell("bennett", 2, "three", seed).playerSeats);
     expect(new Set(seats).size).toBeGreaterThan(1);
+  });
+
+  it("can keep the player greedy while CPUs stay noisy", () => {
+    const finished = playDraft(createDraft(2, 4, "open", "liberman"), "greedy");
+    const player = finished.lists.find((list) => list.isPlayer);
+    expect(player?.picks[0]).toBe("liberman");
+    expect(finished.lists.every((list) => list.picks.length === 10)).toBe(true);
+    const seats = [1, 2, 3, 4, 5, 6, 7, 8].map((seed) => ({
+      greedy: runHubCell("bennett", 2, "three", seed, "greedy").playerSeats,
+      noisy: runHubCell("bennett", 2, "three", seed, "noisy").playerSeats,
+    }));
+    expect(seats.some((row) => row.greedy !== row.noisy)).toBe(true);
   });
 });
