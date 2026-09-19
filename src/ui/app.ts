@@ -205,11 +205,7 @@ function render(): void {
           state.focusId = null;
           render();
         },
-        onRenameParty: (name) => {
-          state.partyName = savePartyName(name);
-          state.draft = renameList(state.draft, "player", state.partyName);
-          render();
-        },
+        onQuit: goToSetup,
         onAutoPick: autoPick,
       }),
     );
@@ -743,7 +739,7 @@ async function hydrateBoard(): Promise<void> {
   if (ok && state.screen === "board") render();
 }
 
-function replay(): void {
+function goToSetup(): void {
   window.clearTimeout(cpuTimer);
   resetMeters();
   const keep = {
@@ -758,4 +754,8 @@ function replay(): void {
   state = { ...freshState(state.nCpus, state.difficulty, keep.playMode), ...keep };
   writeUrl("");
   render();
+}
+
+function replay(): void {
+  goToSetup();
 }
