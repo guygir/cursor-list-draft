@@ -70,6 +70,8 @@ export interface Person {
   aspects: PersonAspects;
   aspectsNoteHe?: string;
   aspectsNoteEn?: string;
+  /** Invented hub only — generated woman/man face, not a likeness. */
+  look?: "woman" | "man";
   identitySource: {
     url: string;
     date: string;

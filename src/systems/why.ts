@@ -25,40 +25,49 @@ export function whyLine(scores: WhyList[], winnerId: string): WhyLine {
     return { he: "אין רשימת שחקן.", en: "No player list." };
   }
 
+  const winner = scores.find((s) => s.list.id === winnerId);
+  const won = player.list.id === winnerId;
+  const headline = won
+    ? `ניצחת עם ${player.seats} מנדטים — הכי הרבה בין הרשימות`
+    : `${winner?.list.labelHe ?? "יריב"} ניצח עם ${winner?.seats ?? 0} מנדטים מול ${player.seats} שלך`;
+
+  const because = supportWhy(player, scores, won);
+  return {
+    he: because ? `${headline}. ${because.he}` : `${headline}.`,
+    en: because ? `${headlineToEn(won, player, winner)}. ${because.en}` : `${headlineToEn(won, player, winner)}.`,
+  };
+}
+
+function headlineToEn(won: boolean, player: WhyList, winner: WhyList | undefined): string {
+  if (won) return `You won with ${player.seats} seats — most among the drafted lists`;
+  return `${winner?.list.labelEn ?? "A rival"} won with ${winner?.seats ?? 0} seats against your ${player.seats}`;
+}
+
+function supportWhy(player: WhyList, scores: WhyList[], won: boolean): WhyLine | null {
   const civil = topTicketWar(player);
   if (civil) return civil;
-
-  const vetoPoster = leaderVeto(player);
-  if (vetoPoster) return vetoPoster;
-
-  const clone = clonedHill(player, scores);
-  if (clone) return clone;
-
+  const veto = leaderVeto(player);
+  if (veto) return veto;
   if (!player.passedThreshold) {
     return {
-      he: "הרשימה נשארה מתחת לאחוז החסימה בצעצוע.",
-      en: "The list stayed under the toy electoral threshold.",
+      he: "הרשימה נשארה מתחת לאחוז החסימה",
+      en: "The list stayed under the toy threshold",
     };
   }
-
-  if (player.massRaw <= 16 && player.cohesion > 0.75) {
+  const clone = clonedHill(player, scores);
+  if (clone) return clone;
+  if (!won && player.massRaw <= 16 && player.cohesion > 0.75) {
     return {
-      he: "רשימה נקייה על גוש קטן — מחזיקה טוב, מעט מנדטים.",
-      en: "Clean list on a small bloc — holds together, few seats.",
+      he: "רשימה נקייה על גוש קטן — מעט מנדטים",
+      en: "Clean list on a small bloc — few seats",
     };
   }
-
-  if (player.list.id === winnerId) {
-    return {
-      he: `ניצחון בצעצוע: ${player.seats} מנדטים — הכי הרבה בין הרשימות. גוש: ${player.neighborhood.labelHe}.`,
-      en: `Toy win: ${player.seats} seats — most among the drafted lists. Bloc: ${player.neighborhood.labelEn}.`,
-    };
+  if (won) {
+    return { he: `גוש: ${player.neighborhood.labelHe}`, en: `Bloc: ${player.neighborhood.labelEn}` };
   }
-
-  const winner = scores.find((s) => s.list.id === winnerId);
   return {
-    he: `${winner?.list.labelHe ?? "יריב"} לקח יותר מנדטים, ולכן ניצח. לרשימה שלך נשארו פחות קולות אחרי שמפלגות דומות חלקו את אותו גוש.`,
-    en: `${winner?.list.labelEn ?? "A rival"} took more seats, so they won. Your list kept fewer votes after similar lists split the same bloc.`,
+    he: "מי עם הכי הרבה מנדטים — ניצח",
+    en: "Most mandates wins",
   };
 }
 
@@ -70,14 +79,8 @@ function topTicketWar(player: WhyList): WhyLine | null {
   if (!pair || pair.s >= 0) return null;
   if (pair.relation.kind === "veto" || pair.relation.kind === "split") {
     return {
-      he: `מלחמת אזרחים ב־1–2: ${name(a)} מול ${name(b)}. הביקוש כמעט לא מומר.`,
-      en: `Civil war at 1–2: ${en(a)} vs ${en(b)}. Demand barely converts.`,
-    };
-  }
-  if (pair.relation.kind === "opposite-cell" && player.cohesion < 0.55) {
-    return {
-      he: `סתירה ב־1–2 בין ${name(a)} ל־${name(b)}.`,
-      en: `Contradiction at 1–2 between ${en(a)} and ${en(b)}. The tree already showed red.`,
+      he: `מלחמת אזרחים ב־1–2: ${name(a)} מול ${name(b)} — הביקוש כמעט לא מומר`,
+      en: `Civil war at 1–2: ${en(a)} vs ${en(b)} — demand barely converts`,
     };
   }
   return null;
@@ -89,8 +92,8 @@ function leaderVeto(player: WhyList): WhyLine | null {
   );
   if (!veto) return null;
   return {
-    he: `כרזה עם וטו מול ראש הרשימה: ${name(veto.a)} / ${name(veto.b)}. האמינות נשברת.`,
-    en: `Veto on the poster against the hub: ${en(veto.a)} / ${en(veto.b)}. Credibility cracks.`,
+    he: `וטו מול ראש הרשימה: ${name(veto.a)} / ${name(veto.b)}`,
+    en: `Veto on the hub: ${en(veto.a)} / ${en(veto.b)}`,
   };
 }
 
@@ -100,8 +103,8 @@ function clonedHill(player: WhyList, scores: WhyList[]): WhyLine | null {
   if (rivals.length === 0) return null;
   const rival = rivals[0]!;
   return {
-    he: `${rival.list.labelHe} ישבה על אותו גוש (${player.neighborhood.labelHe}). הקולות התחלקו.`,
-    en: `${rival.list.labelEn} sat on the same bloc (${player.neighborhood.labelEn}). The votes split.`,
+    he: `${rival.list.labelHe} ישבה על אותו גוש (${player.neighborhood.labelHe}) והקולות התחלקו`,
+    en: `${rival.list.labelEn} sat on the same bloc (${player.neighborhood.labelEn}) and the votes split`,
   };
 }
 

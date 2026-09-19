@@ -23,6 +23,7 @@ import {
 export interface DraftHandlers extends TreeHandlers {
   onCloseSlate: () => void;
   onRenameParty: (name: string) => void;
+  onAutoPick: () => void;
 }
 
 export interface PickNotice {
@@ -68,7 +69,20 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   confirm.addEventListener("click", () => {
     if (view.focusId && canConfirm(view)) handlers.onPick(view.focusId);
   });
-  root.append(el("div", { class: "confirm-bar" }, confirm));
+  const auto = el(
+    "button",
+    {
+      type: "button",
+      class: "auto-pick-btn",
+      disabled: !view.canPick || view.remaining.length === 0,
+    },
+    copy.autoPick,
+  );
+  auto.addEventListener("click", () => {
+    if (!view.canPick || view.remaining.length === 0) return;
+    handlers.onAutoPick();
+  });
+  root.append(el("div", { class: "confirm-bar is-split" }, confirm, auto));
   root.append(renderRivals(view.lists));
   root.append(el("div", { class: "sr-only", "aria-live": "polite" }, view.liveText));
   return root;

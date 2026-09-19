@@ -17,6 +17,7 @@ import {
   countUp,
   scoreMeters,
 } from "./meters";
+import { klafiShareButtons, sharePreparedCard } from "./share-card";
 import { renderEdgeCard, renderTreeMap, type TreeHandlers } from "./tree";
 
 export function renderResolve(
@@ -25,6 +26,8 @@ export function renderResolve(
   opts: {
     shareHint?: string;
     onShare?: () => Promise<void> | void;
+    playerName?: string;
+    shareUrl?: string;
     boardMode?: BoardMode;
     dayKey?: string;
     difficulty?: string;
@@ -103,7 +106,9 @@ export function renderResolve(
   const replay = el("button", { type: "button", class: "primary" }, copy.replay);
   replay.addEventListener("click", onReplay);
   const bar = el("div", { class: "confirm-bar is-split" }, replay);
-  if (opts.onShare) {
+  if (opts.playerName != null) {
+    bar.append(renderShareRow(result, opts.playerName, opts.shareUrl ?? location.href, opts.onShare));
+  } else if (opts.onShare) {
     const share = el("button", { type: "button", class: "share-btn" }, copy.share);
     share.addEventListener("click", async () => {
       await opts.onShare?.();
@@ -114,6 +119,44 @@ export function renderResolve(
   root.append(bar);
   if (opts.shareHint) root.append(el("p", { class: "no-board" }, opts.shareHint));
   return root;
+}
+
+function renderShareRow(
+  result: ElectionResult,
+  playerName: string,
+  shareUrl: string,
+  onShare?: () => Promise<void> | void,
+): HTMLElement {
+  const row = el("div", { class: "share-row dialog-actions" });
+  const { wa, ig } = klafiShareButtons();
+  wa.addEventListener("click", () => {
+    void sharePreparedCard({
+      channel: "whatsapp",
+      result,
+      playerName,
+      url: shareUrl,
+      button: wa,
+    });
+  });
+  ig.addEventListener("click", () => {
+    void sharePreparedCard({
+      channel: "instagram",
+      result,
+      playerName,
+      url: shareUrl,
+      button: ig,
+    });
+  });
+  row.append(wa, ig);
+  if (onShare) {
+    const link = el("button", { type: "button", class: "share-btn" }, copy.share);
+    link.addEventListener("click", async () => {
+      await onShare();
+      link.textContent = copy.shared;
+    });
+    row.append(link);
+  }
+  return row;
 }
 
 function renderListBar(row: ListScore, winnerId: string, index: number): HTMLElement {
@@ -135,19 +178,22 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
       {},
       el("h3", {}, row.list.labelHe),
       row.list.isPlayer ? el("span", { class: "you-pill" }, copy.yourParty) : null,
-      seatNum,
-      el("span", { class: "seat-unit" }, copy.seats),
     ),
-    el("p", { class: "row-names" }, names),
     el(
       "div",
-      { class: "bar-track", "aria-hidden": "true" },
-      el("span", { class: "meter-ticks", "aria-hidden": "true" }),
-      el("div", {
-        class: "bar-fill is-seats",
-        style: `--from:0%;--target:${pct}%;--grow-delay:${rowDelay + NIGHT_BAR_DELAY_MS}ms;--grow-ms:${NIGHT_BAR_MS}ms`,
-      }),
+      { class: "seat-line" },
+      seatNum,
+      el("span", { class: "seat-unit" }, copy.seats),
+      el(
+        "div",
+        { class: "bar-track", "aria-hidden": "true" },
+        el("div", {
+          class: "bar-fill is-seats",
+          style: `--from:0%;--target:${pct}%;--grow-delay:${rowDelay + NIGHT_BAR_DELAY_MS}ms;--grow-ms:${NIGHT_BAR_MS}ms`,
+        }),
+      ),
     ),
+    el("p", { class: "row-names" }, names),
     scoreMeters(cohesionPct, demandPct, "fresh", { delay: rowDelay + NIGHT_METER_DELAY_MS }),
     el("p", { class: "hill-note" }, `${row.neighborhood.labelHe} · ${copy.afterSplit}`),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),

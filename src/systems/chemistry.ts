@@ -394,9 +394,16 @@ export function relationColor(s: number): string {
   return rgbCss(mixRgb(MUTED_RGB, GREEN_RGB, Math.pow(t, 0.55)));
 }
 
-/** Rank weight plus |s| so a strong 1–2 veto is thicker than a faint mid-list cool. */
+/**
+ * Width follows pair rank weight first (1–2 thick, 5–6 quiet), then |s|.
+ * Red uses the rank span; green stays thin so clones do not dominate the tree.
+ */
 export function relationStrokeWidth(s: number, rankWeightValue: number): number {
-  return 0.65 + rankWeightValue * (0.85 + Math.abs(s) * 3.4);
+  const rank = Math.min(1, Math.max(0, rankWeightValue));
+  const span = 0.7 + rank * 7.2;
+  if (s < 0) return span * (0.72 + Math.abs(s) * 0.55);
+  if (s > 0) return Math.min(2.1, span * 0.28);
+  return span * 0.22;
 }
 
 export function relationOpacity(s: number): number {

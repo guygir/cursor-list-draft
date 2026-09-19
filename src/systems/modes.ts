@@ -7,10 +7,13 @@ export const CUSTOM_ID_PREFIX = "custom:";
 
 const ASPECT_SCALE = 99;
 
+export type LeaderLook = "woman" | "man";
+
 export interface CustomLeaderSpec {
   nameHe: string;
   aspects: PersonAspects;
   slateId: SlateId;
+  look?: LeaderLook;
 }
 
 export function isInvented(id: PersonId): boolean {
@@ -76,7 +79,8 @@ export function nameClash(nameHe: string): Person | undefined {
 export function encodeCustomCode(spec: CustomLeaderSpec): string {
   const name = sanitizeLeaderName(spec.nameHe) || "בלי-שם";
   const digits = ASPECT_IDS.map((id) => String(Math.round(spec.aspects[id] * ASPECT_SCALE)).padStart(2, "0")).join("");
-  return `${spec.slateId}_${digits}_${name}`;
+  const look = spec.look === "woman" ? "_w" : spec.look === "man" ? "_m" : "";
+  return `${spec.slateId}_${digits}_${name}${look}`;
 }
 
 export function decodeCustomCode(raw: string): CustomLeaderSpec | null {
@@ -85,7 +89,16 @@ export function decodeCustomCode(raw: string): CustomLeaderSpec | null {
   const slateId = match[1] as SlateId;
   if (!(slateId in SLATE_ASPECTS)) return null;
   const digits = match[2]!;
-  const nameHe = sanitizeLeaderName(match[3] ?? "");
+  let nameRaw = match[3] ?? "";
+  let look: LeaderLook | undefined;
+  if (nameRaw.endsWith("_w")) {
+    look = "woman";
+    nameRaw = nameRaw.slice(0, -2);
+  } else if (nameRaw.endsWith("_m")) {
+    look = "man";
+    nameRaw = nameRaw.slice(0, -2);
+  }
+  const nameHe = sanitizeLeaderName(nameRaw);
   if (!nameHe) return null;
   const aspects = clampAspects({
     bibi: Number(digits.slice(0, 2)) / ASPECT_SCALE,
@@ -94,14 +107,15 @@ export function decodeCustomCode(raw: string): CustomLeaderSpec | null {
     security: Number(digits.slice(6, 8)) / ASPECT_SCALE,
     economy: Number(digits.slice(8, 10)) / ASPECT_SCALE,
   });
-  return { nameHe, aspects, slateId };
+  return { nameHe, aspects, slateId, ...(look ? { look } : {}) };
 }
 
 export function makeCustomLeader(spec: CustomLeaderSpec): Person {
   const nameHe = sanitizeLeaderName(spec.nameHe) || "בלי שם";
   const aspects = clampAspects(spec.aspects);
   const slateId = spec.slateId;
-  const id = `${CUSTOM_ID_PREFIX}${encodeCustomCode({ nameHe, aspects, slateId })}`;
+  const encoded = encodeCustomCode({ nameHe, aspects, slateId, ...(spec.look ? { look: spec.look } : {}) });
+  const id = `${CUSTOM_ID_PREFIX}${encoded}`;
   const sample = PEOPLE.find((row) => row.slateId === slateId);
   const person: Person = {
     id,
@@ -117,8 +131,9 @@ export function makeCustomLeader(spec: CustomLeaderSpec): Person {
     cell: cellFromAspects(aspects),
     aspectsNoteHe: "פרופיל שציירת. צעצוע, לא אדם אמיתי.",
     aspectsNoteEn: "A profile you painted. Toy, not a real person.",
+    ...(spec.look ? { look: spec.look } : {}),
     identitySource: {
-      url: `?c=${encodeURIComponent(encodeCustomCode({ nameHe, aspects, slateId }))}`,
+      url: `?c=${encodeURIComponent(encoded)}`,
       date: israelDateKey(),
       note: INVENTED_NOTE,
       reviewStatus: "draft",

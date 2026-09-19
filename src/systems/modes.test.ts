@@ -22,6 +22,7 @@ describe("create-leader codes", () => {
     const code = encodeCustomCode(spec);
     expect(code.startsWith("democrats_")).toBe(true);
     expect(code.endsWith("_איתי")).toBe(true);
+    expect(code.endsWith("_w")).toBe(false);
     const back = decodeCustomCode(code);
     expect(back?.nameHe).toBe("איתי");
     expect(back?.slateId).toBe("democrats");
@@ -68,5 +69,23 @@ describe("daily hub", () => {
     expect(dailyHubId("2026-09-18")).toBe(dailyHubId("2026-09-18"));
     expect(dailySeed("2026-09-18")).not.toBe(dailySeed("2026-09-19"));
     expect(getPerson(dailyHubId("2026-09-18")).listSlot).toBe(1);
+  });
+});
+
+describe("invented look", () => {
+  it("round-trips woman/man on ?c= and leaves old codes readable", () => {
+    const spec = {
+      nameHe: "איתי",
+      slateId: "democrats" as const,
+      aspects: { bibi: 0.15, judicial: 0.2, service: 0.3, security: 0.7, economy: 0.4 },
+      look: "woman" as const,
+    };
+    expect(encodeCustomCode(spec).endsWith("_איתי_w")).toBe(true);
+    expect(decodeCustomCode(encodeCustomCode(spec))?.look).toBe("woman");
+    expect(decodeCustomCode(encodeCustomCode({ ...spec, look: "man" }))?.look).toBe("man");
+    expect(decodeCustomCode("democrats_1520307040_איתי")?.look).toBeUndefined();
+    const person = makeCustomLeader(spec);
+    expect(person.look).toBe("woman");
+    expect(getPerson(person.id).look).toBe("woman");
   });
 });

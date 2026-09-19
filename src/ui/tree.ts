@@ -208,12 +208,9 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
   const hubId = player.picks[0]!;
   const others = player.picks.slice(1);
   const preview = view.focusId && !player.picks.includes(view.focusId) ? view.focusId : null;
-  const ring = preview ? [...others, preview] : others;
-  const layout = satelliteLayout(ring.length);
-  const nodes: PlacedNode[] = [
-    { id: hubId, rank: 1, x: CX, y: CY, ghost: false, hub: true },
-    ...placeRing(ring, player, preview, layout),
-  ];
+  const ids = preview ? [hubId, ...others, preview] : [hubId, ...others];
+  const layout = polygonLayout(ids.length);
+  const nodes: PlacedNode[] = placePolygon(ids, player, preview, layout);
 
   let markup = `<defs>
     <radialGradient id="stage-glow" cx="50%" cy="48%" r="52%">
@@ -223,7 +220,7 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     </radialGradient>
   </defs>
   <rect width="${SIZE}" height="${SIZE}" fill="url(#stage-glow)" />
-  ${layout.outer > 0 ? `<circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.innerR}" /><circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.outerR}" />` : `<circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.innerR}" />`}`;
+  ${layout.count > 2 ? `<circle class="orbit" cx="${CX}" cy="${CY}" r="${layout.radius}" />` : ""}`;
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
@@ -318,45 +315,44 @@ function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {
   });
 }
 
-export interface SatelliteLayout {
-  inner: number;
-  outer: number;
-  innerR: number;
-  outerR: number;
+export interface PolygonLayout {
+  count: number;
+  radius: number;
 }
 
-/** Hub sits in the center. Six around it stay on one ring; nine split 6+3. */
-export function satelliteLayout(count: number): SatelliteLayout {
-  if (count <= 6) return { inner: count, outer: 0, innerR: count >= 6 ? 108 : 118, outerR: 0 };
-  if (count === 7) return { inner: 4, outer: 3, innerR: 82, outerR: 148 };
-  if (count === 8) return { inner: 5, outer: 3, innerR: 82, outerR: 148 };
-  return { inner: 6, outer: count - 6, innerR: 86, outerR: 150 };
+/** n faces sit on one regular n-gon: triangle, square, pentagon, hexagon… */
+export function polygonLayout(count: number): PolygonLayout {
+  if (count <= 1) return { count, radius: 0 };
+  if (count === 2) return { count, radius: 88 };
+  if (count <= 5) return { count, radius: 128 };
+  if (count <= 7) return { count, radius: 138 };
+  return { count, radius: 152 };
 }
 
-function placeRing(
-  ring: PersonId[],
+function placePolygon(
+  ids: PersonId[],
   player: DraftList,
   preview: PersonId | null,
-  layout: SatelliteLayout,
+  layout: PolygonLayout,
 ): PlacedNode[] {
-  const innerIds = ring.slice(0, layout.inner);
-  const outerIds = ring.slice(layout.inner);
-  const placed: PlacedNode[] = [];
-  const push = (id: PersonId, point: { x: number; y: number }) => {
-    placed.push({
-      id,
-      rank: id === preview ? player.picks.length + 1 : player.picks.indexOf(id) + 1,
-      x: point.x,
-      y: point.y,
-      ghost: id === preview,
-      hub: false,
-    });
-  };
-  ringPoints(innerIds.length, layout.innerR).forEach((point, index) => push(innerIds[index]!, point));
-  ringPoints(outerIds.length, layout.outerR, Math.PI / Math.max(outerIds.length, 1)).forEach((point, index) => {
-    push(outerIds[index]!, point);
-  });
-  return placed;
+  const points = polygonPoints(layout.count, layout.radius);
+  return ids.map((id, index) => ({
+    id,
+    rank: id === preview ? player.picks.length + 1 : player.picks.indexOf(id) + 1,
+    x: points[index]?.x ?? CX,
+    y: points[index]?.y ?? CY,
+    ghost: id === preview,
+    hub: index === 0 && id !== preview,
+  }));
+}
+
+export function polygonPoints(count: number, radius: number): Array<{ x: number; y: number }> {
+  if (count <= 1) return [{ x: CX, y: CY }];
+  if (count === 2) return [
+    { x: CX, y: CY - radius },
+    { x: CX, y: CY + radius },
+  ];
+  return ringPoints(count, radius);
 }
 
 function remainingInSlate(remaining: PersonId[], slate: SlateId): number {

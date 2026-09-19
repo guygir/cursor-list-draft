@@ -1251,8 +1251,24 @@ input {
 
 .mandate-row header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
+}
+
+.seat-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 8px 0 2px;
+}
+
+.seat-line .bar-track {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  height: 14px;
+  margin: 0;
 }
 
 .seat-num {
@@ -1261,6 +1277,10 @@ input {
   font-variant-numeric: tabular-nums;
   color: var(--ochre);
   margin-inline-start: auto;
+}
+
+.seat-line .seat-num {
+  margin-inline-start: 0;
 }
 
 .seat-unit {
@@ -1475,6 +1495,10 @@ input {
 .resolve-screen .mandate-row .score-meter-track {
   height: 10px;
   background: rgba(var(--ink-rgb), 0.08);
+}
+
+.resolve-screen .mandate-row .seat-line .bar-track {
+  height: 16px;
 }
 
 .resolve-screen .mandate-row .meter-ticks {
@@ -1744,6 +1768,223 @@ input {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.draft-screen .confirm-bar.is-split {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+}
+
+.draft-screen .confirm-bar.is-split .primary {
+  width: 100%;
+}
+
+.auto-pick-btn {
+  appearance: none;
+  border: 1px solid var(--yellow);
+  background: transparent;
+  color: var(--yellow);
+  font-weight: 700;
+  padding: 11px 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.auto-pick-btn:disabled {
+  border-color: #3a382f;
+  color: #8a8578;
+  cursor: not-allowed;
+}
+
+.auto-pick-btn:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+.look-pick {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0 0;
+  padding: 16px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.look-pick legend {
+  padding: 0;
+  color: var(--muted);
+}
+
+.look-btn {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  background: var(--studio);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.look-btn.is-on {
+  border-color: var(--yellow);
+  box-shadow: inset 0 -3px 0 var(--yellow);
+}
+
+.look-btn:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.look-face {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: 50%;
+  background: #1c1f27;
+}
+
+.n-pick.is-locked,
+.level-pick.is-locked {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.mast-board {
+  font-weight: 700;
+  color: var(--yellow);
+  padding: 6px 0;
+  white-space: nowrap;
+}
+
+.share-row.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  direction: ltr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.share-icon-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--studio) 82%, transparent);
+  color: var(--yellow);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.share-icon-button svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.share-icon-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.share-icon-button:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.klafi-share-sheet {
+  position: relative;
+  width: min(390px, calc(100% - 24px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 36px 22px 22px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--studio);
+  color: var(--ink);
+}
+
+.klafi-share-sheet::backdrop {
+  background: rgba(18, 21, 28, 0.72);
+}
+
+.klafi-share-sheet h2 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+}
+
+.klafi-share-sheet .eyebrow {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.klafi-share-sheet img {
+  display: block;
+  width: 100%;
+  max-height: min(58dvh, 520px);
+  margin: 12px 0 10px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #111;
+}
+
+.share-sheet-caption {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.share-sheet-caption [dir="ltr"] {
+  display: block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;
+}
+
+.share-sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dialog-close {
+  appearance: none;
+  position: absolute;
+  inset-inline-end: 12px;
+  top: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.share-toast {
+  position: fixed;
+  inset-inline: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 20;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--studio);
+  border: 1px solid var(--yellow);
+  color: var(--ink);
+  font-size: 0.85rem;
 }
 
 .no-board {

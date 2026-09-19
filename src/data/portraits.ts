@@ -383,8 +383,20 @@ export function portraitUrl(id: PersonId): string | null {
   return raw.split("?")[0];
 }
 
+/** Klafi generated citizen faces — not a likeness and not advocacy card art. */
+export const LOOK_PORTRAITS = {
+  woman: "/looks/avatar-grown-woman.png",
+  man: "/looks/avatar-grown-man.png",
+} as const;
+
+export function lookPortraitSrc(look: "woman" | "man" = "woman"): string {
+  return LOOK_PORTRAITS[look];
+}
+
 /** Wikipedia photo when authored; otherwise a slate-colored initial card. */
 export function portraitSrc(id: PersonId): string {
+  const person = getPerson(id);
+  if (person.look) return lookPortraitSrc(person.look);
   return portraitUrl(id) ?? generatedPortrait(id);
 }
 
@@ -412,6 +424,7 @@ export function initialsHe(nameHe: string): string {
 
 export function generatedPortrait(id: PersonId): string {
   const person = getPerson(id);
+  if (person.look) return lookPortraitSrc(person.look);
   const ink = SLATE_INK[person.slateId];
   const letters = initialsHe(person.nameHe);
   const last = person.nameHe.split(/[\s־\-]+/).filter(Boolean).at(-1) ?? person.nameHe;
@@ -422,6 +435,11 @@ export function generatedPortrait(id: PersonId): string {
   <text x="40" y="70" text-anchor="middle" font-size="9" font-family="Rubik, Arial Hebrew, sans-serif" fill="#f4d53b">${escapeXml(last)}</text>
 </svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** Invented hub: Klafi grown-woman / grown-man face. */
+export function generatedLookPortrait(person: { look?: "woman" | "man" }): string {
+  return lookPortraitSrc(person.look === "man" ? "man" : "woman");
 }
 
 function escapeXml(value: string): string {

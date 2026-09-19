@@ -1,5 +1,6 @@
 import type { PersonAspects, PersonId, SlateId } from "../data/types";
 import { getPerson } from "../data/pool";
+import { greedyCpuPick } from "../systems/cpu";
 import {
   applyCpuTurn,
   applyPick,
@@ -33,6 +34,7 @@ import {
   makeCustomLeader,
   nearestSlate,
   sanitizeLeaderName,
+  type LeaderLook,
 } from "../systems/modes";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
 import { copy } from "./copy";
@@ -66,6 +68,7 @@ interface AppState {
   notices: PickNotice[];
   customName: string;
   customAspects: PersonAspects;
+  customLook: LeaderLook;
   dayKey: string;
   boardEntry: BoardEntry | null;
   playerName: string;
@@ -123,6 +126,7 @@ function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: 
     notices: [],
     customName: "",
     customAspects: defaultAspects(),
+    customLook: "woman",
     dayKey: israelDateKey(),
     boardEntry: null,
     playerName: loadOrCreatePlayerName(),
@@ -152,6 +156,7 @@ function render(): void {
       renderCreateLeader({
         nameHe: state.customName,
         aspects: state.customAspects,
+        look: state.customLook,
         onStart: startCreateDraft,
         onBack: () => {
           state.screen = "setup";
@@ -205,6 +210,7 @@ function render(): void {
           state.draft = renameList(state.draft, "player", state.partyName);
           render();
         },
+        onAutoPick: autoPick,
       }),
     );
   } else if (state.result) {
@@ -212,6 +218,8 @@ function render(): void {
       renderResolve(state.result, replay, {
         shareHint: copy.boardLocal,
         onShare: shareRun,
+        playerName: state.playerName,
+        shareUrl: location.href,
         boardMode: state.playMode,
         difficulty: state.difficulty,
         ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
@@ -259,12 +267,18 @@ function draftView(): DraftView {
 
 function renderSetup(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
+  const openBoard = () => {
+    state.screen = "board";
+    render();
+  };
+  const boardBtn = el("button", { type: "button", class: "text-btn board-open mast-board" }, copy.boardOpen);
+  boardBtn.addEventListener("click", openBoard);
   screen.append(
     el(
       "header",
       { class: "mast tall" },
       el("div", { class: "brand" }, el("h1", {}, copy.title), el("p", { class: "tagline" }, copy.tagline)),
-      renderHowCalc(),
+      el("div", { class: "mast-tools" }, boardBtn, renderHowCalc()),
     ),
     el("p", { class: "sponsor" }, copy.sponsor),
     el("p", { class: "disclosure" }, copy.disclosure),
@@ -281,71 +295,133 @@ function renderSetup(): HTMLElement {
   for (const row of modeRows) {
     const btn = el(
       "button",
-      { type: "button", class: `mode-btn ${state.playMode === row.id ? "is-on" : ""}` },
+      { type: "button", class: `mode-btn ${state.playMode === row.id ? "is-on" : ""}`, "data-mode": row.id },
       el("strong", {}, row.title),
       el("span", {}, row.hint),
     );
     btn.addEventListener("click", () => {
+      if (state.playMode === row.id) return;
       state.playMode = row.id;
-      render();
+      if (!patchSetup()) render();
     });
     modes.append(btn);
   }
   screen.append(modes);
 
-  const field = el("fieldset", { class: "n-pick" }, el("legend", {}, copy.nLabel));
+  const dailyLock = state.playMode === "daily";
+  const field = el(
+    "fieldset",
+    { class: `n-pick ${dailyLock ? "is-locked" : ""}`, ...(dailyLock ? { "aria-disabled": "true" } : {}) },
+    el("legend", {}, copy.nLabel),
+  );
   for (let n = MIN_CPU; n <= MAX_CPU; n++) {
     const id = `cpu-${n}`;
     const label = el(
       "label",
-      { class: state.nCpus === n ? "is-on" : "" },
+      { class: state.nCpus === n ? "is-on" : "", "data-n": String(n) },
       el("input", {
         type: "radio",
         name: "cpus",
         id,
         value: n,
         ...(state.nCpus === n ? { checked: true } : {}),
+        ...(dailyLock ? { disabled: true } : {}),
       }),
       ` ${n}`,
     );
     label.querySelector("input")?.addEventListener("change", () => {
+      if (state.playMode === "daily") return;
       state.nCpus = n;
-      render();
+      if (!patchSetup()) render();
     });
     field.append(label);
   }
-  if (state.playMode !== "daily") screen.append(field);
+  screen.append(field);
 
-  const levels = el("fieldset", { class: "level-pick" }, el("legend", {}, copy.levelLabel));
+  const levels = el(
+    "fieldset",
+    { class: `level-pick ${dailyLock ? "is-locked" : ""}`, ...(dailyLock ? { "aria-disabled": "true" } : {}) },
+    el("legend", {}, copy.levelLabel),
+  );
   for (const row of DIFFICULTIES) {
     const id = `level-${row.id}`;
     const label = el(
       "label",
-      { class: state.difficulty === row.id ? "is-on" : "" },
+      { class: state.difficulty === row.id ? "is-on" : "", "data-level": row.id },
       el("input", {
         type: "radio",
         name: "level",
         id,
         value: row.id,
         ...(state.difficulty === row.id ? { checked: true } : {}),
+        ...(dailyLock ? { disabled: true } : {}),
       }),
       el("span", { class: "level-name" }, row.labelHe),
       el("span", { class: "level-hint" }, row.hintHe),
     );
     label.querySelector("input")?.addEventListener("change", () => {
+      if (state.playMode === "daily") return;
       state.difficulty = row.id;
-      render();
+      if (!patchSetup()) render();
     });
     levels.append(label);
   }
-  if (state.playMode !== "daily") screen.append(levels);
+  screen.append(levels);
 
-  const start = el("button", { type: "button", class: "primary" }, startLabel());
+  const start = el("button", { type: "button", class: "primary setup-start" }, startLabel());
   start.addEventListener("click", beginFromSetup);
   screen.append(el("div", { class: "confirm-bar" }, start));
   screen.append(renderRecordTeaser());
   screen.append(el("p", { class: "no-board" }, copy.boardLocal));
   return screen;
+}
+
+function patchSetup(): boolean {
+  const screen = root.querySelector<HTMLElement>(".setup-screen");
+  if (!screen || state.screen !== "setup") return false;
+  const dailyLock = state.playMode === "daily";
+  screen.querySelectorAll<HTMLButtonElement>(".mode-btn[data-mode]").forEach((btn) => {
+    btn.classList.toggle("is-on", btn.dataset.mode === state.playMode);
+  });
+  const nPick = screen.querySelector<HTMLElement>(".n-pick");
+  if (nPick) {
+    nPick.classList.toggle("is-locked", dailyLock);
+    if (dailyLock) nPick.setAttribute("aria-disabled", "true");
+    else nPick.removeAttribute("aria-disabled");
+    nPick.querySelectorAll<HTMLLabelElement>("label[data-n]").forEach((label) => {
+      const n = Number(label.dataset.n);
+      label.classList.toggle("is-on", n === state.nCpus);
+      const input = label.querySelector<HTMLInputElement>("input");
+      if (input) {
+        input.checked = n === state.nCpus;
+        input.disabled = dailyLock;
+      }
+    });
+  }
+  const levels = screen.querySelector<HTMLElement>(".level-pick");
+  if (levels) {
+    levels.classList.toggle("is-locked", dailyLock);
+    if (dailyLock) levels.setAttribute("aria-disabled", "true");
+    else levels.removeAttribute("aria-disabled");
+    levels.querySelectorAll<HTMLLabelElement>("label[data-level]").forEach((label) => {
+      label.classList.toggle("is-on", label.dataset.level === state.difficulty);
+      const input = label.querySelector<HTMLInputElement>("input");
+      if (input) {
+        input.checked = label.dataset.level === state.difficulty;
+        input.disabled = dailyLock;
+      }
+    });
+  }
+  const start = screen.querySelector<HTMLButtonElement>(".setup-start");
+  if (start) start.textContent = startLabel();
+  const first = firstPlaceOf({
+    mode: state.playMode,
+    difficulty: state.playMode === "daily" ? "open" : state.difficulty,
+    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+  });
+  const teaser = screen.querySelector<HTMLButtonElement>(".record-teaser-btn");
+  if (teaser) teaser.textContent = first ? copy.firstPlace(first.playerName || first.hubName, first.seats) : copy.noFirstPlace;
+  return true;
 }
 
 function renderIdentity(): HTMLElement {
@@ -401,9 +477,7 @@ function renderRecordTeaser(): HTMLElement {
     first ? copy.firstPlace(first.playerName || first.hubName, first.seats) : copy.noFirstPlace,
   );
   line.addEventListener("click", open);
-  const more = el("button", { type: "button", class: "text-btn board-open" }, copy.boardOpen);
-  more.addEventListener("click", open);
-  box.append(line, more);
+  box.append(line);
   return box;
 }
 
@@ -476,6 +550,7 @@ function startOpenDraft(): void {
   const keep = {
     customName: state.customName,
     customAspects: state.customAspects,
+    customLook: state.customLook,
     dayKey: state.dayKey,
     playerName: state.playerName,
     partyName: state.partyName,
@@ -491,12 +566,13 @@ function startOpenDraft(): void {
   render();
 }
 
-function startCreateDraft(nameHe: string, aspects: PersonAspects): void {
+function startCreateDraft(nameHe: string, aspects: PersonAspects, look: LeaderLook): void {
   const name = sanitizeLeaderName(nameHe);
   if (!name) return;
   state.customName = name;
   state.customAspects = aspects;
-  const spec = { nameHe: name, aspects, slateId: nearestSlate(aspects) };
+  state.customLook = look;
+  const spec = { nameHe: name, aspects, slateId: nearestSlate(aspects), look };
   const hub = makeCustomLeader(spec);
   startLockedDraft(hub.id, playSeed(), state.nCpus, state.difficulty);
   writeUrl(customSharePath(spec));
@@ -531,6 +607,7 @@ function bootFromUrl(): void {
     state.playMode = "create";
     state.customName = spec.nameHe;
     state.customAspects = spec.aspects;
+    if (spec.look) state.customLook = spec.look;
     const hub = ensureCustomLeader(encodeCustomCode(spec));
     if (hub) startLockedDraft(hub.id, playSeed(), state.nCpus, state.difficulty);
     return;
@@ -554,6 +631,18 @@ async function shareRun(): Promise<void> {
   } catch {
     window.prompt(copy.share, href);
   }
+}
+
+function autoPick(): void {
+  const turn = currentList(state.draft);
+  if (!turn?.isPlayer || state.cpuThinking) return;
+  const remaining = legalRemaining(
+    turn.picks,
+    state.draft.remaining,
+    state.draft.slateCap,
+  );
+  if (remaining.length === 0) return;
+  pick(greedyCpuPick(turn, state.draft.lists, remaining, state.draft.slateCap));
 }
 
 function pick(id: PersonId): void {
@@ -661,6 +750,7 @@ function replay(): void {
     playMode: state.playMode,
     customName: state.customName,
     customAspects: state.customAspects,
+    customLook: state.customLook,
     dayKey: state.dayKey,
     playerName: state.playerName,
     partyName: state.partyName,
