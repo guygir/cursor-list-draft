@@ -3,7 +3,9 @@ import { nearestNeighborhood } from "../src/systems/demand";
 import { formatHubTablesByN, runHubGrid, type PlayerPolicy } from "../src/systems/hub-sim";
 
 const seeds = Number(process.env.HUB_SIM_SEEDS ?? 16);
-const policies: PlayerPolicy[] = ["noisy", "greedy"];
+const policyEnv = process.env.HUB_SIM_POLICY;
+const policies: PlayerPolicy[] =
+  policyEnv === "greedy" || policyEnv === "noisy" ? [policyEnv] : ["noisy", "greedy"];
 
 console.log("leader hills (toy nearest neighborhood)");
 for (const hub of publishedHubs()) {
