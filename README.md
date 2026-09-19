@@ -44,7 +44,7 @@ From **Workers & Pages → Create application → import this GitHub repo**:
 4. Builds for non-production branches: on. Access: off.
 5. Deploy.
 
-Until this branch is merged, production-on-`main` is the old game. Leave non-production builds on and open the **preview URL** for this PR, or point production at this branch.
+Production branch is `main`. A push here rebuilds https://cursor-list-draft.guygir-728.workers.dev/.
 
 **Next:** Settings → Bindings → D1 → create `list-draft` → bind as `DB` → retry the latest deployment. Until then the board stays on the device.
 
