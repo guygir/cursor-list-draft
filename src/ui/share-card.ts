@@ -68,7 +68,7 @@ export function shareCaption(seats: number, party: string, url: string): { title
 }
 
 export function canShareFiles(file: File): boolean {
-  return Boolean(navigator.share && navigator.canShare?.({ files: [file] }));
+  return typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
 }
 
 export function downloadBlob(blob: Blob, name: string): void {
