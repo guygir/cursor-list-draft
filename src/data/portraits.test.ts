@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PEOPLE } from "./pool";
-import { generatedLookPortrait, generatedPortrait, hasWikiPortrait, initialsHe, portraitSrc } from "./portraits";
+import { generatedLookPortrait, generatedPortrait, hasWikiPortrait, initialsHe, lookPortraitSrc, portraitSrc } from "./portraits";
 import { makeCustomLeader } from "../systems/modes";
 
 describe("portraits", () => {
@@ -46,11 +46,9 @@ describe("portraits", () => {
       look: "woman",
     });
     const src = portraitSrc(woman.id);
-    expect(src.startsWith("data:image/svg+xml")).toBe(true);
+    expect(src).toBe("/looks/avatar-grown-woman.png");
     expect(src).toBe(generatedLookPortrait(woman));
-    expect(decodeURIComponent(src)).toContain("ellipse");
-    const man = generatedLookPortrait({ nameHe: "איתי", look: "man", slateId: "likud" });
-    expect(decodeURIComponent(man)).toContain("<rect");
-    expect(man).not.toBe(src);
+    expect(lookPortraitSrc("man")).toBe("/looks/avatar-grown-man.png");
+    expect(lookPortraitSrc("man")).not.toBe(src);
   });
 });

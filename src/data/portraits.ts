@@ -383,10 +383,20 @@ export function portraitUrl(id: PersonId): string | null {
   return raw.split("?")[0];
 }
 
+/** Klafi generated citizen faces — not a likeness and not advocacy card art. */
+export const LOOK_PORTRAITS = {
+  woman: "/looks/avatar-grown-woman.png",
+  man: "/looks/avatar-grown-man.png",
+} as const;
+
+export function lookPortraitSrc(look: "woman" | "man" = "woman"): string {
+  return LOOK_PORTRAITS[look];
+}
+
 /** Wikipedia photo when authored; otherwise a slate-colored initial card. */
 export function portraitSrc(id: PersonId): string {
   const person = getPerson(id);
-  if (person.look) return generatedLookPortrait(person);
+  if (person.look) return lookPortraitSrc(person.look);
   return portraitUrl(id) ?? generatedPortrait(id);
 }
 
@@ -414,7 +424,7 @@ export function initialsHe(nameHe: string): string {
 
 export function generatedPortrait(id: PersonId): string {
   const person = getPerson(id);
-  if (person.look) return generatedLookPortrait(person);
+  if (person.look) return lookPortraitSrc(person.look);
   const ink = SLATE_INK[person.slateId];
   const letters = initialsHe(person.nameHe);
   const last = person.nameHe.split(/[\s־\-]+/).filter(Boolean).at(-1) ?? person.nameHe;
@@ -427,23 +437,9 @@ export function generatedPortrait(id: PersonId): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-/** Invented hub: a generated woman/man face, not a real likeness and not Kalpi art. */
-export function generatedLookPortrait(person: { nameHe: string; look?: "woman" | "man"; slateId: SlateId }): string {
-  const ink = SLATE_INK[person.slateId] ?? "#4a5d3a";
-  const woman = person.look === "woman";
-  const hair = woman
-    ? `<ellipse cx="40" cy="42" rx="24" ry="28" fill="${ink}"/><ellipse cx="22" cy="52" rx="8" ry="16" fill="${ink}"/><ellipse cx="58" cy="52" rx="8" ry="16" fill="${ink}"/>`
-    : `<rect x="22" y="22" width="36" height="20" rx="10" fill="${ink}"/><rect x="24" y="30" width="32" height="12" fill="${ink}"/>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="${escapeXml(person.nameHe)}">
-  <rect width="80" height="80" fill="#1c1f27"/>
-  ${hair}
-  <circle cx="40" cy="40" r="14" fill="#e8d2b8"/>
-  <circle cx="35" cy="38" r="1.4" fill="#1c1f27"/>
-  <circle cx="45" cy="38" r="1.4" fill="#1c1f27"/>
-  <path d="M36 46c2 1.6 6 1.6 8 0" fill="none" stroke="#1c1f27" stroke-width="1.2"/>
-  <text x="40" y="74" text-anchor="middle" font-size="8" font-family="Rubik, Arial Hebrew, sans-serif" fill="#f4d53b">${escapeXml(person.nameHe.slice(0, 8))}</text>
-</svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+/** Invented hub: Klafi grown-woman / grown-man face. */
+export function generatedLookPortrait(person: { look?: "woman" | "man" }): string {
+  return lookPortraitSrc(person.look === "man" ? "man" : "woman");
 }
 
 function escapeXml(value: string): string {

@@ -128,12 +128,12 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
     expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
     expect(root.querySelector(".why-line")?.textContent).not.toMatch(/^סתירה ב־1–2/);
-    expect(root.querySelector(".seat-cluster")).toBeTruthy();
-    expect(root.querySelector(".seat-cluster .bar-fill")).toBeTruthy();
+    expect(root.querySelector(".seat-line")).toBeTruthy();
+    expect(root.querySelector(".seat-line .bar-fill")).toBeTruthy();
     expect(root.textContent).toContain("וואטסאפ");
     expect(root.textContent).toContain("סטורי");
-    expect(root.querySelector(".share-icon-button.is-whatsapp")).toBeTruthy();
-    expect(root.querySelector(".share-icon-button.is-instagram")).toBeTruthy();
+    expect(root.querySelector(".share-icon-button[data-share='whatsapp']")).toBeTruthy();
+    expect(root.querySelector(".share-icon-button[data-share='instagram']")).toBeTruthy();
     expect(root.querySelector(".board-panel")?.textContent).toMatch(/מנדטים|עוד אין/);
   });
 
@@ -169,6 +169,12 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("אישה");
     expect(root.textContent).toContain("גבר");
     expect(root.querySelectorAll(".look-btn").length).toBe(2);
+    expect(root.querySelector<HTMLImageElement>(".look-btn[data-look='woman'] img")?.src).toMatch(
+      /avatar-grown-woman\.png$/,
+    );
+    expect(root.querySelector<HTMLImageElement>(".look-btn[data-look='man'] img")?.src).toMatch(
+      /avatar-grown-man\.png$/,
+    );
     root.querySelector<HTMLButtonElement>(".look-btn[data-look='man']")?.click();
     const name = root.querySelector<HTMLInputElement>("#leader-name");
     if (name) {
@@ -201,7 +207,7 @@ describe("playable draft UI", () => {
     await vi.runAllTimersAsync();
     expect(root.textContent).toContain("ליל בחירות");
     expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
-    expect(root.querySelector(".seat-cluster .bar-fill")).toBeTruthy();
-    expect(root.querySelector(".share-icon-button.is-whatsapp")).toBeTruthy();
+    expect(root.querySelector(".seat-line .bar-fill")).toBeTruthy();
+    expect(root.querySelector(".share-icon-button[data-share='whatsapp']")).toBeTruthy();
   });
 });

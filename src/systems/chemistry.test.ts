@@ -117,6 +117,8 @@ describe("pair relation", () => {
     expect(veto).toMatch(/rgb\(196, 90, 78\)/);
     expect(none).toMatch(/rgb\(90, 86, 76\)/);
     expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-0.2, 1));
+    expect(relationStrokeWidth(-1, 1)).toBeGreaterThan(relationStrokeWidth(-1, pairRankWeight(5, 6)) * 3);
+    expect(relationStrokeWidth(-1, pairRankWeight(1, 2))).toBeGreaterThan(relationStrokeWidth(0.15, pairRankWeight(1, 2)));
     expect(relationOpacity(-1)).toBeGreaterThan(relationOpacity(-0.2));
     expect(relationOpacity(0)).toBeGreaterThan(0.5);
   });

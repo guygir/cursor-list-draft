@@ -45,7 +45,6 @@ import { renderNameEdit } from "./name-edit";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
 import { resetMeters } from "./meters";
-import { makeResultCard, shareCaption, shareFilesOrDownload } from "./share-card";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
@@ -219,7 +218,7 @@ function render(): void {
       renderResolve(state.result, replay, {
         shareHint: copy.boardLocal,
         onShare: shareRun,
-        onShareCard: shareCard,
+        playerName: state.playerName,
         shareUrl: location.href,
         boardMode: state.playMode,
         difficulty: state.difficulty,
@@ -632,18 +631,6 @@ async function shareRun(): Promise<void> {
   } catch {
     window.prompt(copy.share, href);
   }
-}
-
-async function shareCard(kind: "square" | "story"): Promise<"shared" | "saved"> {
-  if (!state.result) throw new Error(copy.shareFail);
-  const player = state.result.lists.find((row) => row.list.isPlayer);
-  const caption = shareCaption(player?.seats ?? 0, player?.list.labelHe ?? state.partyName, location.href);
-  const blob = await makeResultCard({
-    result: state.result,
-    playerName: state.playerName,
-    kind,
-  });
-  return shareFilesOrDownload({ blob, kind, ...caption });
 }
 
 function autoPick(): void {

@@ -1,5 +1,5 @@
 import { ASPECT_IDS, ASPECT_LABEL_HE } from "../data/aspects";
-import { generatedLookPortrait } from "../data/portraits";
+import { lookPortraitSrc } from "../data/portraits";
 import { slateLabelHe } from "../data/pool";
 import type { PersonAspects } from "../data/types";
 import { nameClash, nearestSlate, sanitizeLeaderName, type LeaderLook } from "../systems/modes";
@@ -46,19 +46,17 @@ export function renderCreateLeader(opts: {
 
   const lookField = el("fieldset", { class: "look-pick" }, el("legend", {}, copy.createLook));
   const lookBtns = new Map<LeaderLook, HTMLButtonElement>();
-  const lookImgs = new Map<LeaderLook, HTMLImageElement>();
   for (const id of ["woman", "man"] as const) {
-    const img = el("img", {
-      class: "look-face",
-      src: lookPreview(nameHe, aspects, id),
-      alt: "",
-      width: 72,
-      height: 72,
-    });
     const btn = el(
       "button",
       { type: "button", class: `look-btn ${look === id ? "is-on" : ""}`, "data-look": id },
-      img,
+      el("img", {
+        class: "look-face",
+        src: lookPortraitSrc(id),
+        alt: id === "woman" ? copy.lookWoman : copy.lookMan,
+        width: 96,
+        height: 96,
+      }),
       el("span", {}, id === "woman" ? copy.lookWoman : copy.lookMan),
     );
     btn.addEventListener("click", () => {
@@ -66,7 +64,6 @@ export function renderCreateLeader(opts: {
       for (const [key, node] of lookBtns) node.classList.toggle("is-on", key === look);
     });
     lookBtns.set(id, btn);
-    lookImgs.set(id, img);
     lookField.append(btn);
   }
   screen.append(lookField);
@@ -89,7 +86,6 @@ export function renderCreateLeader(opts: {
       aspects = { ...aspects, [id]: Number(slider.value) / 99 };
       shown.textContent = slider.value;
       nearest.textContent = slateLabelHe(nearestSlate(aspects));
-      refreshLooks();
     });
     list.append(
       el(
@@ -113,13 +109,9 @@ export function renderCreateLeader(opts: {
     clashNote.hidden = !clash;
     start.disabled = !clean || clash;
   };
-  const refreshLooks = () => {
-    for (const [id, img] of lookImgs) img.src = lookPreview(nameHe, aspects, id);
-  };
   input.addEventListener("input", () => {
     nameHe = input.value;
     syncStart();
-    refreshLooks();
   });
   start.addEventListener("click", () => {
     if (start.disabled) return;
@@ -130,12 +122,4 @@ export function renderCreateLeader(opts: {
   screen.append(el("div", { class: "confirm-bar is-split" }, start, back));
   syncStart();
   return screen;
-}
-
-function lookPreview(nameHe: string, aspects: PersonAspects, look: LeaderLook): string {
-  return generatedLookPortrait({
-    nameHe: sanitizeLeaderName(nameHe) || copy.createNamePh,
-    look,
-    slateId: nearestSlate(aspects),
-  });
 }
