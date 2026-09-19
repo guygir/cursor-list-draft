@@ -92,7 +92,7 @@ Controls: tap/click to pick; keyboard-focusable names; confirm on the focused pe
 
 `choose N → snake-draft with the tree visible → resolve mandates → read the why → replay`
 
-CPU: always the greedy max. Score is projected `effective_votes` of the ticket after the pick (split mass × cohesion^α × hub_draw) — the same formula as election night. When a party cap still allows a second name from a newly opened slate, it also looks one partner ahead. No near-tie noise. Same player picks are deterministic. CPU uses the same visible rules as the player. No hidden stats.
+CPU (and the headless sim’s player): same visible score as election night — projected `effective_votes` after the pick (split mass × cohesion^α × hub_draw), plus a one-partner look-ahead when a cap still allows a second name from a newly opened slate. Then a seeded roll: **35% best, 25% 2nd, 15% 3rd, 25% uniform random** among legal names. Same seed is deterministic; a live run uses a fresh seed. The on-screen auto-pick button stays greedy. No hidden stats.
 
 ---
 

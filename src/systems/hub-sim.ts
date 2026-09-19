@@ -13,7 +13,7 @@ import {
   type DifficultyId,
   type DraftState,
 } from "./draft";
-import { greedyCpuPick } from "./cpu";
+import { noisyCpuPick } from "./cpu";
 import { publishedHubs } from "./modes";
 import { resolveElection } from "./resolve";
 
@@ -40,8 +40,8 @@ export interface HubSimRow {
   winRate: number;
 }
 
-/** Player and every CPU take the same greedy max. No noise — one seed is enough. */
-export function playAllGreedy(state: DraftState): DraftState {
+/** Player and every CPU use the same noisy pick (35/25/15/25). Auto-pick in the UI stays greedy. */
+export function playAllNoisy(state: DraftState): DraftState {
   let next = state;
   while (!isDraftOver(next)) {
     const list = currentList(next);
@@ -51,7 +51,7 @@ export function playAllGreedy(state: DraftState): DraftState {
       next = skipIfBlocked({ ...next, turnCursor: next.turnCursor + 1 });
       continue;
     }
-    next = applyPick(next, greedyCpuPick(list, next.lists, pool, next.slateCap));
+    next = applyPick(next, noisyCpuPick(list, next.lists, pool, next.slateCap, next.rand));
   }
   return next;
 }
@@ -63,7 +63,7 @@ export function runHubCell(
   seed = 1,
 ): HubSimCell {
   const hub = getPerson(hubId);
-  const finished = playAllGreedy(createDraft(nCpus, seed, difficulty, hubId));
+  const finished = playAllNoisy(createDraft(nCpus, seed, difficulty, hubId));
   const result = resolveElection(finished.lists);
   const player = result.lists.find((row) => row.list.isPlayer);
   if (!player) throw new Error("no player");
@@ -83,7 +83,7 @@ export function runHubCell(
 }
 
 export function runHubGrid(opts: { seeds?: number } = {}): HubSimRow[] {
-  const seeds = opts.seeds ?? 1;
+  const seeds = opts.seeds ?? 16;
   const hubs = publishedHubs();
   return hubs.map((hub) => {
     const cells: HubSimCell[] = [];
@@ -111,7 +111,7 @@ export function formatHubGrid(rows: HubSimRow[]): string {
   const diffs = DIFFICULTIES.map((row) => row.id);
   const ns = [1, 2, 3] as const;
   const lines: string[] = [
-    "Toy greedy grid — regular draft. Player opening pick = published #1. Everyone greedy. Not a forecast.",
+    "Toy noisy grid — regular draft. Opening pick = published #1. Then 35/25/15/25. Not a forecast.",
     "",
     "hub\tparty\tavg\twin\t" +
       diffs.flatMap((d) => ns.map((n) => `${d}/n${n}`)).join("\t"),
@@ -122,8 +122,8 @@ export function formatHubGrid(rows: HubSimRow[]): string {
       ns.map((n) => {
         const match = row.cells.filter((cell) => cell.difficulty === d && cell.nCpus === n);
         const seats = match.reduce((sum, cell) => sum + cell.playerSeats, 0) / match.length;
-        const wins = match.filter((cell) => cell.won).length;
-        return `${seats.toFixed(1)}${wins ? "*" : ""}`;
+        const winRate = match.filter((cell) => cell.won).length / match.length;
+        return `${seats.toFixed(1)}${winRate >= 0.5 ? "*" : ""}`;
       }),
     );
     lines.push(
