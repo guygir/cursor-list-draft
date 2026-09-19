@@ -1260,13 +1260,13 @@ input {
   align-items: center;
   gap: 8px;
   margin-inline-start: auto;
-  min-width: 9.5rem;
+  min-width: 12rem;
 }
 
 .seat-cluster .bar-track {
-  width: 5.8rem;
-  flex: 1 1 5.8rem;
-  height: 10px;
+  width: 7.5rem;
+  flex: 1 1 7.5rem;
+  height: 14px;
   margin: 0;
 }
 

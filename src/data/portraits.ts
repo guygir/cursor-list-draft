@@ -432,8 +432,8 @@ export function generatedLookPortrait(person: { nameHe: string; look?: "woman" |
   const ink = SLATE_INK[person.slateId] ?? "#4a5d3a";
   const woman = person.look === "woman";
   const hair = woman
-    ? `<ellipse cx="40" cy="38" rx="22" ry="24" fill="${ink}"/><ellipse cx="40" cy="52" rx="20" ry="14" fill="${ink}"/>`
-    : `<circle cx="40" cy="34" r="18" fill="${ink}"/><rect x="24" y="34" width="32" height="10" fill="${ink}"/>`;
+    ? `<ellipse cx="40" cy="42" rx="24" ry="28" fill="${ink}"/><ellipse cx="22" cy="52" rx="8" ry="16" fill="${ink}"/><ellipse cx="58" cy="52" rx="8" ry="16" fill="${ink}"/>`
+    : `<rect x="22" y="22" width="36" height="20" rx="10" fill="${ink}"/><rect x="24" y="30" width="32" height="12" fill="${ink}"/>`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="${escapeXml(person.nameHe)}">
   <rect width="80" height="80" fill="#1c1f27"/>
   ${hair}

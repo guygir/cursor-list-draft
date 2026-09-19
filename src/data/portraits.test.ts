@@ -50,7 +50,7 @@ describe("portraits", () => {
     expect(src).toBe(generatedLookPortrait(woman));
     expect(decodeURIComponent(src)).toContain("ellipse");
     const man = generatedLookPortrait({ nameHe: "איתי", look: "man", slateId: "likud" });
-    expect(decodeURIComponent(man)).toContain("rect");
+    expect(decodeURIComponent(man)).toContain("<rect");
     expect(man).not.toBe(src);
   });
 });

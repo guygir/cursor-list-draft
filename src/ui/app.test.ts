@@ -193,5 +193,15 @@ describe("playable draft UI", () => {
     await vi.runOnlyPendingTimersAsync();
     expect(root.querySelector(".slot.filled")).toBeTruthy();
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
+
+    for (let i = 0; i < 30 && !root.textContent?.includes("ליל בחירות"); i++) {
+      root.querySelector<HTMLButtonElement>(".auto-pick-btn:not([disabled])")?.click();
+      await vi.runOnlyPendingTimersAsync();
+    }
+    await vi.runAllTimersAsync();
+    expect(root.textContent).toContain("ליל בחירות");
+    expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
+    expect(root.querySelector(".seat-cluster .bar-fill")).toBeTruthy();
+    expect(root.querySelector(".share-icon-button.is-whatsapp")).toBeTruthy();
   });
 });
