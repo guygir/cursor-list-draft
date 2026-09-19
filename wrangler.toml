@@ -16,5 +16,7 @@ not_found_handling = "single-page-application"
 binding = "ASSETS"
 run_worker_first = ["/api/*"]
 
-# Bind D1 in the dashboard after the first deploy (Settings → Bindings → D1, name DB).
-# A placeholder database_id here would fail the Git build.
+[[d1_databases]]
+binding = "DB"
+database_name = "list-draft"
+database_id = "4b2e0645-fd53-49b1-b66e-2751617359f1"
