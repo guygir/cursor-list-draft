@@ -385,6 +385,8 @@ export function portraitUrl(id: PersonId): string | null {
 
 /** Wikipedia photo when authored; otherwise a slate-colored initial card. */
 export function portraitSrc(id: PersonId): string {
+  const person = getPerson(id);
+  if (person.look) return generatedLookPortrait(person);
   return portraitUrl(id) ?? generatedPortrait(id);
 }
 
@@ -412,6 +414,7 @@ export function initialsHe(nameHe: string): string {
 
 export function generatedPortrait(id: PersonId): string {
   const person = getPerson(id);
+  if (person.look) return generatedLookPortrait(person);
   const ink = SLATE_INK[person.slateId];
   const letters = initialsHe(person.nameHe);
   const last = person.nameHe.split(/[\s־\-]+/).filter(Boolean).at(-1) ?? person.nameHe;
@@ -420,6 +423,25 @@ export function generatedPortrait(id: PersonId): string {
   <circle cx="40" cy="36" r="24" fill="${ink}"/>
   <text x="40" y="43" text-anchor="middle" font-size="20" font-family="Rubik, Arial Hebrew, sans-serif" fill="#e4ddd0">${escapeXml(letters)}</text>
   <text x="40" y="70" text-anchor="middle" font-size="9" font-family="Rubik, Arial Hebrew, sans-serif" fill="#f4d53b">${escapeXml(last)}</text>
+</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** Invented hub: a generated woman/man face, not a real likeness and not Kalpi art. */
+export function generatedLookPortrait(person: { nameHe: string; look?: "woman" | "man"; slateId: SlateId }): string {
+  const ink = SLATE_INK[person.slateId] ?? "#4a5d3a";
+  const woman = person.look === "woman";
+  const hair = woman
+    ? `<ellipse cx="40" cy="38" rx="22" ry="24" fill="${ink}"/><ellipse cx="40" cy="52" rx="20" ry="14" fill="${ink}"/>`
+    : `<circle cx="40" cy="34" r="18" fill="${ink}"/><rect x="24" y="34" width="32" height="10" fill="${ink}"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="${escapeXml(person.nameHe)}">
+  <rect width="80" height="80" fill="#1c1f27"/>
+  ${hair}
+  <circle cx="40" cy="40" r="14" fill="#e8d2b8"/>
+  <circle cx="35" cy="38" r="1.4" fill="#1c1f27"/>
+  <circle cx="45" cy="38" r="1.4" fill="#1c1f27"/>
+  <path d="M36 46c2 1.6 6 1.6 8 0" fill="none" stroke="#1c1f27" stroke-width="1.2"/>
+  <text x="40" y="74" text-anchor="middle" font-size="8" font-family="Rubik, Arial Hebrew, sans-serif" fill="#f4d53b">${escapeXml(person.nameHe.slice(0, 8))}</text>
 </svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }

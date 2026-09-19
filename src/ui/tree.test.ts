@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { satelliteLayout } from "./tree";
+import { polygonLayout, polygonPoints } from "./tree";
 
-describe("constellation rings", () => {
-  it("keeps six satellites on one ring so seven nodes are a hexagon", () => {
-    const seven = satelliteLayout(6);
-    expect(seven.inner).toBe(6);
-    expect(seven.outer).toBe(0);
+describe("constellation polygons", () => {
+  it("puts three nodes on a triangle and ten on one decagon", () => {
+    expect(polygonLayout(3).count).toBe(3);
+    expect(polygonPoints(3, 120)).toHaveLength(3);
+    const ten = polygonPoints(10, 150);
+    expect(ten).toHaveLength(10);
+    const xs = new Set(ten.map((p) => p.x.toFixed(1)));
+    expect(xs.size).toBeGreaterThan(2);
   });
 
-  it("puts ten nodes on two rings, six then three", () => {
-    const ten = satelliteLayout(9);
-    expect(ten.inner).toBe(6);
-    expect(ten.outer).toBe(3);
+  it("keeps a single hub at the center", () => {
+    const one = polygonPoints(1, 0);
+    expect(one).toEqual([{ x: 210, y: 200 }]);
   });
 });

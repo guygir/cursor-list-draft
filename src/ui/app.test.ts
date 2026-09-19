@@ -9,6 +9,7 @@ describe("playable draft UI", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")));
     localStorage.clear();
+    history.replaceState({}, "", "/");
   });
 
   afterEach(() => {
@@ -38,11 +39,23 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("צור מנהיג");
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
+    expect(root.querySelector(".mast")?.textContent).toContain("לוח שיאים");
+    expect(root.querySelector(".mast-board")).toBeTruthy();
     expect(root.textContent).toContain("שם השחקן");
     expect(root.textContent).toContain("שם המפלגה");
     expect(root.textContent).toContain("עוד אין שיא במצב הזה");
     expect(root.textContent).toContain("על המכשיר הזה");
-    [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.textContent?.includes("לוח שיאים"))?.click();
+    const nPick = root.querySelector(".n-pick");
+    const daily = [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) =>
+      btn.textContent?.includes("אתגר היום"),
+    );
+    daily?.click();
+    expect(root.querySelector(".n-pick")).toBe(nPick);
+    expect(root.querySelector(".n-pick")?.classList.contains("is-locked")).toBe(true);
+    expect(root.querySelector(".level-pick")?.classList.contains("is-locked")).toBe(true);
+    [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) => btn.textContent?.includes("דראפט"))?.click();
+    expect(root.querySelector(".n-pick")?.classList.contains("is-locked")).toBe(false);
+    [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.classList.contains("mast-board"))?.click();
     expect(root.textContent).toContain("עוד אין ריצה");
     expect(root.textContent).not.toContain("דראפט · עד 5");
     root.querySelector<HTMLButtonElement>(".primary")?.click();
@@ -50,6 +63,8 @@ describe("playable draft UI", () => {
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
     expect(root.textContent).toContain("בחר מפלגה");
+    expect(root.textContent).toContain("שבץ אוטומטי");
+    expect(root.querySelector(".auto-pick-btn")).toBeTruthy();
     expect(root.textContent).not.toContain("בנימין נתניהו");
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
@@ -111,6 +126,14 @@ describe("playable draft UI", () => {
     expect(root.textContent).not.toContain("מעבד");
     expect(root.textContent).toContain("דראפט · קל");
     expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
+    expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
+    expect(root.querySelector(".why-line")?.textContent).not.toMatch(/^סתירה ב־1–2/);
+    expect(root.querySelector(".seat-cluster")).toBeTruthy();
+    expect(root.querySelector(".seat-cluster .bar-fill")).toBeTruthy();
+    expect(root.textContent).toContain("וואטסאפ");
+    expect(root.textContent).toContain("סטורי");
+    expect(root.querySelector(".share-icon-button.is-whatsapp")).toBeTruthy();
+    expect(root.querySelector(".share-icon-button.is-instagram")).toBeTruthy();
     expect(root.querySelector(".board-panel")?.textContent).toMatch(/מנדטים|עוד אין/);
   });
 
@@ -143,6 +166,10 @@ describe("playable draft UI", () => {
     create?.click();
     root.querySelector<HTMLButtonElement>(".primary")?.click();
     expect(root.textContent).toContain("הראש שלך");
+    expect(root.textContent).toContain("אישה");
+    expect(root.textContent).toContain("גבר");
+    expect(root.querySelectorAll(".look-btn").length).toBe(2);
+    root.querySelector<HTMLButtonElement>(".look-btn[data-look='man']")?.click();
     const name = root.querySelector<HTMLInputElement>("#leader-name");
     if (name) {
       name.value = "איתי";
@@ -153,5 +180,18 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("איתי");
     expect(root.textContent).toMatch(/הרשימה של איתי|שבץ/);
     expect(root.textContent).toContain("בחירה 2 מתוך 10");
+  });
+
+  it("auto-picks the greedy best without opening a party first", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    expect(root.querySelector(".slot.filled")).toBeNull();
+    root.querySelector<HTMLButtonElement>(".auto-pick-btn")?.click();
+    await vi.runOnlyPendingTimersAsync();
+    expect(root.querySelector(".slot.filled")).toBeTruthy();
+    expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
   });
 });

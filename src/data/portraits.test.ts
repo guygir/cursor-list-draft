@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PEOPLE } from "./pool";
-import { generatedPortrait, hasWikiPortrait, initialsHe, portraitSrc } from "./portraits";
+import { generatedLookPortrait, generatedPortrait, hasWikiPortrait, initialsHe, portraitSrc } from "./portraits";
+import { makeCustomLeader } from "../systems/modes";
 
 describe("portraits", () => {
   it("gives every published name an image src", () => {
@@ -35,5 +36,21 @@ describe("portraits", () => {
     expect(hasWikiPortrait("rosenthal")).toBe(false);
     expect(hasWikiPortrait("david-ohana")).toBe(false);
     expect(hasWikiPortrait("dror-amos")).toBe(false);
+  });
+
+  it("paints an invented hub as a generated woman or man, not a Wikipedia face", () => {
+    const woman = makeCustomLeader({
+      nameHe: "נועה",
+      slateId: "democrats",
+      aspects: { bibi: 0.15, judicial: 0.18, service: 0.15, security: 0.48, economy: 0.74 },
+      look: "woman",
+    });
+    const src = portraitSrc(woman.id);
+    expect(src.startsWith("data:image/svg+xml")).toBe(true);
+    expect(src).toBe(generatedLookPortrait(woman));
+    expect(decodeURIComponent(src)).toContain("ellipse");
+    const man = generatedLookPortrait({ nameHe: "איתי", look: "man", slateId: "likud" });
+    expect(decodeURIComponent(man)).toContain("rect");
+    expect(man).not.toBe(src);
   });
 });
