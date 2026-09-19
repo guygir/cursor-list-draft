@@ -1,6 +1,6 @@
 import { getPerson, POOL_IDS } from "../data/pool";
 import type { DraftList, PersonId, SlateId } from "../data/types";
-import { greedyCpuPick } from "./cpu";
+import { noisyCpuPick } from "./cpu";
 import { mulberry32, uniquePartyNames } from "./names";
 
 export const LIST_SIZE = 10;
@@ -113,7 +113,7 @@ export function createDraft(
     ),
     turnCursor: 0,
     seed,
-    rand: () => 0,
+    rand: mulberry32(seed),
     difficulty,
     slateCap,
   };
@@ -172,7 +172,7 @@ export function applyCpuTurn(state: DraftState): DraftState {
   if (!list || list.isPlayer || isDraftOver(state)) return state;
   const pool = legalRemaining(list.picks, state.remaining, state.slateCap);
   if (pool.length === 0) return skipIfBlocked({ ...state, turnCursor: state.turnCursor + 1 });
-  const pick = greedyCpuPick(list, state.lists, pool, state.slateCap);
+  const pick = noisyCpuPick(list, state.lists, pool, state.slateCap, state.rand);
   return applyPick(state, pick);
 }
 

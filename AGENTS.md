@@ -37,7 +37,7 @@ Draft a list that looks like a real party, sits on a voter hill other lists have
 ## Locked for the PoC
 
 - Independent web game in a new repo. Do not modify `Cursor_Elections_Game_2` for this.
-- Single-player vs N greedy CPU lists. Player chooses N (PoC: 1–4).
+- Single-player vs N CPU lists. Player chooses N (PoC: 1–4). CPU ranks the same visible score, then rolls 35/25/15/25.
 - Snake draft from a shared pool.
 - Win: most mandates after threshold + seat allocation. Ties: higher cohesion, then higher hub draw, then draft order.
 - Chemistry is **asymmetric and rank-weighted**. Opposition/veto dominates. Same-line alignment is a small bonus.
@@ -92,7 +92,7 @@ Controls: tap/click to pick; keyboard-focusable names; confirm on the focused pe
 
 `choose N → snake-draft with the tree visible → resolve mandates → read the why → replay`
 
-CPU: always the greedy max. Score is projected `effective_votes` of the ticket after the pick (split mass × cohesion^α × hub_draw) — the same formula as election night. When a party cap still allows a second name from a newly opened slate, it also looks one partner ahead. No near-tie noise. Same player picks are deterministic. CPU uses the same visible rules as the player. No hidden stats.
+CPU (and the headless sim’s player): same visible score as election night — projected `effective_votes` after the pick (split mass × cohesion^α × hub_draw), plus a one-partner look-ahead when a cap still allows a second name from a newly opened slate. Then a seeded roll: **35% best, 25% 2nd, 15% 3rd, 25% uniform random** among legal names. Same seed is deterministic; a live run uses a fresh seed. The on-screen auto-pick button stays greedy. No hidden stats.
 
 ---
 
@@ -248,19 +248,19 @@ Quality floor: phone + desktop, visible focus, reduced motion, empty/disabled st
 
 - 12 real people in a shared pool (starter table below). **Shipped expansion (Sep 2026):** published 2026 top-10s per slate, including Ra'am / Blue and White / Joint List through slot 10 from CEC/Wikipedia. No invented names.
 - Player list of **10 slots** (not 20). Snake draft vs **N ∈ {1,2,3}** CPU lists of 10.
-- Difficulty is a **party cap**: unlimited, 3, or 1 name per slate. Easy = no cap. CPU always takes the greedy max.
+- Difficulty is a **party cap**: unlimited, 3, or 1 name per slate. Easy = no cap. CPU (and the sim’s player) roll 35/25/15/25 on the ranked legal pool. The on-screen auto-pick button stays greedy.
 - Tree or hub-and-spokes that recolours on pick, with at least a few sourced red edges.
 - Rank-weighted asymmetric cohesion + centroid demand + split + `α` conversion.
 - Threshold 3.25% + 120-seat allocation (simplified).
 - Why-line on the result.
 - Disclosure copy.
-- Local only. Same player picks are deterministic. CPU always takes the greedy max.
+- Local only. Same player picks + same CPU seed are deterministic. Live runs use a fresh seed. CPU noise is 35/25/15/25 among legal names.
 
 **May fake, labeled**
 
 - Cells and neighborhood masses (hand table, comment `toy-demand`).
 - Draw bands (role heuristic).
-- CPU as greedy heuristic.
+- CPU as a ranked-heuristic plus seeded 35/25/15/25 noise. The auto-pick button stays greedy.
 - Geometric / typographic “tree” (no production art).
 - Hebrew UI with a few English strings if a translation is missing; do not ship placeholder party names.
 

@@ -62,10 +62,26 @@ function slateCount(picks: PersonId[], slate: SlateId): number {
   return picks.filter((id) => getPerson(id).slateId === slate).length;
 }
 
-/** Always the greedy max. Ties break on hub draw, then id. */
+/** Always the greedy max. Ties break on hub draw, then id. Used by the auto-pick button. */
 export function chooseCpuCandidate(ranked: CpuCandidate[]): PersonId {
   if (ranked.length === 0) throw new Error("Empty pool");
   return ranked[0]!.id;
+}
+
+/** 35% best, 25% 2nd, 15% 3rd, 25% uniform among the legal pool. */
+export const PICK_NOISE = { first: 0.35, second: 0.25, third: 0.15, random: 0.25 } as const;
+
+export function chooseNoisyCandidate(ranked: CpuCandidate[], rand: () => number): PersonId {
+  if (ranked.length === 0) throw new Error("Empty pool");
+  if (ranked.length === 1) return ranked[0]!.id;
+  const roll = rand();
+  const first = PICK_NOISE.first;
+  const second = first + PICK_NOISE.second;
+  const third = second + PICK_NOISE.third;
+  if (roll < first) return ranked[0]!.id;
+  if (roll < second) return (ranked[1] ?? ranked[0]!).id;
+  if (roll < third) return (ranked[2] ?? ranked[1] ?? ranked[0]!).id;
+  return ranked[Math.floor(rand() * ranked.length)]!.id;
 }
 
 export function greedyCpuPick(
@@ -75,6 +91,16 @@ export function greedyCpuPick(
   slateCap: number | null = null,
 ): PersonId {
   return chooseCpuCandidate(rankCpuCandidates(cpu, allLists, remaining, slateCap));
+}
+
+export function noisyCpuPick(
+  cpu: DraftList,
+  allLists: DraftList[],
+  remaining: PersonId[],
+  slateCap: number | null,
+  rand: () => number,
+): PersonId {
+  return chooseNoisyCandidate(rankCpuCandidates(cpu, allLists, remaining, slateCap), rand);
 }
 
 export function mulberry32(seed: number): () => number {
