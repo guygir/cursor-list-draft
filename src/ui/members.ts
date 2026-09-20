@@ -1,4 +1,4 @@
-import { ASPECT_IDS, ASPECT_LABEL_HE, peakAspect } from "../data/aspects";
+import { ASPECT_IDS, ASPECT_LABEL_HE, ASPECT_PIP_COLOR } from "../data/aspects";
 import { getPerson, slateLabelHe } from "../data/pool";
 import { bindPortrait, hasWikiPortrait, portraitSrc } from "../data/portraits";
 import type { Person, PersonId, SlateId } from "../data/types";
@@ -102,7 +102,12 @@ export function compactPipKey(): HTMLElement {
       el(
         "li",
         {},
-        el("i", { class: "aspect-pip is-demo", style: "--v:0.9", "aria-hidden": "true" }),
+        el("i", {
+          class: "aspect-pip is-demo",
+          "data-axis": id,
+          style: `--v:0.9;--pip:${ASPECT_PIP_COLOR[id]}`,
+          "aria-hidden": "true",
+        }),
         ASPECT_LABEL_HE[id],
       ),
     );
@@ -111,7 +116,6 @@ export function compactPipKey(): HTMLElement {
 }
 
 function aspectPips(person: Person): HTMLElement {
-  const peak = peakAspect(person.aspects, person.slateId);
   const detail = ASPECT_IDS.map((id) => `${ASPECT_LABEL_HE[id]} ${Math.round(person.aspects[id] * 100)}`).join(" · ");
   const pips = el("span", {
     class: "aspect-pips",
@@ -121,8 +125,9 @@ function aspectPips(person: Person): HTMLElement {
   for (const id of ASPECT_IDS) {
     pips.append(
       el("i", {
-        class: `aspect-pip${id === peak ? " is-peak" : ""}`,
-        style: `--v:${person.aspects[id].toFixed(2)}`,
+        class: "aspect-pip",
+        "data-axis": id,
+        style: `--v:${person.aspects[id].toFixed(2)};--pip:${ASPECT_PIP_COLOR[id]}`,
         title: `${ASPECT_LABEL_HE[id]} ${Math.round(person.aspects[id] * 100)}`,
       }),
     );

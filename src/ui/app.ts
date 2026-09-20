@@ -250,7 +250,7 @@ function render(): void {
   } else if (state.screen === "resolve" || state.screen === "board") {
     root.querySelector<HTMLElement>(".resolve-screen, .setup-screen")?.scrollTo(0, 0);
   }
-  if (state.screen === "setup") maybeShowTips();
+  if (state.screen === "setup" || state.screen === "draft") maybeShowTips();
 }
 
 function draftView(): DraftView {

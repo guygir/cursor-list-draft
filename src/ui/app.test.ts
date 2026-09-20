@@ -76,6 +76,11 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("בנימין נתניהו");
     expect(root.textContent).toContain("נתניהו");
     expect(root.textContent).toContain("כלכלה");
+    const pips = [...root.querySelectorAll<HTMLElement>(".name-btn .aspect-pip")];
+    expect(pips.length).toBeGreaterThanOrEqual(5);
+    expect(pips.some((pip) => pip.classList.contains("is-peak"))).toBe(false);
+    expect(new Set(pips.map((pip) => pip.dataset.axis)).size).toBe(5);
+    expect(new Set(pips.map((pip) => pip.style.getPropertyValue("--pip"))).size).toBe(5);
     expect(root.textContent).not.toContain("איתמר בן גביר");
     expect(root.querySelectorAll(".party-btn").length).toBe(0);
 
@@ -275,21 +280,18 @@ describe("playable draft UI", () => {
     const root = document.createElement("div");
     document.body.append(root);
     mount(root);
-    const sheet = document.querySelector(".tips-sheet");
+    const sheet = document.querySelector(".tips-card, .tips-overlay");
     expect(sheet?.textContent).toContain("המשחק");
     expect(sheet?.textContent).toContain("אל תציגו שוב");
-    const hide = sheet?.querySelector<HTMLInputElement>("#tips-hide");
+    const hide = document.querySelector<HTMLInputElement>("#tips-hide");
     expect(hide?.checked).toBe(true);
-    [...sheet?.querySelectorAll("button") ?? []].find((btn) => btn.textContent === "הבנתי" || btn.textContent === "דילוג")?.click();
-    if (document.querySelector(".tips-sheet")) {
-      document.querySelector<HTMLButtonElement>(".tips-sheet .primary")?.click();
-      document.querySelector<HTMLButtonElement>(".tips-sheet .primary")?.click();
-    }
-    expect(document.querySelector(".tips-sheet")).toBeNull();
+    expect(document.querySelector(".tips-marks")).toBeTruthy();
+    [...document.querySelectorAll<HTMLButtonElement>(".tips-card button")].find((btn) => btn.textContent === "דילוג")?.click();
+    expect(document.querySelector(".tips-overlay")).toBeNull();
     document.body.innerHTML = "";
     const again = document.createElement("div");
     document.body.append(again);
     mount(again);
-    expect(document.querySelector(".tips-sheet")).toBeNull();
+    expect(document.querySelector(".tips-overlay")).toBeNull();
   });
 });
