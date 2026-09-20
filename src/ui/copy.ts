@@ -6,7 +6,7 @@ export const copy = {
   disclosure:
     "זה צעצוע, לא סקר ולא תחזית ל־27 באוקטובר 2026. אף מפלגה לא תומכת במשחק. רשימה מעורבת כאן אינה ברית אמיתית.",
   nLabel: "מספר מפלגות יריבות",
-  levelLabel: "רמת קושי",
+  levelLabel: "הנדיקאפ",
   start: "להתחיל דראפט",
   modeLabel: "מצב",
   modeDraft: "דראפט",
@@ -43,6 +43,8 @@ export const copy = {
   shareToastWaOpen: "וואטסאפ נפתח עם הטקסט והקישור. צרפו את התמונה מהגלריה.",
   shareToastIgOpen: "העלו את התמונה לסטורי. הקישור כתוב עליה וגם הועתק.",
   shareFail: "לא הצלחנו להכין את השיתוף.",
+  shareBoast: (seats: number, party: string) =>
+    `I got ${seats} mandates with my party ${party} on הרשימה! Come try for yourself:`,
   axisLow: {
     bibi: "לא־ביבי",
     judicial: "בג״ץ",
@@ -67,6 +69,11 @@ export const copy = {
   firstPlace: (name: string, seats: number) =>
     `${name} במקום הראשון עם ${seats} מנדטים. אפשר לשבור את השיא?`,
   noFirstPlace: "עוד אין שיא במצב הזה. סיימו משחק — והשם יופיע כאן.",
+  localRecord: (seats: number) => `השיא שלך במכשיר: ${seats} מנדטים`,
+  noLocalRecord: "עוד אין שיא שלך במצב הזה.",
+  globalToBeat: (name: string, seats: number) => `השיא בלוח: ${name} · ${seats}. אפשר לשבור?`,
+  noGlobalRecord: "עוד אין שיא בלוח במצב הזה.",
+  yourBest: "השיא שלך",
   playerName: "שם השחקן",
   partyName: "שם המפלגה",
   anonPlayer: "שחקן",
@@ -112,7 +119,7 @@ export const copy = {
   chooseParty: "בחרו מפלגה",
   chooseMember: "בחרו שם",
   chooseMemberHint: "קודם מפלגה, אחר כך שם.",
-  backToParties: "← חזרה לכל המפלגות",
+  backToParties: "← מפלגות",
   noHubAfter: "בחרו שם נוסף לרשימה.",
   night: "ליל בחירות",
   seats: "מנדטים",

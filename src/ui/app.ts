@@ -8,6 +8,7 @@ import {
   createDraft,
   currentList,
   DIFFICULTIES,
+  boardDifficulty,
   isDraftOver,
   legalRemaining,
   MAX_CPU,
@@ -16,9 +17,16 @@ import {
   slateCountOnList,
   type DifficultyId,
   type DraftState,
+  type HandicapId,
 } from "../systems/draft";
 import { recordRun, type BoardEntry } from "../systems/board";
-import { loadOrCreatePartyName, loadOrCreatePlayerName, savePartyName, savePlayerName } from "../systems/names";
+import {
+  loadOrCreatePartyName,
+  loadOrCreatePlayerName,
+  randomPlayerName,
+  savePartyName,
+  savePlayerName,
+} from "../systems/names";
 import { prefetchPortraits } from "../data/portraits";
 import { hydrateRemoteBoard, pushRemoteRun } from "../systems/board-api";
 import {
@@ -38,7 +46,7 @@ import {
 } from "../systems/modes";
 import { resolveElection, type ElectionResult } from "../systems/resolve";
 import { copy } from "./copy";
-import { firstPlaceOf, renderBoardPanel } from "./board";
+import { firstPlaceOf, localBestOf, renderBoardFilters, renderBoardPanel } from "./board";
 import { renderCreateLeader } from "./create";
 import { el, prefersReducedMotion } from "./dom";
 import { renderNameEdit } from "./name-edit";
@@ -73,6 +81,8 @@ interface AppState {
   boardEntry: BoardEntry | null;
   playerName: string;
   partyName: string;
+  boardViewMode: PlayMode;
+  boardViewDifficulty: HandicapId;
 }
 
 let state: AppState = freshState(1);
@@ -124,13 +134,15 @@ function freshState(nCpus: number, difficulty: DifficultyId = "open", playMode: 
     liveText: "",
     cpuThinking: false,
     notices: [],
-    customName: "",
+    customName: randomPlayerName(),
     customAspects: defaultAspects(),
     customLook: "woman",
     dayKey: israelDateKey(),
     boardEntry: null,
     playerName: loadOrCreatePlayerName(),
     partyName,
+    boardViewMode: "daily",
+    boardViewDifficulty: "open",
   };
 }
 
@@ -263,12 +275,8 @@ function draftView(): DraftView {
 
 function renderSetup(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
-  const openBoard = () => {
-    state.screen = "board";
-    render();
-  };
   const boardBtn = el("button", { type: "button", class: "text-btn board-open mast-board" }, copy.boardOpen);
-  boardBtn.addEventListener("click", openBoard);
+  boardBtn.addEventListener("click", () => openBoard("daily"));
   screen.append(
     el(
       "header",
@@ -410,14 +418,30 @@ function patchSetup(): boolean {
   }
   const start = screen.querySelector<HTMLButtonElement>(".setup-start");
   if (start) start.textContent = startLabel();
-  const first = firstPlaceOf({
-    mode: state.playMode,
-    difficulty: state.playMode === "daily" ? "open" : state.difficulty,
-    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
-  });
-  const teaser = screen.querySelector<HTMLButtonElement>(".record-teaser-btn");
-  if (teaser) teaser.textContent = first ? copy.firstPlace(first.playerName || first.hubName, first.seats) : copy.noFirstPlace;
+  patchRecordTeaser(screen);
   return true;
+}
+
+function recordQuery(): { mode: PlayMode; dayKey?: string; difficulty?: string } {
+  return {
+    mode: state.playMode,
+    difficulty: state.playMode === "daily" ? "open" : boardDifficulty(state.difficulty),
+    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
+  };
+}
+
+function patchRecordTeaser(screen: HTMLElement): void {
+  const query = recordQuery();
+  const mine = localBestOf(state.playerName, query);
+  const top = firstPlaceOf(query);
+  const localLine = screen.querySelector<HTMLElement>(".record-local");
+  const globalLine = screen.querySelector<HTMLElement>(".record-global");
+  if (localLine) localLine.textContent = mine ? copy.localRecord(mine.seats) : copy.noLocalRecord;
+  if (globalLine) {
+    globalLine.textContent = top
+      ? copy.globalToBeat(top.playerName || top.hubName, top.seats)
+      : copy.noGlobalRecord;
+  }
 }
 
 function renderIdentity(): HTMLElement {
@@ -457,67 +481,70 @@ function renderIdentity(): HTMLElement {
 }
 
 function renderRecordTeaser(): HTMLElement {
-  const first = firstPlaceOf({
-    mode: state.playMode,
-    difficulty: state.playMode === "daily" ? "open" : state.difficulty,
-    ...(state.playMode === "daily" ? { dayKey: state.dayKey } : {}),
-  });
-  const open = () => {
-    state.screen = "board";
-    render();
-  };
+  const query = recordQuery();
+  const mine = localBestOf(state.playerName, query);
+  const top = firstPlaceOf(query);
   const box = el("div", { class: "record-teaser" });
-  const line = el(
+  const localLine = el("p", { class: "record-local" }, mine ? copy.localRecord(mine.seats) : copy.noLocalRecord);
+  const globalBtn = el(
     "button",
-    { type: "button", class: "record-teaser-btn" },
-    first ? copy.firstPlace(first.playerName || first.hubName, first.seats) : copy.noFirstPlace,
+    { type: "button", class: "record-teaser-btn record-global" },
+    top ? copy.globalToBeat(top.playerName || top.hubName, top.seats) : copy.noGlobalRecord,
   );
-  line.addEventListener("click", open);
-  box.append(line);
+  globalBtn.addEventListener("click", () => openBoard(state.playMode));
+  box.append(localLine, globalBtn);
   return box;
+}
+
+function openBoard(mode: PlayMode): void {
+  state.boardViewMode = mode;
+  state.boardViewDifficulty = mode === "daily" ? "open" : boardDifficulty(state.difficulty);
+  state.screen = "board";
+  render();
 }
 
 function renderBoardScreen(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
+  const back = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  back.addEventListener("click", () => {
+    state.screen = "setup";
+    render();
+  });
   screen.append(
     el(
       "header",
       { class: "mast tall" },
       el("div", { class: "brand" }, el("h1", {}, copy.boardTitle), el("p", { class: "tagline" }, copy.boardLocal)),
+      el("div", { class: "mast-tools" }, back),
     ),
-  );
-  const panels = [
-    renderBoardPanel({
-      mode: "daily",
-      dayKey: state.dayKey,
-      difficulty: "open",
-      title: copy.modeDaily,
-      hideNote: true,
+    renderBoardFilters({
+      mode: state.boardViewMode,
+      difficulty: state.boardViewDifficulty,
+      onMode: (mode) => {
+        state.boardViewMode = mode;
+        if (mode === "daily") state.boardViewDifficulty = "open";
+        render();
+      },
+      onDifficulty: (id) => {
+        state.boardViewDifficulty = id;
+        render();
+      },
     }),
-    ...DIFFICULTIES.map((row) =>
-      renderBoardPanel({
-        mode: "create",
-        difficulty: row.id,
-        title: `${copy.modeCreate} · ${row.labelHe}`,
-        hideNote: true,
-      }),
-    ),
-    ...DIFFICULTIES.map((row) =>
-      renderBoardPanel({
-        mode: "draft",
-        difficulty: row.id,
-        title: `${copy.modeDraft} · ${row.labelHe}`,
-        hideNote: true,
-      }),
-    ),
-  ].filter((node): node is HTMLElement => node !== null);
-  screen.append(...panels);
-  const back = el("button", { type: "button", class: "primary" }, copy.createBack);
-  back.addEventListener("click", () => {
-    state.screen = "setup";
-    render();
+  );
+  const title =
+    state.boardViewMode === "daily"
+      ? copy.modeDaily
+      : `${state.boardViewMode === "create" ? copy.modeCreate : copy.modeDraft} · ${
+          DIFFICULTIES.find((row) => row.id === state.boardViewDifficulty)?.labelHe ?? ""
+        }`;
+  const panel = renderBoardPanel({
+    mode: state.boardViewMode,
+    title,
+    hideNote: true,
+    playerName: state.playerName,
+    ...(state.boardViewMode === "daily" ? { dayKey: state.dayKey, difficulty: "open" } : { difficulty: state.boardViewDifficulty }),
   });
-  screen.append(el("div", { class: "confirm-bar" }, back));
+  if (panel) screen.append(panel);
   return screen;
 }
 

@@ -21,14 +21,14 @@ export function renderMemberPicker(opts: {
   const { ids, slate, picks, focusId, canPick, variant } = opts;
   const hasTeam = picks.length > 0;
   const wrap = el("div", { class: `member-picker is-${variant}`, "aria-label": copy.chooseMember });
-  const back = el("button", { type: "button", class: "back-btn is-loud" }, copy.backToParties);
+  const back = el("button", { type: "button", class: "back-btn" }, copy.backToParties);
   back.addEventListener("click", () => opts.onCloseSlate());
   wrap.append(
     el(
       "div",
       { class: "member-head" },
-      back,
       el("strong", {}, slateLabelHe(slate)),
+      back,
     ),
     pipKey(hasTeam),
   );

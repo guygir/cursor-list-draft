@@ -375,6 +375,11 @@ export function prefetchPortraits(): void {
     img.referrerPolicy = "no-referrer";
     img.src = row.url.split("?")[0]!;
   }
+  for (const src of Object.values(LOOK_PORTRAITS)) {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  }
 }
 
 export function portraitUrl(id: PersonId): string | null {

@@ -250,12 +250,11 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     const person = getPerson(node.id);
     const hot = view.focusId === node.id || view.hoverId === node.id;
     const photo = portraitSrc(node.id);
-    const compact = nodes.length >= 7;
     const face = el(
       "button",
       {
         type: "button",
-        class: `tree-face person-node on-player ${node.hub ? "is-hub" : ""} ${node.ghost ? "is-ghost" : ""} ${hot ? "is-hot" : ""} ${compact ? "is-compact" : ""}`,
+        class: `tree-face person-node on-player ${node.hub ? "is-hub" : ""} ${node.ghost ? "is-ghost" : ""} ${hot ? "is-hot" : ""}`,
         "data-person": node.id,
         style: `--x:${((node.x / SIZE) * 100).toFixed(2)}%;--y:${((node.y / SIZE) * 100).toFixed(2)}%;`,
       },
@@ -320,13 +319,11 @@ export interface PolygonLayout {
   radius: number;
 }
 
-/** n faces sit on one regular n-gon: triangle, square, pentagon, hexagon… */
+/** n faces sit on one regular n-gon. Radius stays tight so photos sit on the vertices. */
 export function polygonLayout(count: number): PolygonLayout {
   if (count <= 1) return { count, radius: 0 };
-  if (count === 2) return { count, radius: 88 };
-  if (count <= 5) return { count, radius: 128 };
-  if (count <= 7) return { count, radius: 138 };
-  return { count, radius: 152 };
+  if (count === 2) return { count, radius: 70 };
+  return { count, radius: 108 };
 }
 
 function placePolygon(

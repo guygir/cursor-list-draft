@@ -42,7 +42,7 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   const player = view.lists.find((l) => l.isPlayer);
   const focus = view.focusId ? getPerson(view.focusId) : null;
   const inspectId = view.hoverId ?? view.focusId;
-  const root = el("div", { class: "screen draft-screen" });
+  const root = el("div", { class: `screen draft-screen ${player?.picks.length ? "has-hub" : ""}` });
 
   root.append(renderHeader(view, player, handlers));
   root.append(renderSlots(player, view.lists));
