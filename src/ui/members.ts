@@ -30,6 +30,7 @@ export function renderMemberPicker(opts: {
       el("strong", {}, slateLabelHe(slate)),
       back,
     ),
+    el("p", { class: "member-legend" }, copy.pickWithButton),
     pipKey(hasTeam),
   );
 

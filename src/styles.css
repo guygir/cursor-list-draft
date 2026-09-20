@@ -285,7 +285,6 @@ input {
 
 .board-open {
   width: auto;
-  color: var(--yellow);
 }
 
 .n-pick {
@@ -393,7 +392,9 @@ a.primary {
   color: var(--ink-deep);
 }
 
-.chrome-btn {
+.chrome-btn,
+.chrome-btn.mast-board,
+.chrome-btn.board-open {
   appearance: none;
   border: 0;
   background: var(--yellow);
@@ -2148,7 +2149,6 @@ a.primary {
 
 .board-open {
   font-weight: 700;
-  color: var(--yellow);
 }
 
 .board-panel {

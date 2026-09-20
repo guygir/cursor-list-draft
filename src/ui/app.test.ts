@@ -69,6 +69,7 @@ describe("playable draft UI", () => {
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
+    expect(root.textContent).toContain("הכפתור הצהוב");
     expect(root.textContent).toContain("חמשת הפסים");
     expect(root.textContent).toContain("האדם עצמו");
     expect(root.textContent).toContain("נתניהו");
