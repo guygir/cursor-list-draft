@@ -1,7 +1,12 @@
 import { getPerson } from "../data/pool";
+import { portraitSrc } from "../data/portraits";
+import { pairRelation, relationColor } from "../systems/chemistry";
 import type { ElectionResult } from "../systems/resolve";
+import { DEMAND_SCALE } from "../systems/scores";
+import { KNESSET_SEATS } from "../systems/seats";
 import { copy } from "./copy";
 import { el } from "./dom";
+import { polygonLayout, polygonPoints } from "./tree";
 
 export interface ShareCaption {
   title: string;
@@ -15,9 +20,9 @@ export async function makeResultCard(opts: {
   kind: "square" | "story";
 }): Promise<Blob> {
   const player = opts.result.lists.find((row) => row.list.isPlayer);
-  const won = opts.result.winnerId === "player";
   const w = 1080;
   const h = opts.kind === "story" ? 1920 : 1080;
+  const cardH = opts.kind === "story" ? 760 : 460;
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -25,45 +30,171 @@ export async function makeResultCard(opts: {
   if (!ctx) throw new Error("canvas");
   ctx.fillStyle = "#191817";
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = "#f4d53b";
-  ctx.fillRect(0, 0, w, 18);
-  ctx.fillStyle = "#ede9e0";
-  ctx.textAlign = "center";
-  ctx.font = "700 72px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(copy.title, w / 2, 160);
-  ctx.fillStyle = "#f4d53b";
-  ctx.font = "700 48px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(player?.list.labelHe ?? copy.yourParty, w / 2, 250);
-  ctx.fillStyle = "#a8a291";
-  ctx.font = "500 32px Assistant, Arial Hebrew, sans-serif";
-  ctx.fillText(opts.playerName, w / 2, 310);
-  const hub = player?.list.picks[0] ? getPerson(player.list.picks[0]).nameHe : "";
-  if (hub) ctx.fillText(hub, w / 2, 360);
-  ctx.fillStyle = "#f4d53b";
-  ctx.font = "800 220px Rubik, sans-serif";
-  ctx.fillText(String(player?.seats ?? 0), w / 2, h / 2 + 40);
-  ctx.fillStyle = "#ede9e0";
-  ctx.font = "700 48px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(copy.seats, w / 2, h / 2 + 110);
-  ctx.fillStyle = won ? "#f4d53b" : "#c45a4e";
-  ctx.font = "700 40px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(won ? copy.win : copy.loss, w / 2, h / 2 + 180);
-  ctx.fillStyle = "#a8a291";
-  ctx.font = "500 28px Assistant, Arial Hebrew, sans-serif";
-  const why = opts.result.why.he.slice(0, 72);
-  ctx.fillText(why, w / 2, h - 160);
-  ctx.fillStyle = "#f4d53b";
-  ctx.font = "600 26px Assistant, Arial Hebrew, sans-serif";
-  ctx.fillText(copy.winBySeats, w / 2, h - 100);
+  drawYellowCard(ctx, {
+    x: 40,
+    y: 40,
+    w: w - 80,
+    h: cardH,
+    party: player?.list.labelHe ?? copy.yourParty,
+    seats: player?.seats ?? 0,
+    names: player?.list.picks.map((id) => getPerson(id).nameHe).join(" · ") ?? "",
+    cohesion: player ? Math.round(player.cohesion * 100) : 0,
+    demand: player ? Math.round(Math.min(100, (player.massAfterSplit / DEMAND_SCALE) * 100)) : 0,
+  });
+  await drawGraph(ctx, {
+    x: 40,
+    y: cardH + 64,
+    w: w - 80,
+    h: h - cardH - 104,
+    picks: player?.list.picks ?? [],
+  });
   return await canvasToPng(canvas);
 }
 
 export function shareCaption(seats: number, party: string, url: string): ShareCaption {
   return {
     title: `${copy.title} · ${seats} ${copy.seats}`,
-    text: `${party}: ${seats} ${copy.seats}. ${copy.winBySeats}\n${url}`,
+    text: `${copy.shareBoast(seats, party)} ${url}`,
     url,
   };
+}
+
+function drawYellowCard(
+  ctx: CanvasRenderingContext2D,
+  box: { x: number; y: number; w: number; h: number; party: string; seats: number; names: string; cohesion: number; demand: number },
+): void {
+  roundRect(ctx, box.x, box.y, box.w, box.h, 36);
+  ctx.fillStyle = "#f4d53b";
+  ctx.fill();
+  ctx.fillStyle = "#191817";
+  ctx.textAlign = "right";
+  ctx.direction = "rtl";
+  ctx.font = "800 56px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(box.party, box.x + box.w - 48, box.y + 78);
+  ctx.font = "700 28px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(copy.yourParty, box.x + box.w - 48, box.y + 118);
+  ctx.textAlign = "left";
+  ctx.direction = "ltr";
+  ctx.font = "800 92px Rubik, sans-serif";
+  const seatLabel = String(box.seats);
+  const seatW = ctx.measureText(seatLabel).width;
+  ctx.fillText(seatLabel, box.x + 48, box.y + 200);
+  ctx.font = "700 28px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(copy.seats, box.x + 48 + seatW + 24, box.y + 190);
+  drawBar(ctx, box.x + 48, box.y + 220, box.w - 96, (box.seats / KNESSET_SEATS) * 100);
+  ctx.fillStyle = "#191817";
+  ctx.textAlign = "right";
+  ctx.direction = "rtl";
+  ctx.font = "500 26px Assistant, Arial Hebrew, sans-serif";
+  wrapText(ctx, box.names, box.x + box.w - 48, box.y + 290, box.w - 96, 34);
+  ctx.font = "600 22px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(`${copy.demand}  ${box.demand}`, box.x + box.w / 2 + 20, box.y + box.h - 78);
+  ctx.fillText(`${copy.credibility}  ${box.cohesion}`, box.x + box.w - 48, box.y + box.h - 78);
+  drawBar(ctx, box.x + 48, box.y + box.h - 58, (box.w - 120) / 2, box.demand);
+  drawBar(ctx, box.x + box.w / 2 + 12, box.y + box.h - 58, (box.w - 120) / 2, box.cohesion);
+}
+
+async function drawGraph(
+  ctx: CanvasRenderingContext2D,
+  box: { x: number; y: number; w: number; h: number; picks: string[] },
+): Promise<void> {
+  ctx.fillStyle = "#12151c";
+  ctx.fillRect(box.x, box.y, box.w, box.h);
+  const ids = box.picks;
+  if (ids.length === 0) return;
+  const layout = polygonLayout(ids.length);
+  const size = 420;
+  const points = polygonPoints(ids.length, layout.radius);
+  const scale = Math.min(box.w, box.h) / size;
+  const ox = box.x + (box.w - size * scale) / 2;
+  const oy = box.y + (box.h - size * scale) / 2;
+  const mapped = points.map((p) => ({ x: ox + p.x * scale, y: oy + p.y * scale }));
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const rel = pairRelation(ids[i]!, ids[j]!);
+      const a = mapped[i]!;
+      const b = mapped[j]!;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = relationColor(rel.s);
+      ctx.lineWidth = rel.s < 0 ? 4 : 2;
+      ctx.globalAlpha = 0.85;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+  const faces = await Promise.all(ids.map((id) => loadFace(portraitSrc(id))));
+  const r = 28;
+  mapped.forEach((p, i) => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    const img = faces[i];
+    if (img) ctx.drawImage(img, p.x - r, p.y - r, r * 2, r * 2);
+    else {
+      ctx.fillStyle = "#2a2618";
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = i === 0 ? "#c6a15b" : "#191817";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = "#ede9e0";
+    ctx.font = "600 18px Rubik, Arial Hebrew, sans-serif";
+    ctx.textAlign = "center";
+    ctx.direction = "rtl";
+    ctx.fillText(getPerson(ids[i]!).nameHe, p.x, p.y + r + 22);
+  });
+}
+
+function drawBar(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, pct: number): void {
+  ctx.fillStyle = "rgba(25, 24, 23, 0.16)";
+  roundRect(ctx, x, y, w, 14, 7);
+  ctx.fill();
+  ctx.fillStyle = "rgba(25, 24, 23, 0.45)";
+  roundRect(ctx, x, y, Math.max(10, (w * Math.min(100, pct)) / 100), 14, 7);
+  ctx.fill();
+}
+
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lineH: number): void {
+  const words = text.split(" · ");
+  let line = "";
+  let row = 0;
+  for (const word of words) {
+    const next = line ? `${line} · ${word}` : word;
+    if (ctx.measureText(next).width > max && line) {
+      ctx.fillText(line, x, y + row * lineH);
+      line = word;
+      row += 1;
+      if (row > 1) break;
+    } else line = next;
+  }
+  if (row <= 1) ctx.fillText(line, x, y + row * lineH);
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function loadFace(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
 export function canShareFiles(file: File): boolean {

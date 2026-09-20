@@ -248,7 +248,7 @@ Quality floor: phone + desktop, visible focus, reduced motion, empty/disabled st
 
 - 12 real people in a shared pool (starter table below). **Shipped expansion (Sep 2026):** published 2026 top-10s per slate, including Ra'am / Blue and White / Joint List through slot 10 from CEC/Wikipedia. No invented names.
 - Player list of **10 slots** (not 20). Snake draft vs **N ∈ {1,2,3}** CPU lists of 10.
-- Difficulty is a **party cap**: unlimited, 3, or 1 name per slate. Easy = no cap. CPU (and the sim’s player) roll 35/25/15/25 on the ranked legal pool. The on-screen auto-pick button stays greedy.
+- Handicap is a **party cap**: open or 3 names per slate. Old one-per-party rows fold into until-3 on the board. CPU (and the sim’s player) roll 35/25/15/25 on the ranked legal pool. The on-screen auto-pick button stays greedy.
 - Tree or hub-and-spokes that recolours on pick, with at least a few sourced red edges.
 - Rank-weighted asymmetric cohesion + centroid demand + split + `α` conversion.
 - Threshold 3.25% + 120-seat allocation (simplified).

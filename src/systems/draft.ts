@@ -8,6 +8,7 @@ export const MIN_CPU = 1;
 export const MAX_CPU = 3;
 
 export type DifficultyId = "open" | "three" | "one";
+export type HandicapId = "open" | "three";
 
 export interface Difficulty {
   id: DifficultyId;
@@ -18,20 +19,27 @@ export interface Difficulty {
 }
 
 export const DIFFICULTIES: readonly Difficulty[] = [
-  { id: "open", slateCap: null, labelHe: "קל", hintHe: "בלי הגבלת מפלגה" },
+  { id: "open", slateCap: null, labelHe: "פתוח", hintHe: "בלי הגבלת מפלגה" },
   { id: "three", slateCap: 3, labelHe: "עד 3", hintHe: "עד שלושה שמות מאותה מפלגה" },
-  { id: "one", slateCap: 1, labelHe: "אחד", hintHe: "שם אחד מכל מפלגה" },
 ];
 
-/** Old five/two rows fold into the nearest remaining cap. */
+/** Hidden: old one-per-party still resolves in tests and stored rows. */
+const LEGACY_ONE: Difficulty = { id: "one", slateCap: 1, labelHe: "עד 3", hintHe: "שם אחד מכל מפלגה" };
+
+/** Old five/two/one rows fold to until-3 on the board. Draft "one" still caps at 1. */
 export function normalizeDifficulty(id: string | undefined): DifficultyId {
   if (id === "one") return "one";
   if (id === "three" || id === "five" || id === "two") return "three";
   return "open";
 }
 
+export function boardDifficulty(id: string | undefined): HandicapId {
+  return normalizeDifficulty(id) === "open" ? "open" : "three";
+}
+
 export function difficultyById(id: string | undefined): Difficulty {
   const key = normalizeDifficulty(id);
+  if (key === "one") return LEGACY_ONE;
   return DIFFICULTIES.find((row) => row.id === key) ?? DIFFICULTIES[0]!;
 }
 

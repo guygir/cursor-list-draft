@@ -105,28 +105,22 @@ export function renderResolve(
 
   const replay = el("button", { type: "button", class: "primary" }, copy.replay);
   replay.addEventListener("click", onReplay);
-  const bar = el("div", { class: "confirm-bar is-split" }, replay);
+  const copyLink = el("button", { type: "button", class: "share-btn" }, copy.share);
+  copyLink.addEventListener("click", async () => {
+    await opts.onShare?.();
+    copyLink.textContent = copy.shared;
+  });
+  const actions = el("div", { class: "result-actions" });
+  actions.append(el("div", { class: "result-actions-row" }, replay, opts.onShare ? copyLink : null));
   if (opts.playerName != null) {
-    bar.append(renderShareRow(result, opts.playerName, opts.shareUrl ?? location.href, opts.onShare));
-  } else if (opts.onShare) {
-    const share = el("button", { type: "button", class: "share-btn" }, copy.share);
-    share.addEventListener("click", async () => {
-      await opts.onShare?.();
-      share.textContent = copy.shared;
-    });
-    bar.append(share);
+    actions.append(renderShareRow(result, opts.playerName, opts.shareUrl ?? location.href));
   }
-  root.append(bar);
+  root.append(actions);
   if (opts.shareHint) root.append(el("p", { class: "no-board" }, opts.shareHint));
   return root;
 }
 
-function renderShareRow(
-  result: ElectionResult,
-  playerName: string,
-  shareUrl: string,
-  onShare?: () => Promise<void> | void,
-): HTMLElement {
+function renderShareRow(result: ElectionResult, playerName: string, shareUrl: string): HTMLElement {
   const row = el("div", { class: "share-row dialog-actions" });
   const { wa, ig } = klafiShareButtons();
   wa.addEventListener("click", () => {
@@ -148,14 +142,6 @@ function renderShareRow(
     });
   });
   row.append(wa, ig);
-  if (onShare) {
-    const link = el("button", { type: "button", class: "share-btn" }, copy.share);
-    link.addEventListener("click", async () => {
-      await onShare();
-      link.textContent = copy.shared;
-    });
-    row.append(link);
-  }
   return row;
 }
 
@@ -195,7 +181,7 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
     ),
     el("p", { class: "row-names" }, names),
     scoreMeters(cohesionPct, demandPct, "fresh", { delay: rowDelay + NIGHT_METER_DELAY_MS }),
-    el("p", { class: "hill-note" }, `${row.neighborhood.labelHe} · ${copy.afterSplit}`),
+    el("p", { class: "hill-note" }, row.neighborhood.labelHe),
     row.passedThreshold ? null : el("p", { class: "tone-red" }, `${copy.dropped} · ${copy.threshold}`),
   );
   return item;

@@ -31,9 +31,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("אמינות");
     expect(root.textContent).toContain("שמועות");
     expect(root.textContent).toContain("3.25%");
-    expect(root.textContent).toContain("רמת קושי");
+    expect(root.textContent).toContain("הנדיקאפ");
     expect(root.textContent).toContain("בלי הגבלת מפלגה");
-    expect(root.textContent).toContain("שם אחד מכל מפלגה");
+    expect(root.textContent).not.toContain("שם אחד מכל מפלגה");
     expect(root.textContent).not.toContain("עד חמישה שמות");
     expect(root.textContent).not.toContain("עד שניים מאותה מפלגה");
     expect(root.textContent).toContain("יצירת מנהיג");
@@ -43,7 +43,7 @@ describe("playable draft UI", () => {
     expect(root.querySelector(".mast-board")).toBeTruthy();
     expect(root.textContent).toContain("שם השחקן");
     expect(root.textContent).toContain("שם המפלגה");
-    expect(root.textContent).toContain("עוד אין שיא במצב הזה");
+    expect(root.textContent).toContain("עוד אין שיא שלך במצב הזה");
     expect(root.textContent).toContain("על המכשיר הזה");
     const nPick = root.querySelector(".n-pick");
     const daily = [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) =>
@@ -58,7 +58,7 @@ describe("playable draft UI", () => {
     [...root.querySelectorAll<HTMLButtonElement>("button")].find((btn) => btn.classList.contains("mast-board"))?.click();
     expect(root.textContent).toContain("עוד אין תוצאה");
     expect(root.textContent).not.toContain("דראפט · עד 5");
-    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    root.querySelector<HTMLButtonElement>(".quit-btn")?.click();
 
     const start = root.querySelector<HTMLButtonElement>(".primary");
     start?.click();
@@ -124,7 +124,7 @@ describe("playable draft UI", () => {
     expect(root.querySelectorAll(".score-meter").length).toBeGreaterThan(0);
     expect(root.textContent).not.toContain("מה שהעץ");
     expect(root.textContent).not.toContain("מעבד");
-    expect(root.textContent).toContain("דראפט · קל");
+    expect(root.textContent).toContain("דראפט · פתוח");
     expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
     expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
     expect(root.querySelector(".why-line")?.textContent).not.toMatch(/^סתירה ב־1–2/);
@@ -231,5 +231,33 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("זה צעצוע");
     expect(root.querySelector(".identity-field .name-edit.is-party")).toBeTruthy();
     expect(root.querySelector(".draft-screen")).toBeNull();
+  });
+
+  it("opens the leaderboard on daily with a top back button", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    root.querySelector<HTMLButtonElement>(".mast-board")?.click();
+    expect(root.textContent).toContain("אתגר היום");
+    expect(root.querySelector(".quit-btn")?.textContent).toContain("חזרה לתפריט");
+    expect(root.querySelector(".board-filters")).toBeTruthy();
+    expect(root.querySelectorAll(".board-panel").length).toBe(1);
+    root.querySelector<HTMLButtonElement>(".quit-btn")?.click();
+    expect(root.querySelector(".setup-screen")?.textContent).toContain("זה צעצוע");
+  });
+
+  it("prefills create-leader with a random name and look faces", () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    [...root.querySelectorAll<HTMLButtonElement>(".mode-btn")].find((btn) =>
+      btn.textContent?.includes("יצירת מנהיג"),
+    )?.click();
+    root.querySelector<HTMLButtonElement>(".primary")?.click();
+    const name = root.querySelector<HTMLInputElement>("#leader-name");
+    expect(name?.value.length).toBeGreaterThan(0);
+    expect(root.querySelector<HTMLImageElement>(".look-btn[data-look='woman'] img")?.src).toMatch(
+      /avatar-grown-woman\.png$/,
+    );
   });
 });

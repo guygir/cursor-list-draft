@@ -1,4 +1,4 @@
-import { normalizeDifficulty } from "./draft";
+import { boardDifficulty } from "./draft";
 
 export type BoardMode = "draft" | "create" | "daily";
 
@@ -81,7 +81,7 @@ export function boardForMode(
     rows.filter((row) => {
       if (row.mode !== query.mode) return false;
       if (query.mode === "daily" && query.dayKey && row.dayKey !== query.dayKey) return false;
-      if (query.difficulty && normalizeDifficulty(row.difficulty) !== normalizeDifficulty(query.difficulty)) {
+      if (query.difficulty && boardDifficulty(row.difficulty) !== boardDifficulty(query.difficulty)) {
         return false;
       }
       return true;
@@ -91,6 +91,12 @@ export function boardForMode(
 
 export function rankOf(rows: BoardEntry[], id: string): number {
   return sortBoard(rows).findIndex((row) => row.id === id) + 1;
+}
+
+export function playerBestOf(rows: BoardEntry[], playerName: string): BoardEntry | null {
+  const needle = playerName.trim();
+  if (!needle) return null;
+  return sortBoard(rows.filter((row) => (row.playerName ?? "").trim() === needle))[0] ?? null;
 }
 
 export function isBoardMode(value: string): value is BoardMode {

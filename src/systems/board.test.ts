@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardForMode, memoryStore, rankOf, readBoard, recordRun, sortBoard } from "./board";
+import { boardForMode, memoryStore, playerBestOf, rankOf, readBoard, recordRun, sortBoard } from "./board";
 
 describe("local leaderboard", () => {
   it("ranks by seats then cohesion and stays on the device store", () => {
@@ -24,12 +24,31 @@ describe("local leaderboard", () => {
     expect(sortBoard(readBoard(store))[0]?.hubName).toBe("איתי");
   });
 
+  it("picks the same player's best local row", () => {
+    const store = memoryStore();
+    recordRun(
+      { mode: "draft", playerName: "נועה", hubName: "א", seats: 10, cohesion: 0.4, demand: 1, won: false, nCpus: 1, difficulty: "open", share: "/" },
+      store,
+    );
+    recordRun(
+      { mode: "draft", playerName: "נועה", hubName: "ב", seats: 22, cohesion: 0.5, demand: 1, won: true, nCpus: 1, difficulty: "open", share: "/" },
+      store,
+    );
+    recordRun(
+      { mode: "draft", playerName: "יובל", hubName: "ג", seats: 40, cohesion: 0.9, demand: 1, won: true, nCpus: 1, difficulty: "open", share: "/" },
+      store,
+    );
+    const mine = playerBestOf(boardForMode(readBoard(store), { mode: "draft", difficulty: "open" }), "נועה");
+    expect(mine?.seats).toBe(22);
+    expect(mine?.hubName).toBe("ב");
+  });
+
   it("does not invent a global player count", () => {
     const rows = readBoard(memoryStore());
     expect(rows).toEqual([]);
   });
 
-  it("splits difficulties as separate boards", () => {
+  it("splits handicaps as separate boards and folds old one-per-party into until-3", () => {
     const store = memoryStore();
     recordRun(
       { mode: "draft", hubName: "קל", seats: 40, cohesion: 0.4, demand: 20, won: true, nCpus: 1, difficulty: "open", share: "/" },
@@ -42,8 +61,8 @@ describe("local leaderboard", () => {
     const rows = readBoard(store);
     expect(boardForMode(rows, { mode: "draft", difficulty: "open" })).toHaveLength(1);
     expect(boardForMode(rows, { mode: "draft", difficulty: "open" })[0]?.hubName).toBe("קל");
+    expect(boardForMode(rows, { mode: "draft", difficulty: "three" })[0]?.hubName).toBe("קשה");
     expect(boardForMode(rows, { mode: "draft", difficulty: "one" })[0]?.hubName).toBe("קשה");
-    expect(boardForMode(rows, { mode: "draft", difficulty: "three" })).toEqual([]);
   });
 
   it("folds old five/two rows into the until-3 board", () => {
