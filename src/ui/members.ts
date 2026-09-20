@@ -38,9 +38,7 @@ export function renderMemberPicker(opts: {
     const person = getPerson(id);
     const team = hasTeam ? teamRelation(picks, id) : null;
     const photo = portraitSrc(id);
-    const title = team
-      ? `${copy.sideTone}. ${copy.sideToneHint} ${team.reasonHe}`
-      : undefined;
+    const title = team?.reasonHe;
     const btn = el(
       "button",
       {

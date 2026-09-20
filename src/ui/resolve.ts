@@ -51,7 +51,6 @@ export function renderResolve(
       el("div", { class: "mast-tools" }, renderHowCalc()),
     ),
     el("p", { class: `verdict ${won ? "is-win" : "is-loss"}`, role: "status" }, verdict),
-    el("p", { class: "win-rule" }, copy.winBySeats),
     el("div", { class: "ticker" }, copy.disclosure),
   );
 

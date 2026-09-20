@@ -176,10 +176,7 @@ function renderPickDock(view: DraftView, handlers: DraftHandlers, picks: PersonI
       }),
     );
   } else if (picks.length) {
-    dock.append(el("p", { class: "dock-kicker" }, copy.chooseParty));
     dock.append(renderPartyChips(view, handlers));
-  } else if (!view.openSlate) {
-    dock.append(el("p", { class: "dock-kicker" }, copy.chooseMemberHint));
   }
   return dock;
 }

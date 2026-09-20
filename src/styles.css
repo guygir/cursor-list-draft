@@ -95,7 +95,9 @@ input {
 .mast-tools {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .tag,
@@ -767,6 +769,10 @@ a.primary {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.hint-line:empty {
+  display: none;
 }
 
 .edge-tip {
@@ -1568,6 +1574,11 @@ a.primary {
   margin-top: 10px;
 }
 
+.edge-card:empty,
+.result-edge:empty {
+  display: none;
+}
+
 .bar-track {
   height: 8px;
   background: rgba(var(--ink-rgb), 0.08);
@@ -2072,12 +2083,22 @@ a.primary {
   pointer-events: none;
 }
 
+.tips-dim,
 .tips-marks {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
+  pointer-events: none;
+}
+
+.tips-dim {
+  z-index: 0;
+}
+
+.tips-marks {
+  z-index: 2;
 }
 
 .tips-ring {
@@ -2096,18 +2117,21 @@ a.primary {
 .tips-sheet {
   width: min(22rem, calc(100% - 28px));
   margin: auto;
-  padding: 20px 18px 16px;
-  border: 1px solid var(--line);
-  background: var(--studio);
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(244, 213, 59, 0.32);
+  background: rgba(38, 36, 32, 0.62);
   color: var(--ink);
   text-align: right;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .tips-card {
   position: absolute;
+  z-index: 1;
   pointer-events: auto;
   margin: 0;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
 .tips-sheet .eyebrow {

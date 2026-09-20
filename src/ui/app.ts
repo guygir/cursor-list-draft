@@ -53,7 +53,7 @@ import { renderNameEdit } from "./name-edit";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
 import { resetMeters } from "./meters";
-import { maybeShowTips } from "./tips";
+import { maybeShowTips, renderTipsButton } from "./tips";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
@@ -284,7 +284,7 @@ function renderSetup(): HTMLElement {
       "header",
       { class: "mast tall" },
       el("div", { class: "brand" }, el("h1", {}, copy.title), el("p", { class: "tagline" }, copy.tagline)),
-      el("div", { class: "mast-tools" }, boardBtn, renderHowCalc()),
+      el("div", { class: "mast-tools" }, boardBtn, renderTipsButton(), renderHowCalc()),
     ),
     el("p", { class: "sponsor" }, copy.sponsor),
     el("p", { class: "disclosure" }, copy.disclosure),

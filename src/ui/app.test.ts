@@ -45,7 +45,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
     expect(root.querySelector(".mast")?.textContent).toContain("לוח שיאים");
+    expect(root.querySelector(".mast")?.textContent).toContain("איך משחקים");
     expect(root.querySelector(".mast-board.chrome-btn")).toBeTruthy();
+    expect(root.querySelector(".tips-open.chrome-btn")?.textContent).toContain("איך משחקים");
     expect(root.textContent).toContain("שם השחקן");
     expect(root.textContent).toContain("שם המפלגה");
     expect(root.textContent).toContain("עוד אין שיא שלך במצב הזה");
@@ -134,8 +136,9 @@ describe("playable draft UI", () => {
     expect(root.textContent).not.toContain("מה שהעץ");
     expect(root.textContent).not.toContain("מעבד");
     expect(root.textContent).toContain("דראפט · פתוח");
-    expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
+    expect(root.querySelector(".win-rule")).toBeNull();
     expect(root.querySelector(".verdict")).toBeTruthy();
+    expect(root.querySelector(".verdict")?.textContent).toMatch(/ניצחון|הפסד|מנדטים/);
     expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
     expect(root.querySelector(".why-line")?.textContent).not.toMatch(/^סתירה ב־1–2/);
     expect(root.querySelector(".seat-line")).toBeTruthy();
@@ -285,7 +288,10 @@ describe("playable draft UI", () => {
     expect(sheet?.textContent).toContain("אל תציגו שוב");
     const hide = document.querySelector<HTMLInputElement>("#tips-hide");
     expect(hide?.checked).toBe(true);
+    expect(document.querySelector(".tips-dim")).toBeTruthy();
+    expect(document.querySelector(".tips-veil")).toBeTruthy();
     expect(document.querySelector(".tips-marks")).toBeTruthy();
+    expect(document.querySelector(".tips-card")?.classList.contains("tips-sheet")).toBe(true);
     [...document.querySelectorAll<HTMLButtonElement>(".tips-card button")].find((btn) => btn.textContent === "דילוג")?.click();
     expect(document.querySelector(".tips-overlay")).toBeNull();
     document.body.innerHTML = "";
@@ -293,5 +299,7 @@ describe("playable draft UI", () => {
     document.body.append(again);
     mount(again);
     expect(document.querySelector(".tips-overlay")).toBeNull();
+    again.querySelector<HTMLButtonElement>(".tips-open")?.click();
+    expect(document.querySelector(".tips-overlay")?.textContent).toContain("המשחק");
   });
 });

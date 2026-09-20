@@ -94,10 +94,7 @@ export function renderHubSpokes(view: TreeView, handlers: TreeHandlers): HTMLEle
 
 export function renderEdgeCard(key: string | null): HTMLElement {
   const box = el("aside", { class: "edge-card", "aria-live": "polite" });
-  if (!key) {
-    box.append(el("p", { class: "muted" }, copy.edgeHoverHint));
-    return box;
-  }
+  if (!key) return box;
   fillEdgeReason(box, key);
   return box;
 }
@@ -143,7 +140,7 @@ function fillEdgeReason(box: HTMLElement, key: string): void {
 
 export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: string | null = null): string {
   if (edgeKeyValue) return edgeLine(edgeKeyValue);
-  if (!id) return picks.length ? copy.noHubAfter : copy.chooseParty;
+  if (!id) return "";
   const person = getPerson(id);
   const hill = nearestNeighborhood(person.cell).labelHe;
   const peak = ASPECT_LABEL_HE[peakAspect(person.aspects, person.slateId)];
@@ -157,7 +154,6 @@ export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: st
 
 function renderPartyField(view: TreeView, handlers: TreeHandlers): HTMLElement {
   const field = el("div", { class: "party-field", role: "group", "aria-label": copy.chooseParty });
-  field.append(el("p", { class: "board-kicker" }, copy.chooseParty));
 
   for (const bloc of BLOCS) {
     const slates = bloc.slates.filter((slate) => remainingInSlate(view.remaining, slate) > 0);
