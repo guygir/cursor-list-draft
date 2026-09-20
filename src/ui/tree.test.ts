@@ -16,10 +16,9 @@ describe("constellation polygons", () => {
     expect(one).toEqual([{ x: 210, y: 200 }]);
   });
 
-  it("labels the hover concat so the four bits are readable", () => {
-    expect(hintFor("sukkot", ["liberman"])).toMatch(/מול הרשימה:/);
-    expect(hintFor("sukkot", ["liberman"])).toMatch(/בולט:/);
-    expect(hintFor("sukkot", ["liberman"])).toMatch(/גבעה:/);
-    expect(hintFor("netanyahu", ["netanyahu"])).toMatch(/בולט:/);
+  it("keeps the hover line as name, chemistry, peak, hill", () => {
+    expect(hintFor("sukkot", ["liberman"])).toContain("צבי סוכות");
+    expect(hintFor("netanyahu", ["netanyahu"])).toContain("בנימין נתניהו");
+    expect(hintFor("netanyahu", ["netanyahu"])).toContain("ליכוד");
   });
 });

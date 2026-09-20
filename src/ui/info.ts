@@ -1,5 +1,6 @@
 import { copy } from "./copy";
 import { el } from "./dom";
+import { showTips } from "./tips";
 
 export function renderHowCalc(): HTMLElement {
   const wrap = el("div", { class: "how-calc" });
@@ -41,6 +42,7 @@ export function renderHowCalc(): HTMLElement {
       "aria-label": copy.howCalcTitle,
     },
     el("p", { class: "how-calc-title" }, copy.howCalcTitle),
+    replayTips(),
     ...blocks,
   );
 
@@ -74,4 +76,13 @@ export function renderHowCalc(): HTMLElement {
 
   wrap.append(button, panel);
   return wrap;
+}
+
+function replayTips(): HTMLElement {
+  const btn = el("button", { type: "button", class: "text-btn tips-replay" }, copy.tipsReplay);
+  btn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    showTips();
+  });
+  return btn;
 }

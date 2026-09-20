@@ -30,9 +30,8 @@ export function renderMemberPicker(opts: {
       el("strong", {}, slateLabelHe(slate)),
       back,
     ),
-    el("p", { class: "member-legend" }, copy.pickWithButton),
-    pipKey(hasTeam),
   );
+  if (!hasTeam) wrap.append(el("div", { class: "pip-key" }, compactPipKey()));
 
   const grid = el("div", { class: "member-grid" });
   for (const id of ids) {
@@ -96,11 +95,8 @@ export function renderMemberPicker(opts: {
   return wrap;
 }
 
-function pipKey(hasTeam: boolean): HTMLElement {
-  const box = el("div", { class: "pip-key" });
-  box.append(el("p", { class: "member-legend" }, copy.pipExplain));
-  box.append(el("p", { class: "member-legend" }, copy.pipPeak));
-  const items = el("ul", { class: "pip-key-list" });
+export function compactPipKey(): HTMLElement {
+  const items = el("ul", { class: "pip-key-list", "aria-label": copy.aspectLegend });
   for (const id of ASPECT_IDS) {
     items.append(
       el(
@@ -111,9 +107,7 @@ function pipKey(hasTeam: boolean): HTMLElement {
       ),
     );
   }
-  box.append(items);
-  if (hasTeam) box.append(el("p", { class: "member-legend" }, `${copy.sideTone}. ${copy.sideToneHint}`));
-  return box;
+  return items;
 }
 
 function aspectPips(person: Person): HTMLElement {

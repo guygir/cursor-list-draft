@@ -3,16 +3,21 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { disableTips, resetTips } from "../systems/tips";
 import { mount } from "./app";
+import { closeTips } from "./tips";
 
 describe("playable draft UI", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")));
     localStorage.clear();
+    resetTips();
+    disableTips();
     history.replaceState({}, "", "/");
   });
 
   afterEach(() => {
+    closeTips();
     document.body.innerHTML = "";
     vi.useRealTimers();
     vi.unstubAllGlobals();
@@ -69,9 +74,6 @@ describe("playable draft UI", () => {
 
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
-    expect(root.textContent).toContain("הכפתור הצהוב");
-    expect(root.textContent).toContain("חמשת הפסים");
-    expect(root.textContent).toContain("האדם עצמו");
     expect(root.textContent).toContain("נתניהו");
     expect(root.textContent).toContain("כלכלה");
     expect(root.textContent).not.toContain("איתמר בן גביר");
@@ -85,19 +87,19 @@ describe("playable draft UI", () => {
     expect(shown.join(" ")).not.toContain("בנימין נתניהו");
     expect(root.querySelector(".notice-rail")?.textContent).toMatch(/בחרה את .+ בבחירה/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
-    expect(root.textContent).toMatch(/ראש אחד|מתעדכנים בכל בחירה/);
     const credMeter = root.querySelector<HTMLButtonElement>(".score-meter.is-cred");
     credMeter?.click();
     expect(credMeter?.classList.contains("is-open")).toBe(true);
     expect(credMeter?.textContent).toContain("מפלגה אחת");
     expect(root.querySelector(".score-meter.is-demand")?.textContent).toContain("חולקות");
-    expect(root.textContent).toContain("צבע הקו מראה כמה חזק החיבור");
-    expect(root.querySelector(".color-scale")).toBeTruthy();
+    expect(root.querySelector(".draft-legend")).toBeTruthy();
+    expect(root.querySelector(".color-scale")?.textContent).toContain("אדום");
+    expect(root.querySelector(".color-scale")?.textContent).toContain("ירוק");
+    expect(root.querySelector(".color-scale")?.textContent).not.toContain("וטו");
 
     if (!root.querySelector(".name-btn")) {
       root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     }
-    expect(root.textContent).toContain("הפס בצד: מול כל הרשימה, לפי המקום");
     root.querySelector<HTMLButtonElement>(".name-btn")?.click();
     root.querySelector<HTMLButtonElement>(".confirm-btn:not([disabled])")?.click();
     await vi.runOnlyPendingTimersAsync();
@@ -266,5 +268,28 @@ describe("playable draft UI", () => {
     expect(root.querySelector<HTMLImageElement>(".look-btn[data-look='woman'] img")?.src).toMatch(
       /avatar-grown-woman\.png$/,
     );
+  });
+
+  it("opens a first-run tip dialog that a cookie can disable", () => {
+    resetTips();
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    const sheet = document.querySelector(".tips-sheet");
+    expect(sheet?.textContent).toContain("המשחק");
+    expect(sheet?.textContent).toContain("אל תציגו שוב");
+    const hide = sheet?.querySelector<HTMLInputElement>("#tips-hide");
+    expect(hide?.checked).toBe(true);
+    [...sheet?.querySelectorAll("button") ?? []].find((btn) => btn.textContent === "הבנתי" || btn.textContent === "דילוג")?.click();
+    if (document.querySelector(".tips-sheet")) {
+      document.querySelector<HTMLButtonElement>(".tips-sheet .primary")?.click();
+      document.querySelector<HTMLButtonElement>(".tips-sheet .primary")?.click();
+    }
+    expect(document.querySelector(".tips-sheet")).toBeNull();
+    document.body.innerHTML = "";
+    const again = document.createElement("div");
+    document.body.append(again);
+    mount(again);
+    expect(document.querySelector(".tips-sheet")).toBeNull();
   });
 });

@@ -53,6 +53,7 @@ import { renderNameEdit } from "./name-edit";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
 import { resetMeters } from "./meters";
+import { maybeShowTips } from "./tips";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
@@ -249,6 +250,7 @@ function render(): void {
   } else if (state.screen === "resolve" || state.screen === "board") {
     root.querySelector<HTMLElement>(".resolve-screen, .setup-screen")?.scrollTo(0, 0);
   }
+  if (state.screen === "setup") maybeShowTips();
 }
 
 function draftView(): DraftView {

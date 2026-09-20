@@ -6,7 +6,6 @@ import {
   pairRankWeight,
   pairRelation,
   relationColor,
-  relationColorStops,
   relationOpacity,
   relationStrokeWidth,
   shortReasonHe,
@@ -15,7 +14,7 @@ import {
 import { nearestNeighborhood } from "../systems/demand";
 import { copy } from "./copy";
 import { el } from "./dom";
-import { renderMemberPicker } from "./members";
+import { compactPipKey, renderMemberPicker } from "./members";
 
 export interface TreeHandlers {
   onHover: (id: PersonId | null) => void;
@@ -149,12 +148,11 @@ export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: st
   const hill = nearestNeighborhood(person.cell).labelHe;
   const peak = ASPECT_LABEL_HE[peakAspect(person.aspects, person.slateId)];
   if (!picks.length || picks[0] === id) {
-    const note = person.aspectsNoteHe ? ` · ${person.aspectsNoteHe}` : "";
-    return `${person.nameHe} · ${person.partyHe} · ${copy.hintPeak}: ${peak} · ${copy.hintHill}: ${hill}${note}`;
+    return `${person.nameHe} · ${person.partyHe} · ${peak} · ${hill}`;
   }
   const team = teamRelation(picks, id);
   const tag = team.worst ? shortReasonHe(team.worst.relation) : shortReasonHe(pairRelation(picks[0]!, id));
-  return `${person.nameHe} · ${copy.hintVs}: ${tag} · ${copy.hintPeak}: ${peak} · ${copy.hintHill}: ${hill}`;
+  return `${person.nameHe} · ${tag} · ${peak} · ${hill}`;
 }
 
 function renderPartyField(view: TreeView, handlers: TreeHandlers): HTMLElement {
@@ -277,25 +275,17 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     faces.append(face);
   }
   board.append(faces);
-  wrap.append(board, renderColorScale());
+  wrap.append(board);
   return wrap;
 }
 
-function renderColorScale(): HTMLElement {
+export function renderDraftLegend(): HTMLElement {
   const scale = el("div", { class: "color-scale", "aria-label": copy.colorScale });
-  scale.append(el("span", { class: "color-scale-label" }, copy.colorScale));
-  const row = el("span", { class: "color-scale-row" });
-  for (const stop of relationColorStops()) {
-    row.append(
-      el(
-        "span",
-        { class: "color-stop", style: `--swatch:${stop.color}`, title: `s=${stop.s}` },
-        stop.labelHe,
-      ),
-    );
-  }
-  scale.append(row, el("span", { class: "color-scale-label" }, copy.edgeStyle));
-  return scale;
+  scale.append(
+    el("span", { class: "color-stop is-red", style: `--swatch:${relationColor(-1)}` }, copy.colorRed),
+    el("span", { class: "color-stop is-green", style: `--swatch:${relationColor(0.22)}` }, copy.colorGreen),
+  );
+  return el("div", { class: "draft-legend" }, scale, compactPipKey());
 }
 
 function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {

@@ -12,6 +12,7 @@ import {
   edgeLine,
   hintFor,
   peopleInSlate,
+  renderDraftLegend,
   renderEdgeTip,
   renderTreeMap,
   slatesWithPeople,
@@ -50,6 +51,7 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   const stage = el("div", { class: "graph-pane" });
   stage.append(renderNotices(view.notices));
   stage.append(renderTreeMap(view, handlers));
+  if (player?.picks.length) stage.append(renderDraftLegend());
   stage.append(renderEdgeTip(view.hoverEdge ?? view.selectedEdge));
   stage.append(el("p", { class: "hint-line" }, hintFor(inspectId, player?.picks ?? [], view.hoverEdge ?? view.selectedEdge)));
   root.append(stage);
@@ -160,7 +162,6 @@ function renderPickDock(view: DraftView, handlers: DraftHandlers, picks: PersonI
   const dock = el("section", { class: "pick-dock", "aria-label": copy.pool });
   if (view.openSlate && picks.length) {
     dock.append(
-      el("p", { class: "dock-kicker" }, copy.pickWithButton),
       renderMemberPicker({
         ids: peopleInSlate(view.remaining, view.openSlate),
         slate: view.openSlate,

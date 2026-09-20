@@ -36,7 +36,7 @@ export function scoreMeters(
       meter(copy.credibility, copy.credibilityTip, fromCred, cred, "cred", delay),
       meter(copy.demand, copy.demandTip, fromDemand, demand, "demand", delay + 80),
     ),
-    mode === "live" ? el("p", { class: "meter-hint" }, meterHint(opts.picks ?? 0)) : null,
+    null,
   );
   return wrap;
 }
@@ -143,12 +143,6 @@ export function countUp(
     if (t < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
-}
-
-function meterHint(picks: number): string {
-  if (picks <= 0) return copy.metersEmpty;
-  if (picks === 1) return copy.metersSolo;
-  return copy.metersLive;
 }
 
 function clampPct(n: number): number {
