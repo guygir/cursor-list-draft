@@ -1,4 +1,4 @@
-import { ASPECT_IDS, ASPECT_LABEL_HE, peakAspect } from "../data/aspects";
+import { ASPECT_IDS, ASPECT_LABEL_HE, ASPECT_PIP_COLOR } from "../data/aspects";
 import { getPerson, slateLabelHe } from "../data/pool";
 import { bindPortrait, hasWikiPortrait, portraitSrc } from "../data/portraits";
 import type { Person, PersonId, SlateId } from "../data/types";
@@ -18,7 +18,7 @@ export function renderMemberPicker(opts: {
   onPick: (id: PersonId) => void;
   onCloseSlate: () => void;
 }): HTMLElement {
-  const { ids, slate, picks, focusId, canPick, variant } = opts;
+  const { ids, slate, picks, focusId, variant } = opts;
   const hasTeam = picks.length > 0;
   const wrap = el("div", { class: `member-picker is-${variant}`, "aria-label": copy.chooseMember });
   const back = el("button", { type: "button", class: "back-btn" }, copy.backToParties);
@@ -30,17 +30,15 @@ export function renderMemberPicker(opts: {
       el("strong", {}, slateLabelHe(slate)),
       back,
     ),
-    pipKey(hasTeam),
   );
+  if (!hasTeam) wrap.append(el("div", { class: "pip-key" }, compactPipKey()));
 
   const grid = el("div", { class: "member-grid" });
   for (const id of ids) {
     const person = getPerson(id);
     const team = hasTeam ? teamRelation(picks, id) : null;
     const photo = portraitSrc(id);
-    const title = team
-      ? `${copy.sideTone}. ${copy.sideToneHint} ${team.reasonHe}`
-      : undefined;
+    const title = team?.reasonHe;
     const btn = el(
       "button",
       {
@@ -75,8 +73,7 @@ export function renderMemberPicker(opts: {
       ),
     );
     btn.addEventListener("click", () => {
-      if (focusId === id && canPick) opts.onPick(id);
-      else opts.onFocus(id);
+      opts.onFocus(id);
     });
     btn.addEventListener("pointerenter", () => opts.onHover(id));
     btn.addEventListener("pointerleave", () => opts.onHover(null));
@@ -96,27 +93,27 @@ export function renderMemberPicker(opts: {
   return wrap;
 }
 
-function pipKey(hasTeam: boolean): HTMLElement {
-  const box = el("div", { class: "pip-key" });
-  box.append(el("p", { class: "member-legend" }, copy.pipExplain));
-  const items = el("ul", { class: "pip-key-list" });
+export function compactPipKey(): HTMLElement {
+  const items = el("ul", { class: "pip-key-list", "aria-label": copy.aspectLegend });
   for (const id of ASPECT_IDS) {
     items.append(
       el(
         "li",
         {},
-        el("i", { class: "aspect-pip is-demo", style: "--v:0.9", "aria-hidden": "true" }),
+        el("i", {
+          class: "aspect-pip is-demo",
+          "data-axis": id,
+          style: `--v:0.9;--pip:${ASPECT_PIP_COLOR[id]}`,
+          "aria-hidden": "true",
+        }),
         ASPECT_LABEL_HE[id],
       ),
     );
   }
-  box.append(items);
-  if (hasTeam) box.append(el("p", { class: "member-legend" }, `${copy.sideTone}. ${copy.sideToneHint}`));
-  return box;
+  return items;
 }
 
 function aspectPips(person: Person): HTMLElement {
-  const peak = peakAspect(person.aspects, person.slateId);
   const detail = ASPECT_IDS.map((id) => `${ASPECT_LABEL_HE[id]} ${Math.round(person.aspects[id] * 100)}`).join(" · ");
   const pips = el("span", {
     class: "aspect-pips",
@@ -126,8 +123,9 @@ function aspectPips(person: Person): HTMLElement {
   for (const id of ASPECT_IDS) {
     pips.append(
       el("i", {
-        class: `aspect-pip${id === peak ? " is-peak" : ""}`,
-        style: `--v:${person.aspects[id].toFixed(2)}`,
+        class: "aspect-pip",
+        "data-axis": id,
+        style: `--v:${person.aspects[id].toFixed(2)};--pip:${ASPECT_PIP_COLOR[id]}`,
         title: `${ASPECT_LABEL_HE[id]} ${Math.round(person.aspects[id] * 100)}`,
       }),
     );

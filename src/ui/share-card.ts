@@ -8,6 +8,9 @@ import { copy } from "./copy";
 import { el } from "./dom";
 import { polygonLayout, polygonPoints } from "./tree";
 
+const GRAPH_CX = 210;
+const GRAPH_CY = 200;
+
 export interface ShareCaption {
   title: string;
   text: string;
@@ -20,9 +23,11 @@ export async function makeResultCard(opts: {
   kind: "square" | "story";
 }): Promise<Blob> {
   const player = opts.result.lists.find((row) => row.list.isPlayer);
+  const rival = [...opts.result.lists].filter((row) => !row.list.isPlayer).sort((a, b) => b.seats - a.seats)[0];
+  const won = opts.result.winnerId === "player";
   const w = 1080;
   const h = opts.kind === "story" ? 1920 : 1080;
-  const cardH = opts.kind === "story" ? 760 : 460;
+  const cardH = opts.kind === "story" ? 700 : 400;
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -37,6 +42,8 @@ export async function makeResultCard(opts: {
     h: cardH,
     party: player?.list.labelHe ?? copy.yourParty,
     seats: player?.seats ?? 0,
+    rivalSeats: rival?.seats ?? 0,
+    won,
     names: player?.list.picks.map((id) => getPerson(id).nameHe).join(" · ") ?? "",
     cohesion: player ? Math.round(player.cohesion * 100) : 0,
     demand: player ? Math.round(Math.min(100, (player.massAfterSplit / DEMAND_SCALE) * 100)) : 0,
@@ -59,9 +66,41 @@ export function shareCaption(seats: number, party: string, url: string): ShareCa
   };
 }
 
+/** Stretch the constellation to the share rect instead of leaving a 420-viewBox postage stamp. */
+export function fitShareGraph(
+  box: { x: number; y: number; w: number; h: number },
+  count: number,
+): Array<{ x: number; y: number }> {
+  const pad = 78;
+  if (count <= 1) return [{ x: box.x + box.w / 2, y: box.y + box.h / 2 }];
+  const layout = polygonLayout(count);
+  const points = polygonPoints(count, layout.radius);
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const spanX = Math.max(Math.max(...xs) - Math.min(...xs), layout.radius * 2, 80);
+  const spanY = Math.max(Math.max(...ys) - Math.min(...ys), layout.radius * 2, 80);
+  const scale = Math.min((box.w - pad * 2) / spanX, (box.h - pad * 2) / spanY);
+  return points.map((p) => ({
+    x: box.x + box.w / 2 + (p.x - GRAPH_CX) * scale,
+    y: box.y + box.h / 2 + (p.y - GRAPH_CY) * scale,
+  }));
+}
+
 function drawYellowCard(
   ctx: CanvasRenderingContext2D,
-  box: { x: number; y: number; w: number; h: number; party: string; seats: number; names: string; cohesion: number; demand: number },
+  box: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    party: string;
+    seats: number;
+    rivalSeats: number;
+    won: boolean;
+    names: string;
+    cohesion: number;
+    demand: number;
+  },
 ): void {
   roundRect(ctx, box.x, box.y, box.w, box.h, 36);
   ctx.fillStyle = "#f4d53b";
@@ -69,29 +108,31 @@ function drawYellowCard(
   ctx.fillStyle = "#191817";
   ctx.textAlign = "right";
   ctx.direction = "rtl";
-  ctx.font = "800 56px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(box.party, box.x + box.w - 48, box.y + 78);
-  ctx.font = "700 28px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(copy.yourParty, box.x + box.w - 48, box.y + 118);
+  ctx.font = "800 42px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(box.won ? copy.win : copy.loss, box.x + box.w - 48, box.y + 58);
+  ctx.font = "800 48px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(box.party, box.x + box.w - 48, box.y + 112);
+  ctx.font = "700 24px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(copy.yourParty, box.x + box.w - 48, box.y + 146);
   ctx.textAlign = "left";
   ctx.direction = "ltr";
-  ctx.font = "800 92px Rubik, sans-serif";
-  const seatLabel = String(box.seats);
+  ctx.font = "800 84px Rubik, sans-serif";
+  const seatLabel = `${box.seats}`;
   const seatW = ctx.measureText(seatLabel).width;
-  ctx.fillText(seatLabel, box.x + 48, box.y + 200);
-  ctx.font = "700 28px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(copy.seats, box.x + 48 + seatW + 24, box.y + 190);
-  drawBar(ctx, box.x + 48, box.y + 220, box.w - 96, (box.seats / KNESSET_SEATS) * 100);
+  ctx.fillText(seatLabel, box.x + 48, box.y + 168);
+  ctx.font = "700 26px Rubik, Arial Hebrew, sans-serif";
+  ctx.fillText(`${copy.seats}  ·  ${box.seats}–${box.rivalSeats}`, box.x + 48 + seatW + 20, box.y + 158);
+  drawBar(ctx, box.x + 48, box.y + 188, box.w - 96, (box.seats / KNESSET_SEATS) * 100);
   ctx.fillStyle = "#191817";
   ctx.textAlign = "right";
   ctx.direction = "rtl";
-  ctx.font = "500 26px Assistant, Arial Hebrew, sans-serif";
-  wrapText(ctx, box.names, box.x + box.w - 48, box.y + 290, box.w - 96, 34);
+  ctx.font = "500 24px Assistant, Arial Hebrew, sans-serif";
+  wrapText(ctx, box.names, box.x + box.w - 48, box.y + 250, box.w - 96, 32);
   ctx.font = "600 22px Rubik, Arial Hebrew, sans-serif";
-  ctx.fillText(`${copy.demand}  ${box.demand}`, box.x + box.w / 2 + 20, box.y + box.h - 78);
-  ctx.fillText(`${copy.credibility}  ${box.cohesion}`, box.x + box.w - 48, box.y + box.h - 78);
-  drawBar(ctx, box.x + 48, box.y + box.h - 58, (box.w - 120) / 2, box.demand);
-  drawBar(ctx, box.x + box.w / 2 + 12, box.y + box.h - 58, (box.w - 120) / 2, box.cohesion);
+  ctx.fillText(`${copy.demand}  ${box.demand}`, box.x + box.w / 2 + 20, box.y + box.h - 70);
+  ctx.fillText(`${copy.credibility}  ${box.cohesion}`, box.x + box.w - 48, box.y + box.h - 70);
+  drawBar(ctx, box.x + 48, box.y + box.h - 50, (box.w - 120) / 2, box.demand);
+  drawBar(ctx, box.x + box.w / 2 + 12, box.y + box.h - 50, (box.w - 120) / 2, box.cohesion);
 }
 
 async function drawGraph(
@@ -102,13 +143,7 @@ async function drawGraph(
   ctx.fillRect(box.x, box.y, box.w, box.h);
   const ids = box.picks;
   if (ids.length === 0) return;
-  const layout = polygonLayout(ids.length);
-  const size = 420;
-  const points = polygonPoints(ids.length, layout.radius);
-  const scale = Math.min(box.w, box.h) / size;
-  const ox = box.x + (box.w - size * scale) / 2;
-  const oy = box.y + (box.h - size * scale) / 2;
-  const mapped = points.map((p) => ({ x: ox + p.x * scale, y: oy + p.y * scale }));
+  const mapped = fitShareGraph(box, ids.length);
   for (let i = 0; i < ids.length; i++) {
     for (let j = i + 1; j < ids.length; j++) {
       const rel = pairRelation(ids[i]!, ids[j]!);
@@ -251,17 +286,22 @@ export async function copyShareImage(blob: Blob): Promise<boolean> {
   }
 }
 
+export function openHref(href: string): void {
+  const link = document.createElement("a");
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
 export function openWhatsAppText(text: string): void {
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  openHref(whatsAppHref(text));
 }
 
 export function openInstagramStory(): void {
-  window.open("instagram://story-camera", "_blank", "noopener");
-  window.setTimeout(() => {
-    if (document.visibilityState === "visible") {
-      window.open("https://www.instagram.com/", "_blank", "noopener");
-    }
-  }, 700);
+  openHref(instagramStoryHref());
 }
 
 export function whatsAppHref(text: string): string {
@@ -269,7 +309,22 @@ export function whatsAppHref(text: string): string {
 }
 
 export function instagramStoryHref(): string {
-  return "instagram://story-camera";
+  return /iPhone|iPad|Android/i.test(navigator.userAgent)
+    ? "instagram://story-camera"
+    : "https://www.instagram.com/";
+}
+
+interface PreparedShare {
+  file: File;
+  blob: Blob;
+  caption: ShareCaption;
+}
+
+const shareCache = new Map<string, PreparedShare>();
+
+function shareCacheKey(channel: "whatsapp" | "instagram", result: ElectionResult, url: string): string {
+  const player = result.lists.find((row) => row.list.isPlayer);
+  return [channel, result.winnerId, player?.seats ?? 0, player?.list.picks.join(","), url].join("|");
 }
 
 /** Klafi share: native sheet with the PNG, else save + copy + preview dialog. */
@@ -281,6 +336,12 @@ export async function sharePreparedCard(opts: {
   button: HTMLButtonElement;
 }): Promise<void> {
   const markup = opts.button.innerHTML;
+  const key = shareCacheKey(opts.channel, opts.result, opts.url);
+  const cached = shareCache.get(key);
+  if (cached) {
+    await launchPreparedShare(opts.channel, cached);
+    return;
+  }
   opts.button.disabled = true;
   opts.button.setAttribute("aria-busy", "true");
   try {
@@ -289,20 +350,9 @@ export async function sharePreparedCard(opts: {
     const file = cardFile(blob, kind);
     const player = opts.result.lists.find((row) => row.list.isPlayer);
     const caption = shareCaption(player?.seats ?? 0, player?.list.labelHe ?? copy.yourParty, opts.url);
-    if (canShareFiles(file)) {
-      try {
-        await navigator.share({ title: caption.title, text: caption.text, files: [file] });
-        showShareToast(opts.channel === "instagram" ? copy.shareReadyIg : copy.shareReadyWa);
-        return;
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
-      }
-    }
-    downloadBlob(blob, file.name);
-    await copyText(opts.channel === "instagram" ? caption.url : caption.text);
-    await copyShareImage(blob);
-    openShareSheet({ channel: opts.channel, blob, file, ...caption });
-    showShareToast(opts.channel === "instagram" ? copy.shareToastIg : copy.shareToastWa);
+    const prepared = { file, blob, caption };
+    shareCache.set(key, prepared);
+    await launchPreparedShare(opts.channel, prepared);
   } catch (error) {
     if (!(error instanceof Error && error.name === "AbortError")) showShareToast(copy.shareFail);
   } finally {
@@ -310,6 +360,24 @@ export async function sharePreparedCard(opts: {
     opts.button.removeAttribute("aria-busy");
     opts.button.innerHTML = markup;
   }
+}
+
+async function launchPreparedShare(channel: "whatsapp" | "instagram", prepared: PreparedShare): Promise<void> {
+  const { file, blob, caption } = prepared;
+  if (canShareFiles(file)) {
+    try {
+      await navigator.share({ title: caption.title, text: caption.text, files: [file] });
+      showShareToast(channel === "instagram" ? copy.shareReadyIg : copy.shareReadyWa);
+      return;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+    }
+  }
+  downloadBlob(blob, file.name);
+  await copyText(channel === "instagram" ? caption.url : caption.text);
+  await copyShareImage(blob);
+  openShareSheet({ channel, blob, file, ...caption });
+  showShareToast(channel === "instagram" ? copy.shareToastIg : copy.shareToastWa);
 }
 
 export function klafiShareButtons(): { wa: HTMLButtonElement; ig: HTMLButtonElement } {
@@ -339,8 +407,13 @@ function openShareSheet(opts: {
   const dialog = el("dialog", { class: "klafi-share-sheet share-sheet", "aria-labelledby": "share-sheet-title" });
   const close = el("button", { type: "button", class: "dialog-close", "aria-label": "סגירת השיתוף" }, "×");
   const send = el(
-    "button",
-    { type: "button", class: "primary share-sheet-send" },
+    "a",
+    {
+      class: "primary share-sheet-send",
+      href: opts.channel === "instagram" ? instagramStoryHref() : whatsAppHref(opts.text),
+      target: "_blank",
+      rel: "noopener noreferrer",
+    },
     opts.channel === "instagram" ? copy.shareOpenIg : copy.shareOpenWa,
   );
   const save = el("button", { type: "button", class: "share-btn share-sheet-save" }, copy.shareSave);
@@ -357,24 +430,25 @@ function openShareSheet(opts: {
     URL.revokeObjectURL(preview);
     dialog.remove();
   });
-  send.addEventListener("click", async () => {
+  send.addEventListener("click", async (event) => {
+    const href = send.getAttribute("href") ?? "";
     if (canShareFiles(opts.file)) {
+      event.preventDefault();
       try {
         await navigator.share({ title: opts.title, text: opts.text, files: [opts.file] });
         close.click();
         return;
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
+        if (href) openHref(href);
       }
     }
     if (opts.channel === "whatsapp") {
-      await copyText(opts.text);
-      openWhatsAppText(opts.text);
+      void copyText(opts.text);
       showShareToast(copy.shareToastWaOpen);
       return;
     }
-    await copyText(opts.url);
-    openInstagramStory();
+    void copyText(opts.url);
     showShareToast(copy.shareToastIgOpen);
   });
   save.addEventListener("click", () => downloadBlob(opts.blob, opts.file.name));

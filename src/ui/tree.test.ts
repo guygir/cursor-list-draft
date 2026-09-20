@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { polygonLayout, polygonPoints } from "./tree";
+import { hintFor, polygonLayout, polygonPoints } from "./tree";
 
 describe("constellation polygons", () => {
   it("puts three nodes on a triangle and ten on one decagon", () => {
@@ -14,5 +14,11 @@ describe("constellation polygons", () => {
   it("keeps a single hub at the center", () => {
     const one = polygonPoints(1, 0);
     expect(one).toEqual([{ x: 210, y: 200 }]);
+  });
+
+  it("keeps the hover line as name, chemistry, peak, hill", () => {
+    expect(hintFor("sukkot", ["liberman"])).toContain("צבי סוכות");
+    expect(hintFor("netanyahu", ["netanyahu"])).toContain("בנימין נתניהו");
+    expect(hintFor("netanyahu", ["netanyahu"])).toContain("ליכוד");
   });
 });

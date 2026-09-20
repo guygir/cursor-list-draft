@@ -36,21 +36,21 @@ export function renderResolve(
 ): HTMLElement {
   const lists = result.lists.map((row) => row.list);
   const won = result.winnerId === "player";
+  const player = result.lists.find((row) => row.list.isPlayer);
+  const rival = [...result.lists].filter((row) => !row.list.isPlayer).sort((a, b) => b.seats - a.seats)[0];
   const root = el("div", { class: "screen resolve-screen" });
+  const verdict = won
+    ? copy.verdictWin(player?.seats ?? 0)
+    : copy.verdictLoss(player?.seats ?? 0, rival?.list.labelHe ?? copy.party(2), rival?.seats ?? 0);
 
   root.append(
     el(
       "header",
       { class: "mast" },
       el("div", { class: "brand" }, el("h1", {}, copy.night), el("p", { class: "tag" }, copy.sponsor)),
-      el(
-        "div",
-        { class: "mast-tools" },
-        renderHowCalc(),
-        el("p", { class: won ? "banner win" : "banner loss" }, won ? copy.win : copy.loss),
-      ),
+      el("div", { class: "mast-tools" }, renderHowCalc()),
     ),
-    el("p", { class: "win-rule" }, copy.winBySeats),
+    el("p", { class: `verdict ${won ? "is-win" : "is-loss"}`, role: "status" }, verdict),
     el("div", { class: "ticker" }, copy.disclosure),
   );
 
@@ -164,6 +164,11 @@ function renderListBar(row: ListScore, winnerId: string, index: number): HTMLEle
       {},
       el("h3", {}, row.list.labelHe),
       row.list.isPlayer ? el("span", { class: "you-pill" }, copy.yourParty) : null,
+      row.list.id === winnerId
+        ? el("span", { class: "verdict-pill is-win" }, copy.win)
+        : row.list.isPlayer
+          ? el("span", { class: "verdict-pill is-loss" }, copy.loss)
+          : null,
     ),
     el(
       "div",

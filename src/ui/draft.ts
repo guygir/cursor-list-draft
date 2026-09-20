@@ -12,6 +12,7 @@ import {
   edgeLine,
   hintFor,
   peopleInSlate,
+  renderDraftLegend,
   renderEdgeTip,
   renderTreeMap,
   slatesWithPeople,
@@ -50,6 +51,7 @@ export function renderDraft(view: DraftView, handlers: DraftHandlers): HTMLEleme
   const stage = el("div", { class: "graph-pane" });
   stage.append(renderNotices(view.notices));
   stage.append(renderTreeMap(view, handlers));
+  if (player?.picks.length) stage.append(renderDraftLegend());
   stage.append(renderEdgeTip(view.hoverEdge ?? view.selectedEdge));
   stage.append(el("p", { class: "hint-line" }, hintFor(inspectId, player?.picks ?? [], view.hoverEdge ?? view.selectedEdge)));
   root.append(stage);
@@ -95,7 +97,7 @@ function canConfirm(view: DraftView): boolean {
 
 function renderHeader(view: DraftView, player: DraftList | undefined, handlers: DraftHandlers): HTMLElement {
   const filled = player?.picks.length ?? 0;
-  const quit = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  const quit = el("button", { type: "button", class: "chrome-btn quit-btn" }, copy.quitToMenu);
   quit.addEventListener("click", handlers.onQuit);
   return el(
     "header",
@@ -124,7 +126,7 @@ function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLEle
   const meters = player
     ? listMeters(player, lists)
     : { cohesionPct: 0, demandPct: 0 };
-  wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct));
+  wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct, "live", { picks: player?.picks.length ?? 0 }));
   const ol = el("ol", { class: "slot-rail" });
   for (let i = 0; i < LIST_SIZE; i++) {
     const id = player?.picks[i];
@@ -174,10 +176,7 @@ function renderPickDock(view: DraftView, handlers: DraftHandlers, picks: PersonI
       }),
     );
   } else if (picks.length) {
-    dock.append(el("p", { class: "dock-kicker" }, copy.chooseParty));
     dock.append(renderPartyChips(view, handlers));
-  } else if (!view.openSlate) {
-    dock.append(el("p", { class: "dock-kicker" }, copy.chooseMemberHint));
   }
   return dock;
 }

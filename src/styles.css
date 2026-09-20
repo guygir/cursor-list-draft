@@ -95,7 +95,9 @@ input {
 .mast-tools {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .tag,
@@ -177,7 +179,6 @@ input {
 
 .quit-btn {
   font-size: 0.82rem;
-  white-space: nowrap;
 }
 
 .identity-row {
@@ -286,7 +287,6 @@ input {
 
 .board-open {
   width: auto;
-  color: var(--yellow);
 }
 
 .n-pick {
@@ -384,6 +384,32 @@ input {
   background: #3a382f;
   color: #8a8578;
   cursor: not-allowed;
+}
+
+a.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--ink-deep);
+}
+
+.chrome-btn,
+.chrome-btn.mast-board,
+.chrome-btn.board-open {
+  appearance: none;
+  border: 0;
+  background: var(--yellow);
+  color: var(--ink-deep);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chrome-btn:hover {
+  filter: brightness(1.05);
 }
 
 .primary:focus-visible,
@@ -738,9 +764,15 @@ input {
   min-height: 1.2em;
   color: var(--muted);
   font-size: 0.78rem;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.hint-line:empty {
+  display: none;
 }
 
 .edge-tip {
@@ -784,14 +816,16 @@ input {
 }
 
 .draft-screen.has-hub .graph-pane {
-  flex: 1 1 46vh;
-  min-height: 46vh;
+  flex: 1 1 40vh;
+  min-height: 34vh;
+  max-height: 48vh;
 }
 
 .draft-screen.has-hub .pick-dock {
-  height: 28vh;
+  flex: 1 1 32vh;
+  height: auto;
   min-height: 28vh;
-  max-height: 28vh;
+  max-height: 40vh;
 }
 
 .tree-stage .member-picker,
@@ -886,6 +920,19 @@ input {
   line-height: 1.3;
 }
 
+.draft-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+  margin: 4px 0 0;
+}
+
+.draft-legend .pip-key-list {
+  margin: 0;
+}
+
 .color-scale {
   display: flex;
   flex-wrap: wrap;
@@ -894,7 +941,7 @@ input {
   position: static;
   flex-shrink: 0;
   max-width: 100%;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 0;
   pointer-events: none;
 }
@@ -950,7 +997,7 @@ input {
 }
 
 .pip-key {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 
 .pip-key-list {
@@ -972,7 +1019,6 @@ input {
 
 .aspect-pip.is-demo {
   height: 11px;
-  background: var(--ochre);
 }
 
 .member-grid {
@@ -1042,12 +1088,8 @@ input {
   width: 3px;
   height: calc(var(--v, 0.4) * 11px);
   min-height: 2px;
-  background: color-mix(in srgb, var(--ochre) 55%, transparent);
+  background: var(--pip, var(--ochre));
   border-radius: 1px;
-}
-
-.aspect-pip.is-peak {
-  background: var(--ochre);
 }
 
 .name-photo {
@@ -1296,6 +1338,44 @@ input {
   color: var(--alert);
 }
 
+.verdict {
+  margin: 10px 0 0;
+  padding: 14px 16px;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.3;
+  border: 2px solid var(--yellow);
+}
+
+.verdict.is-win {
+  background: var(--yellow);
+  color: var(--ink-deep);
+}
+
+.verdict.is-loss {
+  border-color: var(--alert);
+  background: color-mix(in srgb, var(--alert) 22%, transparent);
+  color: #f3d2ce;
+}
+
+.verdict-pill {
+  margin-inline-start: auto;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.verdict-pill.is-win {
+  background: var(--yellow);
+  color: var(--ink-deep);
+}
+
+.verdict-pill.is-loss {
+  background: var(--alert);
+  color: #fff8f6;
+}
+
 .night-board {
   display: flex;
   flex-direction: column;
@@ -1494,6 +1574,11 @@ input {
   margin-top: 10px;
 }
 
+.edge-card:empty,
+.result-edge:empty {
+  display: none;
+}
+
 .bar-track {
   height: 8px;
   background: rgba(var(--ink-rgb), 0.08);
@@ -1636,7 +1721,17 @@ input {
   }
 
   .pick-dock {
-    max-height: 32vh;
+    max-height: 42vh;
+  }
+
+  .draft-screen.has-hub .graph-pane {
+    min-height: 32vh;
+    max-height: 44vh;
+  }
+
+  .draft-screen.has-hub .pick-dock {
+    min-height: 28vh;
+    max-height: 40vh;
   }
 
   .member-grid {
@@ -1770,6 +1865,31 @@ input {
   color: var(--muted);
 }
 
+.axis-end {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--yellow);
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.axis-note {
+  margin: 2px 0 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.axis-tap-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .nearest-line {
   margin: 18px 0 0;
   color: var(--ink);
@@ -1901,10 +2021,7 @@ input {
 }
 
 .mast-board {
-  font-weight: 700;
-  color: var(--yellow);
-  padding: 6px 0;
-  white-space: nowrap;
+  font-size: 0.88rem;
 }
 
 .result-actions {
@@ -1957,6 +2074,102 @@ input {
 .share-icon-button:focus-visible {
   outline: 2px solid var(--yellow);
   outline-offset: 2px;
+}
+
+.tips-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.tips-dim,
+.tips-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tips-dim {
+  z-index: 0;
+}
+
+.tips-marks {
+  z-index: 2;
+}
+
+.tips-ring {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 3;
+}
+
+.tips-arrow {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.tips-sheet {
+  width: min(22rem, calc(100% - 28px));
+  margin: auto;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(244, 213, 59, 0.32);
+  background: rgba(38, 36, 32, 0.62);
+  color: var(--ink);
+  text-align: right;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.tips-card {
+  position: absolute;
+  z-index: 1;
+  pointer-events: auto;
+  margin: 0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.tips-sheet .eyebrow {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.tips-sheet h2 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.tips-body {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.tips-hide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.tips-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.tips-replay {
+  margin: 0 0 10px;
+  color: var(--yellow);
+  font-weight: 700;
 }
 
 .klafi-share-sheet {
@@ -2051,7 +2264,6 @@ input {
 
 .board-open {
   font-weight: 700;
-  color: var(--yellow);
 }
 
 .board-panel {

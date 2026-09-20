@@ -49,9 +49,14 @@ function supportWhy(player: WhyList, scores: WhyList[], won: boolean): WhyLine |
   const veto = leaderVeto(player);
   if (veto) return veto;
   if (!player.passedThreshold) {
+    const winner = scores.find((s) => s.list.id !== player.list.id && s.seats === 120);
     return {
-      he: "הרשימה נשארה מתחת לאחוז החסימה",
-      en: "The list stayed under the toy threshold",
+      he: winner
+        ? `הרשימה נשארה מתחת לאחוז החסימה — ${winner.list.labelHe} לקחה את כל 120`
+        : "הרשימה נשארה מתחת לאחוז החסימה",
+      en: winner
+        ? `The list stayed under the toy threshold — ${winner.list.labelEn} took all 120`
+        : "The list stayed under the toy threshold",
     };
   }
   const clone = clonedHill(player, scores);

@@ -6,7 +6,6 @@ import {
   pairRankWeight,
   pairRelation,
   relationColor,
-  relationColorStops,
   relationOpacity,
   relationStrokeWidth,
   shortReasonHe,
@@ -15,7 +14,7 @@ import {
 import { nearestNeighborhood } from "../systems/demand";
 import { copy } from "./copy";
 import { el } from "./dom";
-import { renderMemberPicker } from "./members";
+import { compactPipKey, renderMemberPicker } from "./members";
 
 export interface TreeHandlers {
   onHover: (id: PersonId | null) => void;
@@ -95,10 +94,7 @@ export function renderHubSpokes(view: TreeView, handlers: TreeHandlers): HTMLEle
 
 export function renderEdgeCard(key: string | null): HTMLElement {
   const box = el("aside", { class: "edge-card", "aria-live": "polite" });
-  if (!key) {
-    box.append(el("p", { class: "muted" }, copy.edgeHoverHint));
-    return box;
-  }
+  if (!key) return box;
   fillEdgeReason(box, key);
   return box;
 }
@@ -144,13 +140,12 @@ function fillEdgeReason(box: HTMLElement, key: string): void {
 
 export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: string | null = null): string {
   if (edgeKeyValue) return edgeLine(edgeKeyValue);
-  if (!id) return picks.length ? copy.noHubAfter : copy.chooseParty;
+  if (!id) return "";
   const person = getPerson(id);
   const hill = nearestNeighborhood(person.cell).labelHe;
   const peak = ASPECT_LABEL_HE[peakAspect(person.aspects, person.slateId)];
   if (!picks.length || picks[0] === id) {
-    const note = person.aspectsNoteHe ? ` · ${person.aspectsNoteHe}` : "";
-    return `${person.nameHe} · ${person.partyHe} · ${peak} · ${hill}${note}`;
+    return `${person.nameHe} · ${person.partyHe} · ${peak} · ${hill}`;
   }
   const team = teamRelation(picks, id);
   const tag = team.worst ? shortReasonHe(team.worst.relation) : shortReasonHe(pairRelation(picks[0]!, id));
@@ -159,7 +154,6 @@ export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: st
 
 function renderPartyField(view: TreeView, handlers: TreeHandlers): HTMLElement {
   const field = el("div", { class: "party-field", role: "group", "aria-label": copy.chooseParty });
-  field.append(el("p", { class: "board-kicker" }, copy.chooseParty));
 
   for (const bloc of BLOCS) {
     const slates = bloc.slates.filter((slate) => remainingInSlate(view.remaining, slate) > 0);
@@ -273,32 +267,21 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     face.addEventListener("pointerleave", () => handlers.onHover(null));
     face.addEventListener("click", () => {
       handlers.onFocus(node.id);
-      if (view.canPick && view.remaining.includes(node.id) && view.focusId === node.id) {
-        handlers.onPick(node.id);
-      }
     });
     faces.append(face);
   }
   board.append(faces);
-  wrap.append(board, renderColorScale());
+  wrap.append(board);
   return wrap;
 }
 
-function renderColorScale(): HTMLElement {
+export function renderDraftLegend(): HTMLElement {
   const scale = el("div", { class: "color-scale", "aria-label": copy.colorScale });
-  scale.append(el("span", { class: "color-scale-label" }, copy.colorScale));
-  const row = el("span", { class: "color-scale-row" });
-  for (const stop of relationColorStops()) {
-    row.append(
-      el(
-        "span",
-        { class: "color-stop", style: `--swatch:${stop.color}`, title: `s=${stop.s}` },
-        stop.labelHe,
-      ),
-    );
-  }
-  scale.append(row);
-  return scale;
+  scale.append(
+    el("span", { class: "color-stop is-red", style: `--swatch:${relationColor(-1)}` }, copy.colorRed),
+    el("span", { class: "color-stop is-green", style: `--swatch:${relationColor(0.22)}` }, copy.colorGreen),
+  );
+  return el("div", { class: "draft-legend" }, scale, compactPipKey());
 }
 
 function bindEdges(svg: SVGSVGElement, handlers: TreeHandlers): void {

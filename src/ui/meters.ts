@@ -18,7 +18,7 @@ export function scoreMeters(
   cohesionPct: number,
   demandPct: number,
   mode: "live" | "fresh" = "live",
-  opts: { delay?: number } = {},
+  opts: { delay?: number; picks?: number } = {},
 ): HTMLElement {
   const cred = clampPct(cohesionPct);
   const demand = clampPct(demandPct);
@@ -36,7 +36,7 @@ export function scoreMeters(
       meter(copy.credibility, copy.credibilityTip, fromCred, cred, "cred", delay),
       meter(copy.demand, copy.demandTip, fromDemand, demand, "demand", delay + 80),
     ),
-    mode === "live" ? el("p", { class: "meter-hint" }, copy.metersLive) : null,
+    null,
   );
   return wrap;
 }

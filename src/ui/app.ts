@@ -53,6 +53,7 @@ import { renderNameEdit } from "./name-edit";
 import { renderHowCalc } from "./info";
 import { hoverEdge, hoverPerson, renderDraft, type DraftView, type PickNotice } from "./draft";
 import { resetMeters } from "./meters";
+import { maybeShowTips, renderTipsButton } from "./tips";
 import { hintFor } from "./tree";
 import { renderResolve } from "./resolve";
 
@@ -249,6 +250,7 @@ function render(): void {
   } else if (state.screen === "resolve" || state.screen === "board") {
     root.querySelector<HTMLElement>(".resolve-screen, .setup-screen")?.scrollTo(0, 0);
   }
+  if (state.screen === "setup" || state.screen === "draft") maybeShowTips();
 }
 
 function draftView(): DraftView {
@@ -275,14 +277,14 @@ function draftView(): DraftView {
 
 function renderSetup(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
-  const boardBtn = el("button", { type: "button", class: "text-btn board-open mast-board" }, copy.boardOpen);
+  const boardBtn = el("button", { type: "button", class: "chrome-btn board-open mast-board" }, copy.boardOpen);
   boardBtn.addEventListener("click", () => openBoard("daily"));
   screen.append(
     el(
       "header",
       { class: "mast tall" },
       el("div", { class: "brand" }, el("h1", {}, copy.title), el("p", { class: "tagline" }, copy.tagline)),
-      el("div", { class: "mast-tools" }, boardBtn, renderHowCalc()),
+      el("div", { class: "mast-tools" }, boardBtn, renderTipsButton(), renderHowCalc()),
     ),
     el("p", { class: "sponsor" }, copy.sponsor),
     el("p", { class: "disclosure" }, copy.disclosure),
@@ -505,7 +507,7 @@ function openBoard(mode: PlayMode): void {
 
 function renderBoardScreen(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
-  const back = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  const back = el("button", { type: "button", class: "chrome-btn quit-btn" }, copy.quitToMenu);
   back.addEventListener("click", () => {
     state.screen = "setup";
     render();

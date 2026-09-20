@@ -19,6 +19,15 @@ export const ASPECT_LABEL_HE: Record<AspectId, string> = {
   economy: "כלכלה",
 };
 
+/** Distinct yellow shades so each axis is readable without a peak highlight. */
+export const ASPECT_PIP_COLOR: Record<AspectId, string> = {
+  bibi: "#f4d53b",
+  judicial: "#e8c24a",
+  service: "#d4a017",
+  security: "#c17d22",
+  economy: "#8f6a1e",
+};
+
 /**
  * Slate means. service/bibi stay near the old toy-cell so hills do not jump.
  * judicial/security/economy are chemistry-only extras. toy-aspect, not CHES scores.
