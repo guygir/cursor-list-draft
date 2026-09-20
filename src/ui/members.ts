@@ -18,7 +18,7 @@ export function renderMemberPicker(opts: {
   onPick: (id: PersonId) => void;
   onCloseSlate: () => void;
 }): HTMLElement {
-  const { ids, slate, picks, focusId, canPick, variant } = opts;
+  const { ids, slate, picks, focusId, variant } = opts;
   const hasTeam = picks.length > 0;
   const wrap = el("div", { class: `member-picker is-${variant}`, "aria-label": copy.chooseMember });
   const back = el("button", { type: "button", class: "back-btn" }, copy.backToParties);
@@ -75,8 +75,7 @@ export function renderMemberPicker(opts: {
       ),
     );
     btn.addEventListener("click", () => {
-      if (focusId === id && canPick) opts.onPick(id);
-      else opts.onFocus(id);
+      opts.onFocus(id);
     });
     btn.addEventListener("pointerenter", () => opts.onHover(id));
     btn.addEventListener("pointerleave", () => opts.onHover(null));
@@ -99,6 +98,7 @@ export function renderMemberPicker(opts: {
 function pipKey(hasTeam: boolean): HTMLElement {
   const box = el("div", { class: "pip-key" });
   box.append(el("p", { class: "member-legend" }, copy.pipExplain));
+  box.append(el("p", { class: "member-legend" }, copy.pipPeak));
   const items = el("ul", { class: "pip-key-list" });
   for (const id of ASPECT_IDS) {
     items.append(

@@ -14,6 +14,15 @@ function list(id: string, picks: DraftList["picks"]): DraftList {
 }
 
 describe("score meters", () => {
+  it("starts empty at 0/0 and a lone hub is full credibility", () => {
+    const empty = listMeters(list("player", []), [list("player", [])]);
+    expect(empty.cohesionPct).toBe(0);
+    expect(empty.demandPct).toBe(0);
+    const solo = listMeters(list("player", ["netanyahu"]), [list("player", ["netanyahu"])]);
+    expect(solo.cohesionPct).toBe(100);
+    expect(solo.demandPct).toBe(100);
+  });
+
   it("maps cohesion to 0–100 and demand against the largest toy hill", () => {
     expect(DEMAND_SCALE).toBe(38);
     const meters = listMeters(list("player", ["ben-gvir", "smotrich"]), [

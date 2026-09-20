@@ -95,7 +95,7 @@ function canConfirm(view: DraftView): boolean {
 
 function renderHeader(view: DraftView, player: DraftList | undefined, handlers: DraftHandlers): HTMLElement {
   const filled = player?.picks.length ?? 0;
-  const quit = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  const quit = el("button", { type: "button", class: "chrome-btn quit-btn" }, copy.quitToMenu);
   quit.addEventListener("click", handlers.onQuit);
   return el(
     "header",
@@ -124,7 +124,7 @@ function renderSlots(player: DraftList | undefined, lists: DraftList[]): HTMLEle
   const meters = player
     ? listMeters(player, lists)
     : { cohesionPct: 0, demandPct: 0 };
-  wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct));
+  wrap.append(scoreMeters(meters.cohesionPct, meters.demandPct, "live", { picks: player?.picks.length ?? 0 }));
   const ol = el("ol", { class: "slot-rail" });
   for (let i = 0; i < LIST_SIZE; i++) {
     const id = player?.picks[i];
@@ -160,6 +160,7 @@ function renderPickDock(view: DraftView, handlers: DraftHandlers, picks: PersonI
   const dock = el("section", { class: "pick-dock", "aria-label": copy.pool });
   if (view.openSlate && picks.length) {
     dock.append(
+      el("p", { class: "dock-kicker" }, copy.pickWithButton),
       renderMemberPicker({
         ids: peopleInSlate(view.remaining, view.openSlate),
         slate: view.openSlate,

@@ -177,7 +177,6 @@ input {
 
 .quit-btn {
   font-size: 0.82rem;
-  white-space: nowrap;
 }
 
 .identity-row {
@@ -384,6 +383,30 @@ input {
   background: #3a382f;
   color: #8a8578;
   cursor: not-allowed;
+}
+
+a.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--ink-deep);
+}
+
+.chrome-btn {
+  appearance: none;
+  border: 0;
+  background: var(--yellow);
+  color: var(--ink-deep);
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chrome-btn:hover {
+  filter: brightness(1.05);
 }
 
 .primary:focus-visible,
@@ -738,9 +761,11 @@ input {
   min-height: 1.2em;
   color: var(--muted);
   font-size: 0.78rem;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .edge-tip {
@@ -784,14 +809,16 @@ input {
 }
 
 .draft-screen.has-hub .graph-pane {
-  flex: 1 1 46vh;
-  min-height: 46vh;
+  flex: 0 1 32vh;
+  min-height: 26vh;
+  max-height: 36vh;
 }
 
 .draft-screen.has-hub .pick-dock {
-  height: 28vh;
-  min-height: 28vh;
-  max-height: 28vh;
+  flex: 1 1 40vh;
+  height: auto;
+  min-height: 34vh;
+  max-height: 46vh;
 }
 
 .tree-stage .member-picker,
@@ -1296,6 +1323,44 @@ input {
   color: var(--alert);
 }
 
+.verdict {
+  margin: 10px 0 0;
+  padding: 14px 16px;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.3;
+  border: 2px solid var(--yellow);
+}
+
+.verdict.is-win {
+  background: var(--yellow);
+  color: var(--ink-deep);
+}
+
+.verdict.is-loss {
+  border-color: var(--alert);
+  background: color-mix(in srgb, var(--alert) 22%, transparent);
+  color: #f3d2ce;
+}
+
+.verdict-pill {
+  margin-inline-start: auto;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.verdict-pill.is-win {
+  background: var(--yellow);
+  color: var(--ink-deep);
+}
+
+.verdict-pill.is-loss {
+  background: var(--alert);
+  color: #fff8f6;
+}
+
 .night-board {
   display: flex;
   flex-direction: column;
@@ -1636,7 +1701,17 @@ input {
   }
 
   .pick-dock {
-    max-height: 32vh;
+    max-height: 42vh;
+  }
+
+  .draft-screen.has-hub .graph-pane {
+    min-height: 22vh;
+    max-height: 30vh;
+  }
+
+  .draft-screen.has-hub .pick-dock {
+    min-height: 36vh;
+    max-height: 50vh;
   }
 
   .member-grid {
@@ -1770,6 +1845,31 @@ input {
   color: var(--muted);
 }
 
+.axis-end {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--yellow);
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.axis-note {
+  margin: 2px 0 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.axis-tap-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .nearest-line {
   margin: 18px 0 0;
   color: var(--ink);
@@ -1901,10 +2001,7 @@ input {
 }
 
 .mast-board {
-  font-weight: 700;
-  color: var(--yellow);
-  padding: 6px 0;
-  white-space: nowrap;
+  font-size: 0.88rem;
 }
 
 .result-actions {

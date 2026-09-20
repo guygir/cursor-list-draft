@@ -275,7 +275,7 @@ function draftView(): DraftView {
 
 function renderSetup(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
-  const boardBtn = el("button", { type: "button", class: "text-btn board-open mast-board" }, copy.boardOpen);
+  const boardBtn = el("button", { type: "button", class: "chrome-btn board-open mast-board" }, copy.boardOpen);
   boardBtn.addEventListener("click", () => openBoard("daily"));
   screen.append(
     el(
@@ -505,7 +505,7 @@ function openBoard(mode: PlayMode): void {
 
 function renderBoardScreen(): HTMLElement {
   const screen = el("div", { class: "screen setup-screen" });
-  const back = el("button", { type: "button", class: "text-btn quit-btn" }, copy.quitToMenu);
+  const back = el("button", { type: "button", class: "chrome-btn quit-btn" }, copy.quitToMenu);
   back.addEventListener("click", () => {
     state.screen = "setup";
     render();

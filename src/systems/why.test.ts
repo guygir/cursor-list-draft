@@ -83,4 +83,17 @@ describe("why line", () => {
     expect(line.he).toMatch(/^ניצחת עם 18 מנדטים/);
     expect(line.he).not.toContain("סתירה ב־1–2");
   });
+
+  it("names a 0–120 wipe when the player misses the threshold", () => {
+    const line = whyLine(
+      [
+        score({ seats: 0, passedThreshold: false }),
+        score({ id: "cpu-1", isPlayer: false, labelHe: "ברק אלון", seats: 120 }),
+      ],
+      "cpu-1",
+    );
+    expect(line.he).toContain("120");
+    expect(line.he).toContain("אחוז החסימה");
+    expect(line.he).toContain("ברק אלון");
+  });
 });

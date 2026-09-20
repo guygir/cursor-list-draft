@@ -40,7 +40,7 @@ describe("playable draft UI", () => {
     expect(root.textContent).toContain("אתגר היום");
     expect(root.textContent).toContain("לוח שיאים");
     expect(root.querySelector(".mast")?.textContent).toContain("לוח שיאים");
-    expect(root.querySelector(".mast-board")).toBeTruthy();
+    expect(root.querySelector(".mast-board.chrome-btn")).toBeTruthy();
     expect(root.textContent).toContain("שם השחקן");
     expect(root.textContent).toContain("שם המפלגה");
     expect(root.textContent).toContain("עוד אין שיא שלך במצב הזה");
@@ -70,6 +70,7 @@ describe("playable draft UI", () => {
     root.querySelector<HTMLButtonElement>(".party-btn")?.click();
     expect(root.textContent).toContain("בנימין נתניהו");
     expect(root.textContent).toContain("חמשת הפסים");
+    expect(root.textContent).toContain("האדם עצמו");
     expect(root.textContent).toContain("נתניהו");
     expect(root.textContent).toContain("כלכלה");
     expect(root.textContent).not.toContain("איתמר בן גביר");
@@ -83,7 +84,7 @@ describe("playable draft UI", () => {
     expect(shown.join(" ")).not.toContain("בנימין נתניהו");
     expect(root.querySelector(".notice-rail")?.textContent).toMatch(/בחרה את .+ בבחירה/);
     expect(root.querySelector(".tree-face, .tree-photo")).toBeTruthy();
-    expect(root.textContent).toContain("מתעדכנים בכל בחירה");
+    expect(root.textContent).toMatch(/ראש אחד|מתעדכנים בכל בחירה/);
     const credMeter = root.querySelector<HTMLButtonElement>(".score-meter.is-cred");
     credMeter?.click();
     expect(credMeter?.classList.contains("is-open")).toBe(true);
@@ -126,6 +127,7 @@ describe("playable draft UI", () => {
     expect(root.textContent).not.toContain("מעבד");
     expect(root.textContent).toContain("דראפט · פתוח");
     expect(root.textContent).toContain("מנצחת המפלגה עם הכי הרבה מנדטים");
+    expect(root.querySelector(".verdict")).toBeTruthy();
     expect(root.querySelector(".why-line")?.textContent).toMatch(/ניצח|מנדטים/);
     expect(root.querySelector(".why-line")?.textContent).not.toMatch(/^סתירה ב־1–2/);
     expect(root.querySelector(".seat-line")).toBeTruthy();
@@ -166,6 +168,10 @@ describe("playable draft UI", () => {
     create?.click();
     root.querySelector<HTMLButtonElement>(".primary")?.click();
     expect(root.textContent).toContain("ראש הרשימה שלך");
+    expect(root.textContent).toContain("המפלגה הקרובה");
+    expect(root.querySelectorAll(".axis-end").length).toBe(10);
+    root.querySelector<HTMLButtonElement>(".axis-end")?.click();
+    expect(root.textContent).toMatch(/מחנה השינוי|גוש נתניהו|בג״ץ|פטור/);
     expect(root.textContent).toContain("אישה");
     expect(root.textContent).toContain("גבר");
     expect(root.querySelectorAll(".look-btn").length).toBe(2);
@@ -239,7 +245,7 @@ describe("playable draft UI", () => {
     mount(root);
     root.querySelector<HTMLButtonElement>(".mast-board")?.click();
     expect(root.textContent).toContain("אתגר היום");
-    expect(root.querySelector(".quit-btn")?.textContent).toContain("חזרה לתפריט");
+    expect(root.querySelector(".quit-btn.chrome-btn")?.textContent).toContain("חזרה לתפריט");
     expect(root.querySelector(".board-filters")).toBeTruthy();
     expect(root.querySelectorAll(".board-panel").length).toBe(1);
     root.querySelector<HTMLButtonElement>(".quit-btn")?.click();

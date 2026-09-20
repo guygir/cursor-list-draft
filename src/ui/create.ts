@@ -1,7 +1,7 @@
 import { ASPECT_IDS, ASPECT_LABEL_HE } from "../data/aspects";
 import { lookPortraitSrc } from "../data/portraits";
 import { slateLabelHe } from "../data/pool";
-import type { PersonAspects } from "../data/types";
+import type { AspectId, PersonAspects } from "../data/types";
 import { nameClash, nearestSlate, sanitizeLeaderName, type LeaderLook } from "../systems/modes";
 import { copy } from "./copy";
 import { el } from "./dom";
@@ -87,17 +87,22 @@ export function renderCreateLeader(opts: {
       shown.textContent = slider.value;
       nearest.textContent = slateLabelHe(nearestSlate(aspects));
     });
+    const note = el("p", { class: "axis-note", hidden: true });
+    const low = endButton(id, "low", note);
+    const high = endButton(id, "high", note);
     list.append(
       el(
         "div",
         { class: "axis-row" },
         el("header", {}, el("span", {}, ASPECT_LABEL_HE[id]), shown),
         slider,
-        el("div", { class: "axis-ends" }, el("span", {}, copy.axisLow[id]), el("span", {}, copy.axisHigh[id])),
+        el("div", { class: "axis-ends" }, low, high),
+        note,
       ),
     );
   }
   screen.append(list);
+  screen.append(el("p", { class: "axis-tap-hint" }, copy.axisTapHint));
 
   const nearest = el("span", {}, slateLabelHe(nearestSlate(aspects)));
   screen.append(el("p", { class: "nearest-line" }, `${copy.createNearest}: `, nearest));
@@ -117,9 +122,29 @@ export function renderCreateLeader(opts: {
     if (start.disabled) return;
     opts.onStart(sanitizeLeaderName(nameHe), aspects, look);
   });
-  const back = el("button", { type: "button", class: "text-btn" }, copy.createBack);
+  const back = el("button", { type: "button", class: "chrome-btn" }, copy.createBack);
   back.addEventListener("click", opts.onBack);
   screen.append(el("div", { class: "confirm-bar is-split" }, start, back));
   syncStart();
   return screen;
+}
+
+function endButton(id: AspectId, side: "low" | "high", note: HTMLElement): HTMLButtonElement {
+  const label = side === "low" ? copy.axisLow[id] : copy.axisHigh[id];
+  const explain = copy.axisExplain[id][side];
+  const btn = el("button", { type: "button", class: "axis-end", "data-axis": id, "data-side": side }, label);
+  btn.addEventListener("click", () => {
+    const open = note.dataset.side === side && !note.hidden;
+    document.querySelectorAll(".axis-note").forEach((node) => {
+      if (node instanceof HTMLElement) {
+        node.hidden = true;
+        delete node.dataset.side;
+      }
+    });
+    if (open) return;
+    note.hidden = false;
+    note.dataset.side = side;
+    note.textContent = explain;
+  });
+  return btn;
 }

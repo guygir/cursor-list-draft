@@ -150,11 +150,11 @@ export function hintFor(id: PersonId | null, picks: PersonId[], edgeKeyValue: st
   const peak = ASPECT_LABEL_HE[peakAspect(person.aspects, person.slateId)];
   if (!picks.length || picks[0] === id) {
     const note = person.aspectsNoteHe ? ` · ${person.aspectsNoteHe}` : "";
-    return `${person.nameHe} · ${person.partyHe} · ${peak} · ${hill}${note}`;
+    return `${person.nameHe} · ${person.partyHe} · ${copy.hintPeak}: ${peak} · ${copy.hintHill}: ${hill}${note}`;
   }
   const team = teamRelation(picks, id);
   const tag = team.worst ? shortReasonHe(team.worst.relation) : shortReasonHe(pairRelation(picks[0]!, id));
-  return `${person.nameHe} · ${tag} · ${peak} · ${hill}`;
+  return `${person.nameHe} · ${copy.hintVs}: ${tag} · ${copy.hintPeak}: ${peak} · ${copy.hintHill}: ${hill}`;
 }
 
 function renderPartyField(view: TreeView, handlers: TreeHandlers): HTMLElement {
@@ -273,9 +273,6 @@ function renderConstellation(view: TreeView, handlers: TreeHandlers, player: Dra
     face.addEventListener("pointerleave", () => handlers.onHover(null));
     face.addEventListener("click", () => {
       handlers.onFocus(node.id);
-      if (view.canPick && view.remaining.includes(node.id) && view.focusId === node.id) {
-        handlers.onPick(node.id);
-      }
     });
     faces.append(face);
   }
@@ -297,7 +294,7 @@ function renderColorScale(): HTMLElement {
       ),
     );
   }
-  scale.append(row);
+  scale.append(row, el("span", { class: "color-scale-label" }, copy.edgeStyle));
   return scale;
 }
 
