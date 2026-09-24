@@ -3,7 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { disableTips, resetTips } from "../systems/tips";
+import { disableTips, resetTips, tipsAllowed } from "../systems/tips";
 import { mount } from "./app";
 import { closeTips } from "./tips";
 
@@ -301,5 +301,31 @@ describe("playable draft UI", () => {
     expect(document.querySelector(".tips-overlay")).toBeNull();
     again.querySelector<HTMLButtonElement>(".tips-open")?.click();
     expect(document.querySelector(".tips-overlay")?.textContent).toContain("המשחק");
+  });
+
+  it("parks the pip tip on Next until a name is opened, without turning tips off", () => {
+    resetTips();
+    const root = document.createElement("div");
+    document.body.append(root);
+    mount(root);
+    root.querySelector<HTMLButtonElement>(".tips-open")?.click();
+    expect(document.querySelector(".tips-overlay")?.textContent).toContain("המשחק");
+    root.querySelector<HTMLButtonElement>(".setup-screen .primary")?.click();
+    expect(root.querySelector(".draft-screen")).toBeTruthy();
+    expect(document.querySelector(".tips-overlay")?.textContent).toContain("בחירה");
+    expect(root.querySelector(".aspect-pips, .pip-key-list")).toBeNull();
+
+    [...document.querySelectorAll<HTMLButtonElement>(".tips-card button")]
+      .find((btn) => btn.textContent === "הבא")
+      ?.click();
+    expect(tipsAllowed()).toBe(true);
+    expect(document.cookie).not.toMatch(/harshima_tips=off/);
+    expect(document.querySelector(".tips-overlay")).toBeTruthy();
+    expect(document.querySelector(".tips-overlay")?.textContent).toContain("הפסים");
+
+    root.querySelector<HTMLButtonElement>(".party-btn")?.click();
+    expect(root.querySelector(".aspect-pips, .pip-key-list")).toBeTruthy();
+    expect(document.querySelector(".tips-overlay")?.textContent).toContain("הפסים");
+    expect(tipsAllowed()).toBe(true);
   });
 });

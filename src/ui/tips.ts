@@ -89,6 +89,10 @@ function openStep(next: number): void {
     finish(true);
     return;
   }
+  showStep(step);
+}
+
+function showStep(step: TipStep): void {
   index = steps.indexOf(step);
   started = true;
   open = true;
@@ -111,13 +115,21 @@ function goToVisible(from: number): void {
     openStep(steps.indexOf(ready));
     return;
   }
+  if (remaining.length === 0) {
+    finish(true);
+    return;
+  }
+  // Next (or resume) asked for a step whose target is not on screen yet.
+  // Park there: keep the tour open and tips allowed; do not write tips off.
+  const requested = remaining[0]!;
+  index = steps.indexOf(requested);
+  started = true;
   if (remaining.some((step) => step.screen !== currentScreen())) {
-    index = from;
-    started = true;
     parkTour();
     return;
   }
-  finish(true);
+  if (document.querySelector("#tips-title")?.textContent === requested.title) return;
+  showStep(requested);
 }
 
 function currentScreen(): "setup" | "draft" | "other" {
