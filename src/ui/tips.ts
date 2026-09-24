@@ -86,18 +86,10 @@ export function closeTips(): void {
 function openStep(next: number): void {
   const step = visibleStep(next);
   if (!step) {
-    finish(true);
+    goToVisible(next);
     return;
   }
-  index = steps.indexOf(step);
-  started = true;
-  open = true;
-  document.querySelector(".tips-overlay")?.remove();
-  const overlay = renderOverlay(step);
-  document.body.append(overlay);
-  window.addEventListener("resize", layoutTips);
-  window.addEventListener("scroll", layoutTips, true);
-  layoutTips();
+  showOverlay(step);
 }
 
 function visibleStep(from: number): TipStep | undefined {
@@ -108,16 +100,35 @@ function goToVisible(from: number): void {
   const remaining = steps.slice(Math.max(0, from));
   const ready = remaining.find((step) => stepTarget(step));
   if (ready) {
-    openStep(steps.indexOf(ready));
+    showOverlay(ready);
     return;
   }
-  if (remaining.some((step) => step.screen !== currentScreen())) {
-    index = from;
+  if (remaining.length > 0) {
+    const parked = remaining[0]!;
+    index = steps.indexOf(parked);
     started = true;
-    parkTour();
+    if (remaining.some((step) => step.screen !== currentScreen())) {
+      parkTour();
+      return;
+    }
+    // Same screen, target not painted yet: stay on the requested step
+    // with the overlay open. maybeShowTips resumes the spotlight later.
+    showOverlay(parked);
     return;
   }
   finish(true);
+}
+
+function showOverlay(step: TipStep): void {
+  index = steps.indexOf(step);
+  started = true;
+  open = true;
+  document.querySelector(".tips-overlay")?.remove();
+  const overlay = renderOverlay(step);
+  document.body.append(overlay);
+  window.addEventListener("resize", layoutTips);
+  window.addEventListener("scroll", layoutTips, true);
+  layoutTips();
 }
 
 function currentScreen(): "setup" | "draft" | "other" {
